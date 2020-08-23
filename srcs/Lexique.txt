@@ -1,0 +1,18 @@
+cgi : La Common Gateway Interface (littéralement « Interface de passerelle commune »),
+généralement abrégée CGI, est une interface utilisée par les serveurs HTTP.
+
+Au lieu d'envoyer le contenu d'un fichier (fichier HTML, image),
+le serveur HTTP exécute un programme, puis retourne le contenu généré.
+CGI est le standard industriel qui indique comment transmettre la requête
+du serveur HTTP au programme, et comment récupérer la réponse générée
+
+- https://fr.wikipedia.org/wiki/Common_Gateway_Interface
+
+
+--------
+
+
+MIME : Multipurpose Internet Mail Extensions
+https://fr.wikipedia.org/wiki/Type_de_médias
+
+Il s'agit en fait de l'identifiant de format de données
