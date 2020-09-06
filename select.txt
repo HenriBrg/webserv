@@ -1,0 +1,74 @@
+2.1.1 How do I use select()?
+----------------------------
+
+The interface to `select()' is primarily based on the concept of an
+`fd_set', which is a set of FDs (usually implemented as a bit-vector). In
+times past, it was common to assume that FDs were smaller than 32, and just
+use an int to store the set, but these days, one usually has more FDs
+available, so it is important to use the standard macros for manipulating
+fd_sets:
+
+     fd_set set;
+     FD_ZERO(&set);      /* empties the set */
+     FD_SET(fd,&set);    /* adds FD to the set */
+     FD_CLR(fd,&set);    /* removes FD from the set */
+     FD_ISSET(fd,&set)   /* true if FD is in the set */
+
+In most cases, it is the system's responsibility to ensure that fdsets can
+handle the whole range of file descriptors, but in some cases you may have
+to predefine the `FD_SETSIZE' macro.  *This is system-dependent*; check
+your `select()' manpage. Also, some systems have problems handling more
+than 1024 file descriptors in `select()'.
+
+The basic interface to select is simple:
+
+     int select(int nfds, fd_set *readset,
+                          fd_set *writeset,
+                          fd_set *exceptset, struct timeval *timeout);
+
+where
+
+`nfds'
+     the number of FDs to examine; this must be greater than the largest FD
+     in any of the fdsets, *not* the actual number of FDs specified
+
+`readset'
+     the set of FDs to examine for readability
+
+`writeset'
+     the set of FDs to examine for writability
+
+`exceptfds'
+     the set of FDs to examine for exceptional status (note: errors are
+     *not* exceptional statuses)
+
+`timeout'
+     NULL for infinite timeout, or points to a timeval specifying the
+     maximum wait time (if `tv_sec' and `tv_usec' both equal zero, then the
+     status of the FDs is polled, but the call never blocks)
+
+The call returns the number of `ready' FDs found, and the three fdsets are
+modified in-place, with only the ready FDs left in the sets. Use the
+`FD_ISSET' macro to test the returned sets.
+
+Here's a simple example of testing a single FD for readability:
+
+     int isready(int fd)
+     {
+         int rc;
+         fd_set fds;
+         struct timeval tv;
+     
+         FD_ZERO(&fds);
+         FD_SET(fd,&fds);
+         tv.tv_sec = tv.tv_usec = 0;
+     
+         rc = select(fd+1, &fds, NULL, NULL, &tv);
+         if (rc < 0)
+           return -1;
+     
+         return FD_ISSET(fd,&fds) ? 1 : 0;
+     }
+
+Note that we can pass `NULL' for fdsets that we aren't interested in
+testing.
