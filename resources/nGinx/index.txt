@@ -1,0 +1,19 @@
+vi /usr/local/etc/nginx/nginx.conf
+
+brew services start nginx
+brew services reload nginx
+brew services stop nginx
+
+nginx -t : évalue la validité de la configuration
+nginx -s <SIGNAL> : envoie un signal (quit / stop / reload / reopen)
+
+Attention au retour HTTP 304 qui, en cas d'absence de différence entre la requête précédente et l'actuelle,
+ira récupérer en cache la réponse antérieure et n'appliquera pas les changements de configuration etc ...
+
+# Pourquoi un reverse_proxy ?
+
+    A very common scenario for developers, is to run their REST APIs behind a reverse proxy.
+    There are many reasons why you would want to do this but one of the main reasons is to run
+    your API server on a different network or IP then your front-end application is on.
+    You can then secure this network and only allow traffic from the reverse proxy server.
+

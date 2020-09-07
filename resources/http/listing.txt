@@ -1,0 +1,9 @@
+Code 304
+
+Le code de réponse de redirection 304 Not Modified indique qu'il n'y a pas besoin de retransmettre les ressources demandées.
+C'est une redirection implicite vers une ressource mise en cache
+
++ d'infos --> https://developer.mozilla.org/fr/docs/Web/HTTP/Status/304
+
+-------------------------
+

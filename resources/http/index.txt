@@ -1,0 +1,13 @@
+
+--------> HTTP/2
+
+HTTP/2 is the successor to the HTTP/1.1 standard which, among other benefits,
+reduces page load times and bandwidth used. While the HTTP/2 specification applies to both HTTP and HTTP traffic,
+web browsers currently do not support unencrypted HTTP/2, so it can only be used with TLS.
+
+HSTS is used to force browsers to only connect using HTTPS
+
+https://www.linode.com/docs/web-servers/nginx/tls-deployment-best-practices-for-nginx/
+
+-------->
+

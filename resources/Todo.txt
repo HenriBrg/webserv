@@ -1,8 +1,0 @@
-Comprendre la config NGINX à reproduire
-Doc Wpark
-
-Mini programme pour :
-
-- socket
-- select
-- autres fonctions autorisées
