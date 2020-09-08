@@ -1,0 +1,5 @@
+https://www.geeksforgeeks.org/tcp-and-udp-server-using-select/
+https://www.bogotobogo.com/cplusplus/sockets_server_client.php
+https://bousk.developpez.com/cours/reseau-c++/TCP/05-envoi-reception-serveur/
+https://broux.developpez.com/articles/c/sockets/
+http://vidalc.chez.com/lf/socket.html

@@ -1,11 +1,14 @@
 FROM nginx:latest
-# Image officielle basée sur debian:buster
-# COPY index.html /usr/share/nginx/html/index.html
-COPY ./nginx.conf /etc/nginx/nginx.conf
 
+# docker build -t nginxwbs .
+# docker run -it --rm -d -p 8080:80 --name webserver nginxwbs
+# docker exec -it xxx /bin/sh
 
+# apt-get update
+# installer vim
+# 
+ 
 # Tips & Tricks
-
 
 # --> DL des packages dans debian:buster
 

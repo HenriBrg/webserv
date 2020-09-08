@@ -1,0 +1,8 @@
+
+Commandes shell à tester durant webserv :
+
+    - curl          :
+    - netcat        :
+    - ping          :
+    - traceroute    :
+    - nmap          :

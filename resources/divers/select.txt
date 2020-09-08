@@ -1,0 +1,10 @@
+La fonction select()  attend   des  changements  d'état  sur  plusieurs descripteurs (sockets, tubes, périphériques) de fichiers.
+L’attente est passive : tant qu’aucune condition n’est réalisée, la tâche appelante est endormie.
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+Lorsqu’une tâche appelle une fonction de lecture sur un périphérique, la méthode read() du driver correspondant est invoquée.
+Si des données sont déjà disponibles, la méthode read() les renvoie immédiatement et se termine.
+Si aucune donnée n’est disponible, la fonction read() va inscrire la tâche appelante dans une waitqueue (file d’attente) et l’endormir.
+Pour cela, elle bascule l’état de la tâche à Sleeping et invoque directement l’ordonnanceur (fonction schedule() du kernel).
+Ce dernier peut alors activer une autre tâche ou basculer le processeur en mode idle (c.a.d processus inactif)
