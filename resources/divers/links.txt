@@ -3,3 +3,5 @@ https://www.bogotobogo.com/cplusplus/sockets_server_client.php
 https://bousk.developpez.com/cours/reseau-c++/TCP/05-envoi-reception-serveur/
 https://broux.developpez.com/articles/c/sockets/
 http://vidalc.chez.com/lf/socket.html
+https://broux.developpez.com/articles/c/sockets/#
+http://www.garshol.priv.no/download/text/http-tut.html
