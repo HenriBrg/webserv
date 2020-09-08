@@ -20,9 +20,9 @@ FROM nginx:latest
 
     # cat /proc/version
     # cat /etc/os-release
-    # uname -r
+    # uname -rsm
 
-# --> Modifier le dockerfile n'implique pas un rebuilt, sauf si un ADD statement est ajouté
+# --> Modifier le dockerfile n'implique pas un rebuilt, sauf si un ADD statement est ajouté :
 
     # Docker build support caching as long as there is no ADD instruction.
     # If you are actively developing and changing files, only what is after the ADD will be rebuilt.
