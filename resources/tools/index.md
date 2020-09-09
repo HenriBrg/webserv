@@ -32,4 +32,10 @@ On an unswitched network, where Ethernet packets pass through every device on th
 
 ## SOFTWARE
 
+* Telnet            : Telnet est un protocole informatique qui a été conçu pour interagir avec des ordinateurs distants. Outil puissant à approfondir, voici un usag très basique :
+-   python -m SimpleHTTPServer 8080
+-   telnet 127.0.0.1 8080
+-   HEAD / HTTP/1.0
+-   ^]
+
 * Wireshark         :
