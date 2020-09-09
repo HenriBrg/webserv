@@ -1,6 +1,7 @@
 ## SHELL
 
-*   curl            :
+*   curl            : à approfondir à fond
+
 *   netcat          :
 *   ping            :
 *   traceroute      : tool for displaying the route (path) and measuring transit delays of packets across an Internet Protocol (IP) network, shows the number of hops taken during the entire transmission route. What traceroute does is it sends a packet towards that remote host, only a single hop onto the network. And then, causes the network to send a message back.
