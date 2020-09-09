@@ -4,11 +4,16 @@ brew services start nginx
 brew services reload nginx
 brew services stop nginx
 
+ps -ax | grep nginx
+
 nginx -t : évalue la validité de la configuration
 nginx -s <SIGNAL> : envoie un signal (quit / stop / reload / reopen)
 
+Sur mac : nginx -c /usr/local/etc/nginx/nginx.conf.test
+
 Attention au retour HTTP 304 qui, en cas d'absence de différence entre la requête précédente et l'actuelle,
 ira récupérer en cache la réponse antérieure et n'appliquera pas les changements de configuration etc ...
+Penser à vider le cache
 
 # Pourquoi un reverse_proxy ?
 
