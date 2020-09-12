@@ -2,7 +2,7 @@
 
 NAME = webserv
 CPP = clang++ # -Wall -Wextra -Werror
-SRCS = srcs/main.cpp srcs/utils.cpp
+SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # COMPILATION
@@ -22,7 +22,7 @@ $(NAME): $(OBJS)
 # TEST
 
 x: $(NAME)
-	./$(NAME) x
+	./$(NAME)
 
 
 # CLEAN

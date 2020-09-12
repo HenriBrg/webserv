@@ -1,3 +1,18 @@
+
+
+// struct sockaddr_in {
+//     sa_family_t    sin_family; /* famille d'adresses : AF_INET     */
+//     uint16_t       sin_port;   /* port dans l'ordre d'octets réseau */
+//     struct in_addr sin_addr;   /* adresse Internet                  */
+// };
+
+// /* Adresse Internet */
+// struct in_addr {
+//     uint32_t       s_addr;     /* Adresse dans l'ordre d'octets réseau */
+// };
+
+ 
+ 
     //  #include <sys/time.h> 
     //    #include <sys/types.h> 
     //    #include <unistd.h> 

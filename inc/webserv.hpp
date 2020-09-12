@@ -3,12 +3,13 @@
 
 # include <string>
 # include <iostream>
-
-# include <sys/select.h>
-# include <sys/time.h>
-# include <sys/types.h>
+# include <errno.h>  
 
 # include "Config.hpp"
+# include "Client.hpp"
+
+
+extern Config gConfig;
 
 int        putstrError(std::string str);
 

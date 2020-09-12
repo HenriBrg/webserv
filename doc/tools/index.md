@@ -11,9 +11,7 @@
 -   nmap 127.0.0.1
 
 *   ifconfig        : configure network interface parameters (sur macos, on aura l'IP devant le inet en en0)
--   ifconfig
 -   ifconfig en0
--   ifconfig
 
 *   netstat         : Affiche les connexions entrantes / sortantes ainsi que les tables de routages, les ports, les protocoles
 -   netstat -an
