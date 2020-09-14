@@ -12,6 +12,8 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 
+# include "Request.hpp"
+
 class Server;
 
 class Client {
@@ -27,7 +29,7 @@ class Client {
         Server      *server;
         std::string ip;
 
-        // Request     req;
+        Request     req;
         // Response    res;
 
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);

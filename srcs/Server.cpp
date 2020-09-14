@@ -98,11 +98,6 @@ int    Server::start() {
 
 void Server::acceptNewClient(void) {
 
-    // Temporary Part
-    char buffer[256];
-    bzero(&buffer, sizeof(buffer));
-    // END Temporary Part
-
     int acceptFd;
     struct sockaddr_in clientAddr;
     int addrSize = sizeof(clientAddr);
@@ -116,10 +111,7 @@ void Server::acceptNewClient(void) {
         Client *newClient = new Client(this, acceptFd, clientAddr);
         clients.push_back(newClient);
 
-        // Temporary Part
-        read(acceptFd, buffer, sizeof(buffer));
-        puts(buffer);
-        // END Temporary Part
+        // ...
 
     }
 }

@@ -23,7 +23,7 @@ int main(int ac, char **av) {
     while (gConfig.run) {
 
         gConfig.resetFds();
-        select(gConfig.getNfds(), &gConfig.rFds, &gConfig.wFds, &gConfig.eFds, NULL);
+        select(gConfig.getNfds(), &gConfig.rFds, &gConfig.wFds, &gConfig.eFds, &gConfig.timeout);
                 
         std::vector<Server*>::iterator itb;
         for (itb = gConfig.servers.begin(); itb != gConfig.servers.end(); itb++) {
@@ -40,7 +40,8 @@ int main(int ac, char **av) {
                 }
             }
 
-            // 2) On itère sur le client (ayant "débloqué" select() et qui sera associé au serveur) afin de produire puis lui envoyer une réponse
+            // 2) On itère sur le client (ayant été à l'origine du "déblocage" de select() et qui sera associé au serveur)
+            //    afin de produire puis lui envoyer une réponse propre au contenu de la requête et à la configuration du serveur
 
 
 
