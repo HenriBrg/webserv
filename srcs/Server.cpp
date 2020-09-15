@@ -116,6 +116,42 @@ void Server::acceptNewClient(void) {
     }
 }
 
+int readClientRequest(Client *c) {
+
+    return (0);
+}
+
+int writeClientResponse(Client *c) {
+
+    return (0);
+}
+
+void Server::handleClientRequest(Client *c) {
+
+    int ret = 2;
+
+    ret = 0;
+    if (FD_ISSET(c->acceptFd, &gConfig.rFds)) {
+        // READ REQUEST
+        if (readClientRequest(c) != 0)
+            return ;
+        ret--;
+    } else {
+        // LOGGER
+    }
+
+    if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
+        if (writeClientResponse(c) != 0)
+            return ;
+        ret--;
+
+    } else {
+        // LOGGER
+    }
+    return (ret);
+}
+
+
 
 Server::ServerException::ServerException(std::string where, std::string error) {
     this->error = where + ": " + error;

@@ -25,10 +25,10 @@ int main(int ac, char **av) {
         gConfig.resetFds();
         select(gConfig.getNfds(), &gConfig.rFds, &gConfig.wFds, &gConfig.eFds, &gConfig.timeout);
                 
-        std::vector<Server*>::iterator itb;
-        for (itb = gConfig.servers.begin(); itb != gConfig.servers.end(); itb++) {
+        std::vector<Server*>::iterator its;
+        for (its = gConfig.servers.begin(); its != gConfig.servers.end(); its++) {
             
-            s = *itb;
+            s = *its;
 
             // 1) On itère sur les serveurs pour vérifier si l'un deux fait l'objet d'une requête
             
@@ -43,7 +43,12 @@ int main(int ac, char **av) {
             // 2) On itère sur le client (ayant été à l'origine du "déblocage" de select() et qui sera associé au serveur)
             //    afin de produire puis lui envoyer une réponse propre au contenu de la requête et à la configuration du serveur
 
-
+            std::vector<Client*>::iterator itc;
+            for(itc = (*its)->clients.begin(); itc != (*its)->clients.end(); itc++) {
+                c = *itc;
+                s->handleClientRequest(c);
+                
+            }
 
         }
 

@@ -49,9 +49,12 @@ class Server {
 
         /* Members Methods */
 
-        int start(void);
+        int  start(void);
         void acceptNewClient(void);
-        
+        void handleClientRequest(Client *c);
+        int readClientRequest(Client *c);
+        int writeClientResponse(Client *c);
+
         /* Exceptions */
 
         class ServerException: public std::exception {

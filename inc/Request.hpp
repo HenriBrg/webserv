@@ -11,9 +11,18 @@ class Request {
     
     public:
 
-        Client *client;
 
+        /* METHODS */
+
+        Request();
+        virtual ~Request();
+
+        /* MEMBERS */
+
+
+        Client *client;
         std::string buffer;
+        int bodyLength;
 
         // Read this if you're not familiar with HTTP Requests
 
@@ -37,6 +46,7 @@ class Request {
         // { 1: "utf-8", 2: "iso-8859-1;q=0.5" }
         // For character set negotiation, the client can use this header to tell the server which character sets it can handle or it prefers
         std::map<int, std::string> acceptCharset;
+        // Si on a pas la ressource dans le format souhaité, en théorie on retourne 406 mais en pratique on ignore pour qu'une réponse, bien qu'imparfaite, soit quand même retournée
 
         // Accept-Language: language-1, language-2, ...
         // Accept-Language: da, en-gb;q=0.8, en;q=0.7
@@ -61,7 +71,8 @@ class Request {
         int contentLength;
 
 
-        // Content-Location header indicates an alternate location for the returned data.
+        // Il semble que ce Content-Location soit utilisé en requête mais aussi en réponse ... à voir
+         
         // The principal use is to indicate the URL of a resource transmitted as the result of content negotiation.
         // The Content-Location header indicates an alternate location for the returned data. The principal use is to indicate the URL of a resource transmitted as the result of content negotiation.
         // Location and Content-Location are different.
@@ -105,7 +116,6 @@ class Request {
 
     private:
 
-        Request();
 
 
 };
