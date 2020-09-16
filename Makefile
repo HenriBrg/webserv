@@ -2,14 +2,14 @@
 
 NAME = webserv
 CPP = clang++ # -Wall -Wextra -Werror
-SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp
+SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp srcs/Request.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # COMPILATION
 
-ifndef VERBOSE
-.SILENT:
-endif
+# ifndef VERBOSE
+# .SILENT:
+# endif
 
 .cpp.o: 
 	$(CPP) -c $< -o $@
@@ -28,11 +28,11 @@ x: $(NAME)
 # CLEAN
 
 clean:
-	rm $(OBJS)
+	rm -f $(OBJS)
 
 fclean: clean
-	rm $(NAME)
+	rm -f $(NAME)
 
-re: fclean all
+re: fclean $(NAME)
 
-.PHONY: re fclean all
+.PHONY: re fclean

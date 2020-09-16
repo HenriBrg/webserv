@@ -8,7 +8,6 @@
 # include "Config.hpp"
 # include "Client.hpp"
 
-
 extern Config gConfig;
 
 int        putstrError(std::string str);

@@ -28,6 +28,8 @@ class Client {
         int         acceptFd;
         Server      *server;
         std::string ip;
+        char        buf[4096];
+        std::string strbuf;
 
         Request     req;
         // Response    res;

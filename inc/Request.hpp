@@ -7,6 +7,8 @@
 
 # include "Server.hpp"
 
+class Client;
+
 class Request {
     
     public:
@@ -21,7 +23,7 @@ class Request {
 
 
         Client *client;
-        std::string buffer;
+        std::string buf;
         int bodyLength;
 
         // Read this if you're not familiar with HTTP Requests

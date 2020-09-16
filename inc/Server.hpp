@@ -17,12 +17,12 @@
 # include <netinet/ip.h>
 # include <sys/types.h>
 
-#include <fcntl.h>
+# include <fcntl.h>
 
 /* Local */
 
 # include "Client.hpp"
-
+# include "Location.hpp"
 
 class Server {
     
@@ -46,6 +46,8 @@ class Server {
         std::string                 name;
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
+        std::vector<Location*>       locations;
+
 
         /* Members Methods */
 

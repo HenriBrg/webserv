@@ -3,7 +3,13 @@
 Server::Server(std::string name, int port): name(name), port(port) {
     
     bzero(&addr, sizeof(addr));
-    // ADD TO TEST
+    
+    // Locations will be parsed later
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
+    Location *newLoc2 = new Location("/", "./www", "index.html", "GET");
+
+    locations.push_back(newLoc1);
+    locations.push_back(newLoc2);
 
 }
 
@@ -105,62 +111,68 @@ void Server::acceptNewClient(void) {
     bzero(&clientAddr, addrSize);
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
         gConfig.run = 0;
+        // LOGGER
         throw ServerException("Server::acceptNewClient : accept()", std::string(strerror(errno)));
     } else
     {
+        // LOGGER
         Client *newClient = new Client(this, acceptFd, clientAddr);
         clients.push_back(newClient);
-
-        // ...
 
     }
 }
 
-int readClientRequest(Client *c) {
+
+int Server::readClientRequest(Client *c) {
+
+    int ret;
+
+    bzero(c->buf, sizeof(c->buf));
+    if ((ret = recv(c->acceptFd, c->buf, sizeof(c->buf), 0)) == -1) {
+        // LOGGER
+        // throw ServerException("Server::readClientRequest : recv()", std::string(strerror(errno)));
+        return (-1);
+    }
+    c->buf[ret] = 0;
+    // LOGGER
+    c->req.buf = std::string(c->buf, sizeof(c->buf));
+
+    FD_CLR(c->acceptFd, &gConfig.rFds);
+    FD_SET(c->acceptFd, &gConfig.wFds);
 
     return (0);
 }
 
-int writeClientResponse(Client *c) {
+int Server::writeClientResponse(Client *c) {
 
     return (0);
 }
 
 void Server::handleClientRequest(Client *c) {
 
-    int ret = 2;
-
-    ret = 0;
     if (FD_ISSET(c->acceptFd, &gConfig.rFds)) {
-        // READ REQUEST
         if (readClientRequest(c) != 0)
             return ;
-        ret--;
-    } else {
-        // LOGGER
     }
 
     if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
         if (writeClientResponse(c) != 0)
             return ;
-        ret--;
-
     } else {
         // LOGGER
+        std::cerr << "Server::handleClientRequest : write(): error" << std::endl;
     }
-    return (ret);
+
 }
-
-
 
 Server::ServerException::ServerException(std::string where, std::string error) {
     this->error = where + ": " + error;
 }
 
-Server::ServerException::~ServerException(void) throw() {}
+Server::ServerException::~ServerException(void) throw() {
+    
+}
 
 const char * Server::ServerException::what(void) const throw() {
     return this->error.c_str();
 }
-
-

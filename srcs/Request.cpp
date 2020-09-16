@@ -23,7 +23,5 @@ Request::Request(void) {
 
 Request::~Request() {
 
-
-
 }
 
