@@ -1,5 +1,8 @@
 Start :
 
+    Nginx : http://www.rgonzo.us/shiny/books/Nginx%20HTTP%20Server%20-%20Unknown.pdf
+    
+
     https://www.geeksforgeeks.org/tcp-and-udp-server-using-select/
     https://www.bogotobogo.com/cplusplus/sockets_server_client.php
     https://bousk.developpez.com/cours/reseau-c++/TCP/05-envoi-reception-serveur/

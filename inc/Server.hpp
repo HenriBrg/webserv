@@ -46,7 +46,7 @@ class Server {
         std::string                 name;
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
-        std::vector<Location*>       locations;
+        std::vector<Location*>      locations;
 
 
         /* Members Methods */

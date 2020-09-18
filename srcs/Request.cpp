@@ -25,3 +25,13 @@ Request::~Request() {
 
 }
 
+// Pour le moment, on suppoesera un requête GET très basique : 
+// GET /index.html HTTP/1.0
+
+void Request::parse(std::vector<Location*> locations) {
+    
+    std::vector<std::string> requestLine;
+
+    // requestLine = split()
+
+}

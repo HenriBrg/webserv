@@ -6,7 +6,7 @@ Server::Server(std::string name, int port): name(name), port(port) {
     
     // Locations will be parsed later
     Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-    Location *newLoc2 = new Location("/", "./www", "index.html", "GET");
+    Location *newLoc2 = new Location("/", "./www", "page.html", "GET");
 
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
@@ -134,9 +134,11 @@ int Server::readClientRequest(Client *c) {
         return (-1);
     }
     c->buf[ret] = 0;
-    // LOGGER
-    c->req.buf = std::string(c->buf, sizeof(c->buf));
+    
+    // LOGGER : We've read the following client request :
 
+    c->req.buf = std::string(c->buf, sizeof(c->buf));
+    c->req.parse(locations);
     FD_CLR(c->acceptFd, &gConfig.rFds);
     FD_SET(c->acceptFd, &gConfig.wFds);
 

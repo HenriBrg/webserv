@@ -6,6 +6,7 @@
 # include <unistd.h>
 
 # include "Server.hpp"
+# include "Location.hpp"
 
 class Client;
 
@@ -18,6 +19,8 @@ class Request {
 
         Request();
         virtual ~Request();
+
+        void parse(std::vector<Location*> locations);
 
         /* MEMBERS */
 
