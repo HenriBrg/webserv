@@ -14,6 +14,8 @@
 
 # include "Request.hpp"
 
+# define BUFMAX 50000
+
 class Server;
 
 class Client {
@@ -28,7 +30,7 @@ class Client {
         int         acceptFd;
         Server      *server;
         std::string ip;
-        char        buf[4096];
+        char        *buf;
         std::string strbuf;
 
         Request     req;

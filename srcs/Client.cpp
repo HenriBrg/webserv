@@ -12,6 +12,8 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
     FD_SET(acceptFd, &gConfig.rFds);
     gConfig.setNfds(acceptFd);
 
+    buf = (char*)malloc(sizeof(char) * (BUFMAX + 1));
+    memset((void*)buf, 0, BUFMAX + 1);
 }
 
 Client::~Client() {

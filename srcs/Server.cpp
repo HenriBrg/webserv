@@ -116,37 +116,59 @@ void Server::acceptNewClient(void) {
     } else
     {
         // LOGGER
+        std::cout << "New Client" << std::endl;
+
         Client *newClient = new Client(this, acceptFd, clientAddr);
         clients.push_back(newClient);
 
     }
 }
 
-
 int Server::readClientRequest(Client *c) {
 
     int ret;
+    int x;
 
-    bzero(c->buf, sizeof(c->buf));
-    if ((ret = recv(c->acceptFd, c->buf, sizeof(c->buf), 0)) == -1) {
+    x = strlen(c->buf);
+    ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
+    x += ret;
+
+    if (ret == -1) {
         // LOGGER
         // throw ServerException("Server::readClientRequest : recv()", std::string(strerror(errno)));
         return (-1);
+    } else if (ret == 0) {
+        // If we pass here, it means that the connection has been closed by the client
+        return (-1);
+    } else {
+        
+        c->buf[x] = '\0';
+        if (strstr(c->buf, "\r\n\r\n") != NULL) {
+
+            // For info, an HTTP request has to end with "\r\n\r\n"
+            // If we pass here, it means that the request is fully received
+                
+            // LOGGER
+
+            c->req.reqBuf = std::string(c->buf, x);
+            c->req.parse(locations);
+            c->req.showReq();
+
+
+            FD_SET(c->acceptFd, &gConfig.wFdsBackup);
+            return 0;
+
+        } else { 
+            // LOGGER
+            // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
+            return 0;
+        }
+        
     }
-    c->buf[ret] = 0;
-    
-    // LOGGER : We've read the following client request :
-
-    c->req.buf = std::string(c->buf, sizeof(c->buf));
-    c->req.parse(locations);
-    FD_CLR(c->acceptFd, &gConfig.rFds);
-    FD_SET(c->acceptFd, &gConfig.wFds);
-
     return (0);
 }
 
 int Server::writeClientResponse(Client *c) {
-
     return (0);
 }
 
@@ -156,6 +178,9 @@ void Server::handleClientRequest(Client *c) {
         if (readClientRequest(c) != 0)
             return ;
     }
+
+    std::cout << "Done" << std::endl;
+    return ;
 
     if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
         if (writeClientResponse(c) != 0)

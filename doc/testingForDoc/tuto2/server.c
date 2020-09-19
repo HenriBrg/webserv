@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
      if (newsockfd < 0) 
           error("ERROR on accept");
 
-     printf("server: got connection from %s port %d\n",
-            inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+    //  printf("server: got connection from %s port %d\n",
+    //         inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
 
 
-     // This send() function sends the 13 bytes of the string to the new socket
-     send(newsockfd, "Hello, world!\n", 13, 0);
+    //  // This send() function sends the 13 bytes of the string to the new socket
+    //  send(newsockfd, "Hello, world!\n", 13, 0);
 
      bzero(buffer,256);
 

@@ -2,6 +2,7 @@
 # define REQUEST_HPP
 
 # include <iostream>
+# include <string>
 # include <map>
 # include <unistd.h>
 
@@ -21,12 +22,17 @@ class Request {
         virtual ~Request();
 
         void parse(std::vector<Location*> locations);
+        void showReq(void);
+
+        void	readline(std::string & b, std::string & line);
+        int     parseRequestLine();
+
 
         /* MEMBERS */
 
 
         Client *client;
-        std::string buf;
+        std::string reqBuf;
         int bodyLength;
 
         // Read this if you're not familiar with HTTP Requests

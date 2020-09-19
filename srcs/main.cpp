@@ -47,7 +47,6 @@ int main(int ac, char **av) {
             for(itc = (*its)->clients.begin(); itc != (*its)->clients.end(); itc++) {
                 c = *itc;
                 s->handleClientRequest(c);
-                
             }
 
         }

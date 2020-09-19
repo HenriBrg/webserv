@@ -9,8 +9,8 @@ Config::Config() {
     FD_ZERO(&rFdsBackup);
     FD_ZERO(&wFdsBackup);
     FD_ZERO(&eFdsBackup);
-    this->timeout.tv_sec = 1;
-    this->timeout.tv_usec = 500000;
+    this->timeout.tv_sec = 5;
+    this->timeout.tv_usec = 0;
 }
 
 Config::~Config() {}
