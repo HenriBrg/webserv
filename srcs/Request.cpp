@@ -19,6 +19,9 @@ Request::Request(void) {
     body.clear();
     transferEncoding.clear();
     bodyLength = -1;
+
+    client = NULL;
+    reqLocation = NULL;
 }
 
 Request::~Request() {
@@ -80,20 +83,118 @@ int Request::parseRequestLine() {
     return (0);
 }
 
+// -----------
+
+// The request line holds the location AND the params : http://www.domain.com/index.html?name1=value1
+// We differenciate the storage of uri : http://www.domain.com/index.html
+// and the storage of the query : ?name1=value1
+
+void Request::parseQuery() {
+
+    int i = 0;
+    std::string tmp = uri;
+
+    while (tmp[i] && tmp[i] != '?')
+        i++;
+    if (tmp[i] == '?') {
+        query = uri.substr(i + 1, tmp.size());
+        uri = tmp.substr(0, i);
+    }
+
+    // TODO : stocker les params dans un vector<pair> ou map
+}
+
+
+void Request::assignLocation(std::vector<Location*> vecLocs) {
+
+    // Location NGinx : http://nginx.org/en/docs/beginners_guide.html
+    // Faille de sécurité connue : Directory Traversal --> à gérer ultérieurement
+
+    // 1) If URI requested match directly one of server's locations, we match here
+    for (std::size_t i = 0; i < vecLocs.size(); i++) {
+        if (vecLocs[i]->uri == uri) {
+            reqLocation = vecLocs[i];
+            // Point à éclaicir sur le le path de la ressource
+            return ;
+        }
+    }
+
+    // 2) Else, if no direct match, we iterate on every folder given by the URI (for example, "GET /tmp/data/site/ ..." 
+    // and for each of them, we check if the server has one matching location
+    std::string tmp(uri);
+    int i = tmp.size() - 1;
+    i = (i < 0) ? 0 : i;
+    while (tmp.size() > 0) {
+        while (i && tmp[i] != '/')
+            i--;
+        tmp = tmp.substr(0, i);
+        if (tmp.empty())
+            tmp = "/";
+        for (std::size_t i = 0; i < vecLocs.size(); i++) {
+            if (vecLocs[i]->uri == tmp) {
+                file = tmp.substr(i + 1, tmp.size());
+                reqLocation = vecLocs[i];
+                return ;
+
+            }
+        }
+    }
+    // TODO : à confirmer mais, si échec de location de la ressource, la location de base "/"" doit être utilisée pour réessayer l'association d'une location à la requête (voir lien ci-dessus)
+}
+
+int Request::parseFile(std::vector<Location*> locations) {
+
+    // TMP Location : Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
+
+    // Location(std::string uri, std::string root, std::string index, std::string methods) {
+
+    int         i;
+    struct stat info;
+
+    parseQuery();
+    assignLocation(locations);
+
+    if (reqLocation) {
+        
+        i = reqLocation->root.size() - 1;
+        if (reqLocation->root[i] == '/')
+            file = reqLocation->root + file;
+        else
+            file = reqLocation->root + "/" + file;
+        if (stat(file.c_str(), &info) == 0) {
+            if (S_ISDIR(info.st_mode)) {
+                i = file.size() - 1;
+                if (file[i] == '/')
+                    file += reqLocation->index;
+                else
+                    file = file + "/" + reqLocation->index;
+                }
+        }
+        return (0);
+    }
+    return (-1); // Erreur XXX
+}
+
 // À ce stade, on supposera une requête GET très basique : 
 // GET /index.html HTTP/1.0
 
 void Request::parse(std::vector<Location*> locations) {
     
     parseRequestLine();
+    parseFile(locations);
+    // TODO 1 : On skip les headers pour le moment, mais ça devrait être faisable assez vite, à voir selon la diversité du format
+    // des requêtes du testeurs
+    // TODO 2 : Parsing du body et surtout, gestion des requêtes chunked, chauddd
+    showReq();
+
 }
 
 void Request::showReq(void) {
 
-    std::cout << "PARSE DONE" << std::endl;
-
-    std::cout << "1) Method : " << method << std::endl;
-    std::cout << "2) URI : " << uri << std::endl;
-    std::cout << "3) HTTP Version : " << httpVersion << std::endl;
+    std::cout << "Method : " << method << std::endl;
+    std::cout << "URI : " << uri << std::endl;
+    std::cout << "HTTP Version : " << httpVersion << std::endl;
+    std::cout << "Query : " << query << std::endl;
+    std::cout << "File : " << file << std::endl;
 
 }

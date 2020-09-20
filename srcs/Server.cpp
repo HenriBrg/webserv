@@ -6,8 +6,9 @@ Server::Server(std::string name, int port): name(name), port(port) {
     
     // Locations will be parsed later
     Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-    Location *newLoc2 = new Location("/", "./www", "page.html", "GET");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET POST");
 
+    // Pourquoi le THIS est-il indispensable ici ? Essaies sans et les contructeurs ne sont pas appelés !?
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
@@ -152,8 +153,6 @@ int Server::readClientRequest(Client *c) {
 
             c->req.reqBuf = std::string(c->buf, x);
             c->req.parse(locations);
-            c->req.showReq();
-
 
             FD_SET(c->acceptFd, &gConfig.wFdsBackup);
             return 0;
@@ -179,7 +178,6 @@ void Server::handleClientRequest(Client *c) {
             return ;
     }
 
-    std::cout << "Done" << std::endl;
     return ;
 
     if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {

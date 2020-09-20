@@ -7,9 +7,9 @@ OBJS = $(SRCS:.cpp=.o)
 
 # COMPILATION
 
-# ifndef VERBOSE
-# .SILENT:
-# endif
+ifndef VERBOSE
+.SILENT:
+endif
 
 .cpp.o: 
 	$(CPP) -c $< -o $@

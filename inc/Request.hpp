@@ -5,6 +5,8 @@
 # include <string>
 # include <map>
 # include <unistd.h>
+# include <sys/stat.h> 
+
 
 # include "Server.hpp"
 # include "Location.hpp"
@@ -24,32 +26,39 @@ class Request {
         void parse(std::vector<Location*> locations);
         void showReq(void);
 
+
         void	readline(std::string & b, std::string & line);
         int     parseRequestLine();
+
+        int     parseFile(std::vector<Location*> locations);
+        void    parseQuery();
+        void    assignLocation(std::vector<Location*> locations);
 
 
         /* MEMBERS */
 
 
-        Client *client;
-        std::string reqBuf;
-        int bodyLength;
+        Client          *client;
+        std::string     reqBuf;
+        int             bodyLength;
+        Location        *reqLocation;
+        std::string     file;
+
 
         // Read this if you're not familiar with HTTP Requests
-
-        // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers (100% Best Documentation)
-
+        // (100% Best Documentation) => https://developer.mozilla.org/fr/docs/Web/HTTP/Headers 
+        // https://web.maths.unsw.edu.au/~lafaye/CCM/internet/http.htm
         // https://www.tutorialspoint.com/http/http_requests.htm and the 4 pages following this one
         // https://www.ntu.edu.sg/home/ehchua/programming/webprogramming/HTTP_Basics.html (middle of page - fields explained)
 
-
-        /* 1) Request Line */
-
-        // Example : HEAD / HTTP/1.0
+        /* 1) Request Line : Example : HEAD / HTTP/1.0 */
 
         std::string method;
         std::string uri;
         std::string httpVersion;
+        // Everything after '?' inside URI
+        std::string query;
+
 
         /* 2) Request Headers Fields - Ordered Alphabetically */
 
@@ -123,7 +132,6 @@ class Request {
 
         
         // Chunked : Data is sent in a series of chunks. The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk
-
 
     private:
 
