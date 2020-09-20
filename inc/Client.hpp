@@ -13,6 +13,8 @@
 # include <arpa/inet.h>
 
 # include "Request.hpp"
+# include "Response.hpp"
+
 
 # define BUFMAX 50000
 

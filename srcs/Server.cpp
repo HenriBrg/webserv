@@ -168,7 +168,10 @@ int Server::readClientRequest(Client *c) {
 }
 
 int Server::writeClientResponse(Client *c) {
-    return (0);
+
+
+
+    return (42);
 }
 
 void Server::handleClientRequest(Client *c) {
@@ -178,14 +181,9 @@ void Server::handleClientRequest(Client *c) {
             return ;
     }
 
-    return ;
-
     if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
         if (writeClientResponse(c) != 0)
             return ;
-    } else {
-        // LOGGER
-        std::cerr << "Server::handleClientRequest : write(): error" << std::endl;
     }
 
 }

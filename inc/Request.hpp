@@ -13,6 +13,25 @@
 
 class Client;
 
+/* EXEMPLES DE REQUÊTES GET/POST */
+
+// GET /hello.htm HTTP/1.1
+// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
+// Host: www.tutorialspoint.com
+// Accept-Language: en-us
+// Accept-Encoding: gzip, deflate
+// Connection: Keep-Alive
+
+
+// POST /cgi-bin/process.cgi HTTP/1.1
+// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
+// Host: www.tutorialspoint.com
+// Content-Type: application/x-www-form-urlencoded
+// Content-Length: length
+// Accept-Language: en-us
+// Accept-Encoding: gzip, deflate
+// Connection: Keep-Alive
+
 class Request {
     
     public:
@@ -138,24 +157,5 @@ class Request {
 
 
 };
-
-/* EXEMPLES DE REQUÊTES GET/POST */
-
-// GET /hello.htm HTTP/1.1
-// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
-// Host: www.tutorialspoint.com
-// Accept-Language: en-us
-// Accept-Encoding: gzip, deflate
-// Connection: Keep-Alive
-
-
-// POST /cgi-bin/process.cgi HTTP/1.1
-// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
-// Host: www.tutorialspoint.com
-// Content-Type: application/x-www-form-urlencoded
-// Content-Length: length
-// Accept-Language: en-us
-// Accept-Encoding: gzip, deflate
-// Connection: Keep-Alive
 
 #endif

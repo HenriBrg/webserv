@@ -2,7 +2,7 @@
 
 NAME = webserv
 CPP = clang++ # -Wall -Wextra -Werror
-SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp srcs/Request.cpp
+SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp srcs/Request.cpp srcs/Response.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # COMPILATION
