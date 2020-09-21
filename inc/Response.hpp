@@ -41,12 +41,14 @@ class Response {
         virtual ~Response();
 
         void handleResponse(Request * req);
-        void reqGet(Request * req);
+        void get(Request * req);
 
         
         /* MEMBERS */
 
         // https://web.maths.unsw.edu.au/~lafaye/CCM/internet/http.htm
+
+        std::string body;
 
         
         /* 1) Ligne de statut */

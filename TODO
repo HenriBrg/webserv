@@ -1,0 +1,54 @@
+--------- Point à clarifier ----------
+
+Soit la configuration suivante :
+
+    location / {
+        method GET HEAD
+        root ./www
+        cgi  ./www/cgi_tester
+        index index.html
+    }
+
+     location /data {
+        method GET POST
+        root ./www/web
+        cgi  ./www/cgi_tester
+        index page.html
+    }
+
+--------- Cas concrets (à faire confirmer) basés sur la configuration ci-dessus ---------
+
+1 - Soit la requête suivante : GET / HTTP/1.0
+
+    Match Location : /
+    Ressource retournée : ./www/index.html
+
+2 - Soit la requête suivante : GET /data HTTP/1.0
+
+    Match Location : /data
+    Ressource retournée : ./www/web/page.html
+
+3 - Soit la requête suivante : GET /data/index.html HTTP/1.0
+
+    Match Location : /data
+    Ressource retournée : ./www/web/page.html
+
+4 - Soit la requête suivante : GET /data/wrong/index.html HTTP/1.0
+    
+    Erreur 4XX
+
+
+--------- Configuration ---------
+
+L'index doit forcément être un .html ? => 
+
+Concernant le CGI, que faut-il de plus que le path de l'executable ? (son extension, ...)
+
+Que vient faire PHP dans le sujet ? CGI le + souvent codé en php ?
+
+Que fait le CGI du sujet ?
+
+Dans la mesure où il n'y a aucun besoin de "dynamisme" conernant le CGI fournit pour le projet (pas de DB derrière, ...),
+est-ce OK de faire son propre CGI (bonus flou) ? https://computer.howstuffworks.com/cgi3.htm
+
+

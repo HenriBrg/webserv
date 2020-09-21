@@ -174,7 +174,6 @@ int Server::writeClientResponse(Client *c) {
     
     // SYSCALL Send
 
-
     return (0);
 }
 
