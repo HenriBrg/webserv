@@ -18,9 +18,9 @@
 #define NOT_FOUND_404 					404
 #define METHOD_NOT_ALLOWED_405			405
 #define REQUEST_ENTITY_TOO_LARGE_413	413
-#define SERVICE_UNAVAILABLE_503			503
-#define NOT_IMPLEMENTED_501				501
 #define INTERNAL_ERROR_500				500
+#define NOT_IMPLEMENTED_501				501
+#define SERVICE_UNAVAILABLE_503			503
 
 
 class Client;
@@ -39,6 +39,9 @@ class Response {
 
         Response();
         virtual ~Response();
+
+        void handleResponse(Request * req);
+        void reqGet(Request * req);
 
         
         /* MEMBERS */

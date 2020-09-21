@@ -170,8 +170,12 @@ int Server::readClientRequest(Client *c) {
 int Server::writeClientResponse(Client *c) {
 
 
+    c->res.handleResponse(&c->req);
+    
+    // SYSCALL Send
 
-    return (42);
+
+    return (0);
 }
 
 void Server::handleClientRequest(Client *c) {
@@ -180,6 +184,9 @@ void Server::handleClientRequest(Client *c) {
         if (readClientRequest(c) != 0)
             return ;
     }
+
+    // JUST FOR TEST UNTIL HERE
+    return ;
 
     if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
         if (writeClientResponse(c) != 0)

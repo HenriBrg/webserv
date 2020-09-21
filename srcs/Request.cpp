@@ -40,14 +40,7 @@ void	reqGetLine(std::string & buf, std::string & line) {
         line = std::string(buf, 0, pos++);
         buf = buf.substr(pos);
     }
-    else {
-        if (buf[buf.size() - 1] == '\n')
-            buf = buf.substr(buf.size());
-        else {
-            line = buf;
-            buf = buf.substr(buf.size());
-        }
-    }
+    // ELSE ?
 }
 
 std::vector<std::string> split(const std::string & str, char delim) {

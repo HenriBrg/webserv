@@ -36,7 +36,7 @@ class Client {
         std::string strbuf;
 
         Request     req;
-        // Response    res;
+        Response    res;
 
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
 

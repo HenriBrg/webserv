@@ -15,6 +15,7 @@ Response::Response(void) {
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
+
     statusCode = -1;
     contentLength = -1;
 }
@@ -22,3 +23,18 @@ Response::Response(void) {
 Response::~Response() {
 
 }
+
+void Response::reqGet(Request * req) {
+
+}
+
+
+
+void Response::handleResponse(Request * req) {
+
+   if (req->method == "GET") {
+       reqGet(req);
+   }
+}
+
+
