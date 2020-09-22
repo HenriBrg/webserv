@@ -1,23 +1,35 @@
-import sys
 import requests
-from socket import *
+import sys
+import os
 
-def http_req(server, path):
+# RUN : python3 get.py
 
-    # Creating a socket to connect and read from
-    s=socket(AF_INET,SOCK_STREAM)
-    # Finding server address
-    adr=(gethostbyname(server), 3000)
-    # # Connecting to server
-    s.connect(adr)
+class bcolors:
+    HEADER = '\033[95m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
-    # # Sending request
-    s.send("GET "+path+" HTTP/1.0\r\n\r\n")
+def getReq(uri, hd):
+    req = requests.get(uri, headers=hd)
+    print (bcolors.WARNING, "\n    NEW REQUEST :", req.request.method, "|", uri, bcolors.ENDC)
+    print ("\n    Request : \n")
+    for h in req.request.headers:
+        print ("    > " + h + ":" + req.request.headers[h])
+    print ("\n    Response : \n")
 
-    # Printing response
-    # resp=s.recv(1024)
-    # while resp!="":
-	# print resp
-	# resp=s.recv(1024)
+    print ("    Status :", req.status_code)
+    print ("    Reason :", req.raw.reason)
+    print ()
+    
+    for h in req.headers:
+        print ("    > " + h + ":" + req.headers[h])
+    print ()
+    # print ("Body:", req.text)
+    print (bcolors.HEADER, "    ---------------------------\n", bcolors.ENDC)
 
-http_req(sys.argv[1], sys.argv[2])
+
+hd = {'user-agent': '42'}
+getReq('http://localhost:8080', hd)
+
