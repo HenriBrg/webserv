@@ -1,4 +1,5 @@
 import sys
+import requests
 from socket import *
 
 def http_req(server, path):
