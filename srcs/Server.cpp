@@ -135,11 +135,11 @@ int Server::readClientRequest(Client *c) {
     x += ret;
 
     if (ret == -1) {
-        // LOGGER
-        // throw ServerException("Server::readClientRequest : recv()", std::string(strerror(errno)));
+        std::cout << "Server::readClientRequest : recv() returned -1 : " << std::string(strerror(errno)) << std::endl;
         return (-1);
     } else if (ret == 0) {
         // If we pass here, it means that the connection has been closed by the client
+        std::cout << "Server::readClientRequest : recv() returned 0 : " << std::string(strerror(errno)) << std::endl;
         return (-1);
     } else {
         

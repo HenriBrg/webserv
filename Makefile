@@ -1,38 +1,56 @@
+# COLORS
+
+_RED		=	\e[31m
+_GREEN		=	\e[32m
+_YELLOW		=	\e[33m
+_BLUE		=	\e[34m
+_END		=	\e[0m
+
+# ifndef VERBOSE
+# .SILENT:
+# endif
+
 # VARIABLES
 
 NAME = webserv
-CPP = clang++ # -Wall -Wextra -Werror
-SRCS = srcs/main.cpp srcs/Config.cpp srcs/Server.cpp srcs/Client.cpp srcs/Request.cpp srcs/Response.cpp
-OBJS = $(SRCS:.cpp=.o)
+CC = clang++ # -Wall -Wextra -Werror
+RM = rm -rf
+
+# DIRECTORIES
+
+DHEADERS = ./includes/
+DSRCS	= ./srcs/
+DOBJS	= ./comp/
+
+# SOURCES
+
+SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp
+OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 # COMPILATION
 
-ifndef VERBOSE
-.SILENT:
-endif
-
-.cpp.o: 
-	$(CPP) -c $< -o $@
-
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	$(CPP) $(OBJS) -o $(NAME)
-
-# TEST
-
-x: $(NAME)
+run: all
 	./$(NAME)
 
+$(NAME): $(OBJS)
+	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)
 
-# CLEAN
+$(OBJS): $(DOBJS)
+
+$(DOBJS)%.o: $(DSRCS)%.cpp
+	$(CC)  -I $(DHEADERS) -c $< -o $@
+
+$(DOBJS):
+	mkdir $(DOBJS)
 
 clean:
-	rm -f $(OBJS)
+	$(RM) $(DOBJS)
 
 fclean: clean
-	rm -f $(NAME)
+	$(RM) $(NAME)
 
-re: fclean $(NAME)
+re: fclean all
 
-.PHONY: re fclean
+.PHONY: all clean re fclean

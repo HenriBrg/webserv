@@ -6,14 +6,12 @@ L'index doit forcément être un .html ? =>
 
 Concernant le CGI, que faut-il de plus que le path de l'executable ? (son extension, ...)
 
-Que vient faire PHP dans le sujet ? CGI le + souvent codé en php ?
+Que vient faire PHP dans le sujet ? hint : CGI le + souvent codé en php ?
 
-Que fait le CGI du sujet ?
-
-Dans la mesure où il n'y a aucun besoin de "dynamisme" conernant le CGI fournit pour le projet (pas de DB derrière, ...),
-est-ce OK de faire son propre CGI (bonus flou) ? https://computer.howstuffworks.com/cgi3.htm
+Que fait le CGI du sujet ? -> Capitalize les headers
 
 
 ---------- CGI ----------
 
 https://computer.howstuffworks.com/cgi.htm
+
