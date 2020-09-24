@@ -18,11 +18,9 @@ class Config {
 
         fd_set          rFds;
         fd_set          wFds;
-        fd_set          eFds;
 
         fd_set          rFdsBackup;
         fd_set          wFdsBackup;
-        fd_set          eFdsBackup;
 
         struct  timeval         timeout;
         std::vector<Server*>    servers;

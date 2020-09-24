@@ -8,13 +8,23 @@ Server::Server(std::string name, int port): name(name), port(port) {
     Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
     Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET POST");
 
-    // Pourquoi le THIS est-il indispensable ici ? Essaies sans et les contructeurs ne sont pas appelés !?
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
 }
 
-Server::~Server() {}
+Server::~Server() {
+    std::vector<Client*>::iterator itb;
+    std::vector<Client*>::iterator ite = clients.end();
+
+    for (itb = clients.begin(); itb < ite; itb++) {
+        delete *itb;
+    }
+    
+    clients.clear();
+    close(sockFd);
+    FD_CLR(sockFd, &gConfig.rFds);
+}
 
 int    Server::start() {
 
@@ -27,12 +37,12 @@ int    Server::start() {
 
     // ---------- 2) SETSOCKOPT ----------
 
+    // https://stackoverflow.com/a/3233022
+    // SO_REUSEADDR is a boolean which allow the re-use of the current socket to avoid the error (when binding) : "Address already in use"
+
     // https://stackoverflow.com/questions/21515946/what-is-sol-socket-used-for
     // The second parameter indicates the "level" of the option that we want to set.
     // In this case, SOL_SOCKET indicates that the item we want to set refers to the socket itself
-    // SO_REUSEADDR is a boolean which allow the re-use of the current socket to avoid that kind of error when binding : "Address already in use"
-
-    // https://man7.org/linux/man-pages/man7/ip.7.html
     // A TCP local socket address that has been bound is unavailable for
     // some time after closing, unless the SO_REUSEADDR flag has been set.
 
@@ -96,6 +106,7 @@ int    Server::start() {
     // ---------- 6) FD_SET ----------
     // On ajoute à la liste des FD le socket du serveur
     // Un descripteur de fichier est considéré comme prêt s'il est possible d'effectuer l'opération d'entrées-sorties correspondante (par exemple, un read(2)) sans bloquer.
+    // On va lire la requête du client, qui aura été écrite dans la socket du serveur, donc on veut être alerté du caractère lisible du fd
     
     FD_SET(sockFd, &gConfig.rFdsBackup);
     gConfig.setNfds(sockFd);
