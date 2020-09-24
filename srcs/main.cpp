@@ -40,6 +40,12 @@ int main(int ac, char **av) {
                 }
             }
 
+
+
+
+
+
+
             // 2) On itère sur le client (ayant été à l'origine du "déblocage" de select() et qui sera associé au serveur)
             //    afin de produire puis lui envoyer une réponse propre au contenu de la requête et à la configuration du serveur
 

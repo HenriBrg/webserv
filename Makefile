@@ -6,9 +6,9 @@ _YELLOW		=	\e[33m
 _BLUE		=	\e[34m
 _END		=	\e[0m
 
-# ifndef VERBOSE
-# .SILENT:
-# endif
+ifndef VERBOSE
+.SILENT:
+endif
 
 # VARIABLES
 
@@ -32,18 +32,22 @@ OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 all: $(NAME)
 
 run: all
+	# printf "$(_GREEN) Webserv Ready 📡$(_END)\n"
+
 	./$(NAME)
 
 $(NAME): $(OBJS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)
 
-$(OBJS): $(DOBJS)
+$(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
+
+$(DOBJS):
+	mkdir $(DOBJS)
 
 $(DOBJS)%.o: $(DSRCS)%.cpp
 	$(CC)  -I $(DHEADERS) -c $< -o $@
 
-$(DOBJS):
-	mkdir $(DOBJS)
+# CLEAR
 
 clean:
 	$(RM) $(DOBJS)
