@@ -28,6 +28,16 @@ class Client {
 
     public:
 
+
+        // Etat de réception de la requête
+        int         recvStatus;
+        enum {
+            HEADER,
+            BODY,
+            COMPLETE,
+            ERROR
+        };
+
         int         port;
         int         acceptFd;
         Server      *server;

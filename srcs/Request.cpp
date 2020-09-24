@@ -175,9 +175,8 @@ void Request::parse(std::vector<Location*> locations) {
     
     parseRequestLine();
     parseFile(locations);
-    // TODO 1 : On skip les headers pour le moment, mais ça devrait être faisable assez vite, à voir selon la diversité du format
-    // des requêtes du testeurs
-    // TODO 2 : Parsing du body et surtout, gestion des requêtes chunked
+    // TODO 1 : On skip les headers pour le moment
+    // TODO 2 : Parsing du body et gestion des requêtes chunked (en amont)
     showReq();
 
 }

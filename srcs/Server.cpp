@@ -120,20 +120,19 @@ void Server::acceptNewClient(void) {
     struct sockaddr_in clientAddr;
     int addrSize = sizeof(clientAddr);
 
+    // S'il n'y a pas de connexion en attente dans la file, et si la socket n'est pas marquée comme non bloquante, accept() se met en attente d'une connexion.
+    // Si la socket est non bloquante, et qu'aucune connexion n'est présente dans la file, accept() échoue avec l'erreur EAGAIN.
     bzero(&clientAddr, addrSize);
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
-        gConfig.run = 0;
-        // LOGGER
         throw ServerException("Server::acceptNewClient : accept()", std::string(strerror(errno)));
-    } else
-    {
-        // LOGGER
-        std::cout << "New Client" << std::endl;
-
-        Client *newClient = new Client(this, acceptFd, clientAddr);
-        clients.push_back(newClient);
-
     }
+    
+    // A confirmer, et sous réserve que accept retourne un FD toujours supérieur à celui générés à l'appel précédent
+    // On va pouvoir du coup tracker le socket du client
+    gConfig.setNfds(acceptFd);
+
+    Client *newClient = new Client(this, acceptFd, clientAddr);
+    clients.push_back(newClient);
 }
 
 int Server::readClientRequest(Client *c) {
@@ -142,6 +141,9 @@ int Server::readClientRequest(Client *c) {
     int x;
 
     x = strlen(c->buf);
+    // En temps normal, le nombre d'octets reçus est retourné
+    // Si aucun message n'est disponible sur la socket, la valeur -1 est renvoyée. En fait il faut juste réessayer + tard
+    // La valeur de retour sera 0 si le pair a effectué un arrêt normal.  
     ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
     x += ret;
 
@@ -164,8 +166,8 @@ int Server::readClientRequest(Client *c) {
 
             c->req.reqBuf = std::string(c->buf, x);
             c->req.parse(locations);
+            c->recvStatus = Client::COMPLETE;
 
-            FD_SET(c->acceptFd, &gConfig.wFdsBackup);
             return 0;
 
         } else { 
@@ -194,6 +196,9 @@ void Server::handleClientRequest(Client *c) {
         if (readClientRequest(c) != 0)
             return ;
     }
+
+    char res[50] = "Hello, we have successfully received your request";
+    write(c->acceptFd, res, sizeof(res));
 
     // JUST FOR TEST UNTIL HERE
     return ;

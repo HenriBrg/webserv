@@ -31,5 +31,5 @@ def getReq(uri, hd):
 
 
 hd = {'user-agent': '42'}
-getReq('http://localhost:8080', hd)
+getReq('http://localhost:7777', {})
 
