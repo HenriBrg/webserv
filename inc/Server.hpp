@@ -41,21 +41,32 @@ class Server {
 
         /* Members variables */
 
+        // Set identic to the main
+
+        fd_set			*_readSet;
+        fd_set			*_writeSet;
+        fd_set          *_readSetBackup;
+        fd_set          *_writeSetBackup;
+
         int                         port;
         int                         sockFd;
+        int                         srvMaxFd;
+
         std::string                 name;
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
         std::vector<Location*>      locations;
 
-
         /* Members Methods */
 
-        int  start(void);
+        int start(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
+        
         void acceptNewClient(void);
         void handleClientRequest(Client *c);
         int readClientRequest(Client *c);
         int writeClientResponse(Client *c);
+
+        int getMaxFdServer();
 
         /* Exceptions */
 

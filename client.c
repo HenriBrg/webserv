@@ -37,10 +37,10 @@ int main()
     } 
   
     memset(buffer, 0, sizeof(buffer)); 
-    strcpy(buffer, "Hello Server\r\n\r\n"); 
-    write(sockfd, buffer, sizeof(buffer)); 
+    // strcpy(buffer, "Hello Server\r\n\r\n"); 
+    // write(sockfd, buffer, sizeof(buffer)); 
     printf("Message from server: "); 
     read(sockfd, buffer, sizeof(buffer)); 
     puts(buffer); 
-    close(sockfd); 
+    // close(sockfd); 
 }

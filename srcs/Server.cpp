@@ -26,7 +26,31 @@ Server::~Server() {
     FD_CLR(sockFd, &gConfig.rFds);
 }
 
-int    Server::start() {
+
+int Server::getMaxFdServer() {
+    
+    std::vector<Client*>::iterator itb;
+    std::vector<Client*>::iterator ite;
+
+    ite = clients.end();
+    for (itb = clients.begin(); itb != ite; itb++) {
+ 
+        if ((*itb)->readFd > srvMaxFd)
+            srvMaxFd = (*itb)->readFd;
+        if ((*itb)->writeFd > srvMaxFd)
+            srvMaxFd = (*itb)->writeFd;
+
+    }
+
+    return (srvMaxFd);
+}
+
+int Server::start(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup) {
+
+    _readSet = readSet;
+    _writeSet = writeSet;
+    _readSetBackup = readSetBackup;
+    _writeSetBackup = writeSetBackup;
 
     // ---------- 1) SOCKET ----------
 
@@ -46,7 +70,9 @@ int    Server::start() {
     // A TCP local socket address that has been bound is unavailable for
     // some time after closing, unless the SO_REUSEADDR flag has been set.
 
+    // So this allow multiple connections, is it just a good habit, it will work without this
     // x value is the wanted value for the updated parameter
+
     int x = 1;
     if (setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(x)) == -1)
         throw ServerException("Server::start : setsockopt()", std::string(strerror(errno)));
@@ -108,15 +134,15 @@ int    Server::start() {
     // Un descripteur de fichier est considéré comme prêt s'il est possible d'effectuer l'opération d'entrées-sorties correspondante (par exemple, un read(2)) sans bloquer.
     // On va lire la requête du client, qui aura été écrite dans la socket du serveur, donc on veut être alerté du caractère lisible du fd
     
-    FD_SET(sockFd, &gConfig.rFdsBackup);
-    gConfig.setNfds(sockFd);
-
+    FD_SET(sockFd, _readSet);
+    // TODO : Socket() renvoie tjrs un FD supérieur à celui précédement généré ?
+    srvMaxFd = sockFd;
     return (EXIT_SUCCESS);
 }
 
 void Server::acceptNewClient(void) {
 
-    int acceptFd;
+    int acceptFd = -1;
     struct sockaddr_in clientAddr;
     int addrSize = sizeof(clientAddr);
 
@@ -127,11 +153,10 @@ void Server::acceptNewClient(void) {
         throw ServerException("Server::acceptNewClient : accept()", std::string(strerror(errno)));
     }
     
-    // A confirmer, et sous réserve que accept retourne un FD toujours supérieur à celui générés à l'appel précédent
-    // On va pouvoir du coup tracker le socket du client
-    gConfig.setNfds(acceptFd);
+    if (acceptFd > srvMaxFd)
+        srvMaxFd = acceptFd;
 
-    Client *newClient = new Client(this, acceptFd, clientAddr);
+    Client *newClient = new Client(this, acceptFd, _readSet, _writeSet, clientAddr);
     clients.push_back(newClient);
 }
 

@@ -1,8 +1,13 @@
 # include "../inc/Webserv.hpp"
 
-Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
+Client::Client(Server *server, int acceptFd, fd_set *readSet, fd_set *writeSet, struct sockaddr_in clientAddr):
     server(server), 
     acceptFd(acceptFd) {
+
+    readFd = -1;
+    writeFd = -1;
+
+    recvStatus = Client::WAIT;
 
     // Temporary Forbidden Functions
     ip = inet_ntoa(clientAddr.sin_addr);
@@ -10,6 +15,8 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
 
     // fcntl(acceptFd, F_SETFL, O_NONBLOCK);  // Nécessaire ou non ?
 	// FD_SET(acceptFd, &gConfig.wFds);       // Nécessaire ou non ?
+	// FD_SET(acceptFd, &gConfig.wFds);       // Nécessaire ou non ?
+
 
     // ADD Tableau de FD dans la config !
 

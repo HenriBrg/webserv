@@ -35,11 +35,17 @@ class Client {
             HEADER,
             BODY,
             COMPLETE,
+            WAIT,
             ERROR
         };
 
         int         port;
         int         acceptFd;
+
+        // TO USE
+        int         readFd;
+        int         writeFd;
+
         Server      *server;
         std::string ip;
         char        *buf;
@@ -48,8 +54,7 @@ class Client {
         Request     req;
         Response    res;
 
-        Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
-
+        Client::Client(Server *server, int acceptFd, fd_set *readSet, fd_set *writeSet, struct sockaddr_in clientAddr);
         
         virtual ~Client();
 

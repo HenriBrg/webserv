@@ -28,11 +28,10 @@ class Config {
         Config();
         virtual ~Config();
 
-        int     getNfds(void) const;
-        void    setNfds(int newFd);
+        int     getMaxFds(void);
 
-        void    resetFds();
-        void    parse();
+        void    init(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
+        void    resetFds(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
 
     private:
 
