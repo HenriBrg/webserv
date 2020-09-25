@@ -18,7 +18,6 @@ class Config {
 
         fd_set          rFds;
         fd_set          wFds;
-
         fd_set          rFdsBackup;
         fd_set          wFdsBackup;
 
