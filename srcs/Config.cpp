@@ -8,11 +8,11 @@ void exitCTRLC(int signal) {
 Config::Config() {
     run = 1;
     nfds = 0;
-    FD_ZERO(&rFds);
-    FD_ZERO(&wFds);
-    FD_ZERO(&rFdsBackup);
-    FD_ZERO(&wFdsBackup);
-    timeout.tv_sec = 3;
+    FD_ZERO(&readSet);
+    FD_ZERO(&writeSet);
+    FD_ZERO(&readSetBackup);
+    FD_ZERO(&writeSetBackup);
+    timeout.tv_sec = 5;
     timeout.tv_usec = 0;
     signal(SIGINT, exitCTRLC);
 }
@@ -34,19 +34,14 @@ int Config::getMaxFds(void) {
     return (retMaxFd + 1);
 }
 
-void Config::resetFds(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup) {
+void Config::resetFds() {
 
     readSet = readSetBackup;
     writeSet = writeSetBackup;
-    // TODO : Excepts and Reset les FD_SET in Servers
+
 }
 
-void Config::init(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup) {
-
-    FD_ZERO(readSet);
-	FD_ZERO(writeSet);
-	FD_ZERO(readSetBackup);
-	FD_ZERO(writeSetBackup);
+void Config::init() {
 
     std::string n1("Server One");
     std::string n2("Server Two");
@@ -55,8 +50,8 @@ void Config::init(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_s
     Server *s2 = new Server(n2, 8888);
 
     try {
-        s1->start(readSet, writeSet, readSetBackup, writeSetBackup);
-        s2->start(readSet, writeSet, readSetBackup, writeSetBackup);
+        s1->start();
+        s2->start();
     } catch (std::exception & e) {
         std::cerr << e.what() << std::endl;
     }

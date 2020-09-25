@@ -54,7 +54,7 @@ class Client {
         Request     req;
         Response    res;
 
-        Client::Client(Server *server, int acceptFd, fd_set *readSet, fd_set *writeSet, struct sockaddr_in clientAddr);
+        Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
         
         virtual ~Client();
 

@@ -23,7 +23,7 @@ Server::~Server() {
     
     clients.clear();
     close(sockFd);
-    FD_CLR(sockFd, &gConfig.rFds);
+    FD_CLR(sockFd, &gConfig.readSet);
 }
 
 
@@ -45,12 +45,7 @@ int Server::getMaxFdServer() {
     return (srvMaxFd);
 }
 
-int Server::start(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup) {
-
-    _readSet = readSet;
-    _writeSet = writeSet;
-    _readSetBackup = readSetBackup;
-    _writeSetBackup = writeSetBackup;
+int Server::start() {
 
     // ---------- 1) SOCKET ----------
 
@@ -134,9 +129,11 @@ int Server::start(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_s
     // Un descripteur de fichier est considéré comme prêt s'il est possible d'effectuer l'opération d'entrées-sorties correspondante (par exemple, un read(2)) sans bloquer.
     // On va lire la requête du client, qui aura été écrite dans la socket du serveur, donc on veut être alerté du caractère lisible du fd
     
-    FD_SET(sockFd, _readSet);
+    FD_SET(sockFd, &gConfig.readSetBackup);
+
     // TODO : Socket() renvoie tjrs un FD supérieur à celui précédement généré ?
     srvMaxFd = sockFd;
+
     return (EXIT_SUCCESS);
 }
 
@@ -156,7 +153,7 @@ void Server::acceptNewClient(void) {
     if (acceptFd > srvMaxFd)
         srvMaxFd = acceptFd;
 
-    Client *newClient = new Client(this, acceptFd, _readSet, _writeSet, clientAddr);
+    Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
 }
 
@@ -217,7 +214,7 @@ int Server::writeClientResponse(Client *c) {
 
 void Server::handleClientRequest(Client *c) {
 
-    if (FD_ISSET(c->acceptFd, &gConfig.rFds)) {
+    if (FD_ISSET(c->acceptFd, &gConfig.readSet)) {
         if (readClientRequest(c) != 0)
             return ;
     }
@@ -228,7 +225,7 @@ void Server::handleClientRequest(Client *c) {
     // JUST FOR TEST UNTIL HERE
     return ;
 
-    if (FD_ISSET(c->acceptFd, &gConfig.wFds)) {
+    if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
         if (writeClientResponse(c) != 0)
             return ;
     }

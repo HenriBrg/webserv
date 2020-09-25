@@ -16,10 +16,10 @@ class Config {
         
         int             run;
 
-        fd_set          rFds;
-        fd_set          wFds;
-        fd_set          rFdsBackup;
-        fd_set          wFdsBackup;
+        fd_set          readSet;
+        fd_set          writeSet;
+        fd_set          readSetBackup;
+        fd_set          writeSetBackup;
 
         struct  timeval         timeout;
         std::vector<Server*>    servers;
@@ -29,8 +29,8 @@ class Config {
 
         int     getMaxFds(void);
 
-        void    init(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
-        void    resetFds(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
+        void    init();
+        void    resetFds();
 
     private:
 

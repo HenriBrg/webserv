@@ -41,13 +41,6 @@ class Server {
 
         /* Members variables */
 
-        // Set identic to the main
-
-        fd_set			*_readSet;
-        fd_set			*_writeSet;
-        fd_set          *_readSetBackup;
-        fd_set          *_writeSetBackup;
-
         int                         port;
         int                         sockFd;
         int                         srvMaxFd;
@@ -59,7 +52,7 @@ class Server {
 
         /* Members Methods */
 
-        int start(fd_set *readSet, fd_set *writeSet, fd_set *readSetBackup, fd_set *writeSetBackup);
+        int start();
         
         void acceptNewClient(void);
         void handleClientRequest(Client *c);

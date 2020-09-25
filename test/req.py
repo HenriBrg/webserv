@@ -26,10 +26,9 @@ def getReq(uri, hd):
     for h in req.headers:
         print ("    > " + h + ":" + req.headers[h])
     print ()
-    # print ("Body:", req.text)
-    print (bcolors.HEADER, "    ---------------------------\n", bcolors.ENDC)
-
+    print ("    Body :", req.text)
+    print (bcolors.HEADER, "\n    ---------------------------\n", bcolors.ENDC)
 
 hd = {'user-agent': '42'}
-getReq('http://localhost:7777', {})
+getReq('http://localhost:8080', hd)
 
