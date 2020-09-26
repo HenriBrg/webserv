@@ -27,15 +27,16 @@ class Logger {
 
     public:
     
-        static void print(int type, Server *srv, std::string const & message) {
+        template <typename T>
+        static void print(int type, T *x, std::string const & message) {
 
             std::string timestamp;
             std::string str;
 
             std::cout << getTimestamp();
 
-            if (srv) {
-                str = "[:" + std::to_string(srv->port) + "] ";
+            if (x != NULL) {
+                str = "[:" + std::to_string(x->port) + "] ";
             }
             str += message;
             switch (type) {

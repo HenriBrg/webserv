@@ -10,14 +10,13 @@ int main(int ac, char **av) {
     gConfig.init();
     while (gConfig.run) {
         gConfig.resetFds();
-        select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, &gConfig.timeout);
+        select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its;
         for (its = gConfig.servers.begin(); its != gConfig.servers.end(); its++) {
             s = *its;
             if (FD_ISSET(s->sockFd, &gConfig.readSet)) {
                 try {
                     s->acceptNewClient();
-                    std::cout << "NEW CLIENT" << std::endl;
                 } catch (std::exception & e) {
                     std::cerr << e.what() << std::endl;
                 }
@@ -30,7 +29,6 @@ int main(int ac, char **av) {
             }
             
         }
-        gConfig.run = 0;
     }
     return (EXIT_SUCCESS);
 }

@@ -2,12 +2,15 @@
 
 Server::Server(std::string name, int port): name(name), port(port) {
     
+    port = -1;
+    sockFd = -1;
+    srvMaxFd = -1;
+
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
     Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
     Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET POST");
-
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
@@ -23,8 +26,11 @@ Server::~Server() {
     }
     clients.clear();
 
+    LOGPRINT(INFO, this, "Server - Closed");
+
     close(sockFd);
     FD_CLR(sockFd, &gConfig.readSet);
+
 }
 
 
@@ -133,7 +139,7 @@ int Server::start() {
     FD_SET(sockFd, &gConfig.readSetBackup);
     srvMaxFd = sockFd;
 
-    LOGPRINT(INFO, this, "SERVER LISTENING");
+    LOGPRINT(INFO, this, "Server - Listening");
 
     return (EXIT_SUCCESS);
 }
@@ -157,6 +163,7 @@ void Server::acceptNewClient(void) {
     Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
     
+    LOGPRINT(INFO, newClient, "Client - New connection ");
 
 }
 
@@ -224,6 +231,7 @@ void Server::handleClientRequest(Client *c) {
 
     char res[50] = "Hello, we have successfully received your request";
     write(c->acceptFd, res, sizeof(res));
+
 
     // JUST FOR TEST UNTIL HERE
     return ;
