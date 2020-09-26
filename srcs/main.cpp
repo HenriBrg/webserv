@@ -10,6 +10,7 @@ int main(int ac, char **av) {
     gConfig.init();
     while (gConfig.run) {
         gConfig.resetFds();
+        LOGPRINT(INFO, c, ("Main() : New Select() Call"));
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its;
         for (its = gConfig.servers.begin(); its != gConfig.servers.end(); its++) {
@@ -21,13 +22,12 @@ int main(int ac, char **av) {
                     std::cerr << e.what() << std::endl;
                 }
             }
-
             std::vector<Client*>::iterator itc;
             for (itc = (*its)->clients.begin(); itc != (*its)->clients.end(); itc++) {
                 c = *itc;
                 s->handleClientRequest(c);
+                c->reset();
             }
-            
         }
     }
     return (EXIT_SUCCESS);

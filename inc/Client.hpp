@@ -16,7 +16,7 @@
 # include "Response.hpp"
 
 
-# define BUFMAX 50000
+# define BUFMAX 4096
 
 class Server;
 
@@ -42,10 +42,6 @@ class Client {
         int         port;
         int         acceptFd;
 
-        // TO USE
-        int         readFd;
-        int         writeFd;
-
         Server      *server;
         std::string ip;
         char        *buf;
@@ -55,8 +51,9 @@ class Client {
         Response    res;
 
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
-        
         virtual ~Client();
+        void reset();
+
 
     private:
 

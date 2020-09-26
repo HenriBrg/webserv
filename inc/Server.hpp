@@ -59,7 +59,7 @@ class Server {
         int readClientRequest(Client *c);
         int writeClientResponse(Client *c);
 
-        int getMaxFdServer();
+        // int getMaxFdServer();
 
         /* Exceptions */
 

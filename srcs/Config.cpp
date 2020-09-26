@@ -3,35 +3,52 @@
 void exitCTRLC(int signal) {
     (void)signal;
     gConfig.run = 0;
+    // TODO : Clear
 }
 
 Config::Config() {
     run = 1;
-    nfds = 0;
+    nfds = -1;
     FD_ZERO(&readSet);
     FD_ZERO(&writeSet);
     FD_ZERO(&readSetBackup);
     FD_ZERO(&writeSetBackup);
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
+    // timeout.tv_sec = 5;
+    // timeout.tv_usec = 0;
     signal(SIGINT, exitCTRLC);
 }
 
-Config::~Config() {}
+Config::~Config() {
+    // TODO : Clear
+}
 
 int Config::getMaxFds(void) {
     
-    int tmp;
-    int retMaxFd = 0;
+    // int tmp;
+    // int retMaxFd = 0;
     
-    std::vector<Server*>::iterator it;
-    for (it = servers.begin(); it != servers.end(); it++) {
-        tmp = (*it)->getMaxFdServer();
-        if (tmp > retMaxFd)
-            retMaxFd = tmp;
-    }
+    // std::vector<Server*>::iterator it;
+    // for (it = servers.begin(); it != servers.end(); it++) {
+    //     tmp = (*it)->getMaxFdServer();
+    //     if (tmp > retMaxFd)
+    //         retMaxFd = tmp;
+    // }
 
-    return (retMaxFd + 1);
+    // return (retMaxFd + 1);
+
+    return (*std::max_element(activeFds.begin(), activeFds.end()) + 1);
+}
+
+
+void Config::addFd(int fd) {
+    std::pair<std::set<int>::iterator, bool> ret = activeFds.insert(fd);
+    if (ret.second == false)
+        std::cout << "FD ALREADY EXIST IN SET" << std::endl;
+
+}
+
+void Config::removeFd(int fd) {
+    activeFds.erase(fd);
 }
 
 void Config::resetFds() {

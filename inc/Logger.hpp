@@ -17,6 +17,10 @@
 
 # define END		"\033[1;0m"
 
+// INFO  : routine
+// ERROR : syscall fail
+// DEBUG : soucis temporaire juste pour différencier output
+
 # define INFO 1
 # define ERROR 2
 # define DEBUG 3

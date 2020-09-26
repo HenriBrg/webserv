@@ -27,9 +27,9 @@ Response::~Response() {
 void Response::get(Request * req) {
 
     // Pour l'instant on va au plus simple
-
-    
-
+    char res[41] = "Hello dear Client ! Welcome to WEBSERV \n";
+    write(req->client->acceptFd, res, sizeof(res));
+    return ;
 
 }
 

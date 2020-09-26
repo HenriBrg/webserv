@@ -19,9 +19,7 @@ Request::Request(void) {
     body.clear();
     transferEncoding.clear();
     bodyLength = -1;
-
-    client = NULL;
-    reqLocation = NULL;
+    
 }
 
 Request::~Request() {
@@ -39,8 +37,15 @@ void	reqGetLine(std::string & buf, std::string & line) {
     if (pos != std::string::npos) {
         line = std::string(buf, 0, pos++);
         buf = buf.substr(pos);
+    } else {
+        if (buf[buf.size() - 1] == '\n')
+            buf = buf.substr(buf.size());
+        else
+        {
+            line = buf;
+            buf = buf.substr(buf.size());
+        }
     }
-    // ELSE ?
 }
 
 std::vector<std::string> split(const std::string & str, char delim) {
@@ -104,6 +109,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     // Faille de sécurité connue : Directory Traversal --> à gérer ultérieurement
 
     // 1) If URI requested match directly one of server's locations, we match here
+
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
@@ -114,24 +120,24 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
     // 2) Else, if no direct match, we iterate on every folder given by the URI (for example, "GET /tmp/data/site/ ..." 
     // and for each of them, we check if the server has one matching location
-    std::string tmp(uri);
-    int i = tmp.size() - 1;
-    i = (i < 0) ? 0 : i;
-    while (tmp.size() > 0) {
-        while (i && tmp[i] != '/')
-            i--;
-        tmp = tmp.substr(0, i);
-        if (tmp.empty())
-            tmp = "/";
-        for (std::size_t i = 0; i < vecLocs.size(); i++) {
-            if (vecLocs[i]->uri == tmp) {
-                file = tmp.substr(i + 1, tmp.size());
-                reqLocation = vecLocs[i];
-                return ;
+    // std::string tmp(uri);
+    // int i = tmp.size() - 1;
+    // i = (i < 0) ? 0 : i;
+    // while (tmp.size() > 0) {
+    //     while (i && tmp[i] != '/')
+    //         i--;
+    //     tmp = tmp.substr(0, i);
+    //     if (tmp.empty())
+    //         tmp = "/";
+    //     for (std::size_t i = 0; i < vecLocs.size(); i++) {
+    //         if (vecLocs[i]->uri == tmp) {
+    //             file = tmp.substr(i + 1, tmp.size()); // BAD, need to assign the file pointed by index/root parameter in location
+    //             reqLocation = vecLocs[i];
+    //             return ;
 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
     // TODO : à confirmer mais, si échec de location de la ressource, la location de base "/"" doit être utilisée pour réessayer l'association d'une location à la requête (voir lien ci-dessus)
 }
 
@@ -163,9 +169,12 @@ int Request::parseFile(std::vector<Location*> locations) {
                     file = file + "/" + reqLocation->index;
                 }
         }
+
+        LOGPRINT(DEBUG, this->client, ("Request::parseFile() : File Assignedd : " + file));
+
         return (0);
     }
-    return (-1); // Erreur XXX
+    return (-1); // Erreur 4XX
 }
 
 // À ce stade, on supposera une requête GET très basique : 
@@ -176,7 +185,7 @@ void Request::parse(std::vector<Location*> locations) {
     parseRequestLine();
     parseFile(locations);
     // TODO 1 : On skip les headers pour le moment
-    // TODO 2 : Parsing du body et gestion des requêtes chunked (en amont)
+    // TODO 2 : Parsing du body et gestion des requêtes chunked + tard
     showReq();
 
 }
