@@ -43,7 +43,7 @@ class Server {
 
         int                         port;
         int                         sockFd;
-        int                         srvMaxFd;
+        int                         srvMaxFd; 
 
         std::string                 name;
         struct sockaddr_in          addr;

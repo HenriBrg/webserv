@@ -10,7 +10,6 @@ Que vient faire PHP dans le sujet ? hint : CGI le + souvent codé en php ?
 
 Que fait le CGI du sujet ? -> Capitalize les headers
 
-
 ---------- CGI ----------
 
 https://computer.howstuffworks.com/cgi.htm
@@ -18,3 +17,8 @@ https://computer.howstuffworks.com/cgi.htm
 
 https://www.reddit.com/r/C_Programming/comments/gse04e/when_can_send_return_fewer_bytes_than_expected/
 
+
+------------- Erreurs courantes :
+
+https://stackoverflow.com/questions/1880509/socket-send-error-as-broken-pipe
+https://stackoverflow.com/questions/39718967/getting-connection-reset-by-peer-during-tcp-socket-connection

@@ -14,14 +14,15 @@ Server::Server(std::string name, int port): name(name), port(port) {
 }
 
 Server::~Server() {
+
     std::vector<Client*>::iterator itb;
     std::vector<Client*>::iterator ite = clients.end();
 
     for (itb = clients.begin(); itb < ite; itb++) {
         delete *itb;
     }
-    
     clients.clear();
+
     close(sockFd);
     FD_CLR(sockFd, &gConfig.readSet);
 }
@@ -130,9 +131,9 @@ int Server::start() {
     // On va lire la requête du client, qui aura été écrite dans la socket du serveur, donc on veut être alerté du caractère lisible du fd
     
     FD_SET(sockFd, &gConfig.readSetBackup);
-
-    // TODO : Socket() renvoie tjrs un FD supérieur à celui précédement généré ?
     srvMaxFd = sockFd;
+
+    LOGPRINT(INFO, this, "SERVER LISTENING");
 
     return (EXIT_SUCCESS);
 }
@@ -155,6 +156,8 @@ void Server::acceptNewClient(void) {
 
     Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
+    
+
 }
 
 int Server::readClientRequest(Client *c) {

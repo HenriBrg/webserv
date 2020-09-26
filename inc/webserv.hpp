@@ -7,7 +7,8 @@
 
 # include "Config.hpp"
 # include "Client.hpp"
-
+# include "Logger.hpp"
+# include "Utils.hpp"
 
 extern Config gConfig;
 
