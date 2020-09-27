@@ -39,6 +39,8 @@ class Client {
             ERROR
         };
 
+        bool        isConnected;
+
         int         port;
         int         acceptFd;
 

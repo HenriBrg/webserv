@@ -6,14 +6,14 @@ _YELLOW		=	\e[33m
 _BLUE		=	\e[34m
 _END		=	\e[0m
 
-ifndef VERBOSE
-.SILENT:
-endif
+# ifndef VERBOSE
+# .SILENT:
+# endif
 
 # VARIABLES
 
 NAME = webserv
-CC = clang++ # -Wall -Wextra -Werror
+CC = clang++ -g # -Wall -Wextra -Werror
 RM = rm -rf
 
 # DIRECTORIES

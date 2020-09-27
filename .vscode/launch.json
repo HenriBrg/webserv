@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+
+    // https://www.youtube.com/watch?v=9VpiGwp8Vos
+
+    // 1) In the VSCode DEBUG window, create a new configuration file
+    // 2) Rename properly the "program" name so that it matchs the output program name of Makefile : $(NAME) 
+    // 3) Run make and set some breakpoints
+    // 4) Start begugging in the VSCode Debug section
+    
+    // Usage :
+
+    // STEP OVER : jump to the next line of current fonction, even if it call another one,  so in short, in show the full path of the current FUNCTION
+    // STEP INTO : jump inside the fonction, so in short, in show the full path of the FUNCTION
+    // STEP OUT  : leave the function where we went into with STEP INTO before
+
+    // 3 sections at the left pane :
+
+    // Locals : show you content of local variables
+    // Call Stack   : tells you the state of the stack (called functions, etc ...)
+    // Watch        : allow you to track a given variable, for example, in main(), add watch to the "s" variable (servers)
+
+    // NB : for global variable, add them to watch()
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(lldb) Lancer",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/webserv",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ]
+}

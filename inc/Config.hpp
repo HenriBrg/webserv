@@ -26,7 +26,7 @@ class Config {
         // struct  timeval         timeout;
 
         // TODO : OPTI : Vec ou List ?
-        std::set<int>          activeFds;
+        std::set<int>           activeFds;
         std::vector<Server*>    servers;
 
         Config();

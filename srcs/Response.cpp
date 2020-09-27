@@ -31,6 +31,8 @@ void Response::get(Request * req) {
     write(req->client->acceptFd, res, sizeof(res));
     return ;
 
+    // If SEND() fail, we disconnet the client
+
 }
 
 

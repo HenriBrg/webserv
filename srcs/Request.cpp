@@ -28,6 +28,7 @@ Request::~Request() {
 
 
 // PARSING - No member methods
+// TODO : handle REQUEST LINE wrote in several time (for example, with telnet, "GET" + hit enter + "/ HTTP/1.0" + double hit enter, must work)
 
 void	reqGetLine(std::string & buf, std::string & line) {
     
@@ -192,6 +193,7 @@ void Request::parse(std::vector<Location*> locations) {
 
 void Request::showReq(void) {
 
+    std::cout << "ReqBuf : " << reqBuf << std::endl;
     std::cout << "Method : " << method << std::endl;
     std::cout << "URI : " << uri << std::endl;
     std::cout << "HTTP Version : " << httpVersion << std::endl;

@@ -30,5 +30,5 @@ def getReq(uri, hd):
     print (bcolors.HEADER, "\n    ---------------------------\n", bcolors.ENDC)
 
 hd = {'user-agent': '42'}
-getReq('http://localhost:8080', hd)
+getReq('http://localhost:8888', {})
 

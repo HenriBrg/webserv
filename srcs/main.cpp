@@ -10,10 +10,11 @@ int main(int ac, char **av) {
     gConfig.init();
     while (gConfig.run) {
         gConfig.resetFds();
-        LOGPRINT(INFO, c, ("Main() : New Select() Call"));
+        LOGPRINT(INFO, s, "Main() : New Select() Call");
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
-        std::vector<Server*>::iterator its;
-        for (its = gConfig.servers.begin(); its != gConfig.servers.end(); its++) {
+
+        std::vector<Server*>::iterator its = gConfig.servers.begin();
+        for (; its != gConfig.servers.end(); its++) {
             s = *its;
             if (FD_ISSET(s->sockFd, &gConfig.readSet)) {
                 try {
@@ -22,11 +23,12 @@ int main(int ac, char **av) {
                     std::cerr << e.what() << std::endl;
                 }
             }
-            std::vector<Client*>::iterator itc;
-            for (itc = (*its)->clients.begin(); itc != (*its)->clients.end(); itc++) {
+            std::vector<Client*>::iterator itc = s->clients.begin();
+            for (; itc != s->clients.end(); itc++) {
                 c = *itc;
                 s->handleClientRequest(c);
-                c->reset();
+                // if (c->isConnected == false)
+                //     c->reset();
             }
         }
     }

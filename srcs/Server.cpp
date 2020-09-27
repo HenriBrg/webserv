@@ -176,10 +176,12 @@ int Server::readClientRequest(Client *c) {
     x += ret;
 
     if (ret == -1) {
+        c->isConnected = false;
         LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return (EXIT_FAILURE);
     } else if (ret == 0) {
         // If we pass here, it means that the connection has been closed by the client
+        c->isConnected = false;
         LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned 0 : Error : " + std::string(strerror(errno))));
         return (EXIT_FAILURE);
     } else {
@@ -225,14 +227,11 @@ int Server::readClientRequest(Client *c) {
 
 int Server::writeClientResponse(Client *c) {
 
-
     c->res.handleResponse(&c->req);
-
-    // We no longer need to read client
+    // We no longer need to read or write client
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
-
-    
-    // SYSCALL Send
+    // A uptade quand on écrira la réponse en plusieurs fois
+    FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
 
     return (0);
 }
@@ -249,7 +248,6 @@ void Server::handleClientRequest(Client *c) {
         LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't YET readable"));
 
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
-
         if (c->recvStatus != Client::COMPLETE) {
             LOGPRINT(ERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
             return ;
