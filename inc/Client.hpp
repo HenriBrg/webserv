@@ -55,6 +55,8 @@ class Client {
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
         virtual ~Client();
         void reset();
+        std::string const logInfo(void);
+
 
 
     private:

@@ -37,8 +37,15 @@ void Client::reset() {
 
 	memset((void *)buf, 0, BUFMAX + 1);
 	FD_SET(acceptFd, &gConfig.readSetBackup);
-	FD_CLR(acceptFd, &gConfig.readSet);
+	// FD_CLR(acceptFd, &gConfig.readSet);
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
-	FD_CLR(acceptFd, &gConfig.writeSet);
+	// FD_CLR(acceptFd, &gConfig.writeSet);
 
+}
+
+std::string const Client::logInfo(void) {
+    std::string ret;
+    ret = "Client | Connected to port " + std::to_string(this->server->port) + \
+          " from port " + std::to_string(this->port) + " | recvStatus : " +  std::to_string(this->recvStatus) + " | isConnected : " +  std::to_string(this->isConnected) ;
+    return (ret);
 }

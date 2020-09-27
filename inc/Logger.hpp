@@ -25,33 +25,51 @@
 # define ERROR 2
 # define DEBUG 3
 
-# define LOGPRINT(PURPOSE, SERVER, MESSAGE) Logger::print(PURPOSE, SERVER, MESSAGE);
+# define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
+# define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
 
 class Logger {
 
     public:
-    
         template <typename T>
         static void print(int type, T *x, std::string const & message) {
 
-            std::string timestamp;
             std::string str;
+            std::string timestamp;
 
             std::cout << getTimestamp();
-
-            if (x != NULL) {
-                str = "[:" + std::to_string(x->port) + "] ";
-            }
-            str += message;
+            str = x->logInfo();
+            if (!message.empty())
+                str += " | " + message;
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << " [INFO] " << END  << str << std::endl;
+                    std::cout << YELLOW << std::setw(7) << " [INFO] " << END << str << std::endl;
                     break ;
                 case ERROR:
-                    std::cout << RED << " [ERROR] " << END << str << std::endl;
+                    std::cout << RED << std::setw(7) << " [ERROR] " << END << str << std::endl;
                     break ;
                 case DEBUG:
-                    std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
+                    std::cout << BLUE << std::setw(7) << " [DEBUG] " << END  << str << std::endl;
+                    break ;
+                default:
+                    break ;
+            }
+        }
+
+        // Fonction requise car impossible de passer NULL à un paramètre définit par template
+        static void noClassLogPrint(int type, std::string const & message) {
+
+            std::string timestamp;
+            std::cout << getTimestamp();
+            switch (type) {
+                case INFO:
+                    std::cout << YELLOW << std::setw(7) << " [INFO] " << END << message << std::endl;
+                    break ;
+                case ERROR:
+                    std::cout << RED << std::setw(7) << " [ERROR] " << END << message << std::endl;
+                    break ;
+                case DEBUG:
+                    std::cout << BLUE << std::setw(7) << " [DEBUG] " << END  << message << std::endl;
                     break ;
                 default:
                     break ;

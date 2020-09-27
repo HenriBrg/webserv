@@ -6,9 +6,9 @@ _YELLOW		=	\e[33m
 _BLUE		=	\e[34m
 _END		=	\e[0m
 
-# ifndef VERBOSE
-# .SILENT:
-# endif
+ifndef VERBOSE
+.SILENT:
+endif
 
 # VARIABLES
 

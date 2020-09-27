@@ -10,9 +10,8 @@ int main(int ac, char **av) {
     gConfig.init();
     while (gConfig.run) {
         gConfig.resetFds();
-        LOGPRINT(INFO, s, "Main() : New Select() Call");
+        NOCLASSLOGPRINT(INFO, ("Select call with maxFds = " + std::to_string(gConfig.getMaxFds())));
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
-
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
             s = *its;

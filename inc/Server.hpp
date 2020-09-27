@@ -59,6 +59,8 @@ class Server {
         int readClientRequest(Client *c);
         int writeClientResponse(Client *c);
 
+        std::string const logInfo(void);
+
         // int getMaxFdServer();
 
         /* Exceptions */

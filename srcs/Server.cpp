@@ -139,7 +139,7 @@ int Server::start() {
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
 
-    LOGPRINT(INFO, this, "Server - Listening");
+    LOGPRINT(INFO, this, "");
 
     return (EXIT_SUCCESS);
 }
@@ -161,7 +161,7 @@ void Server::acceptNewClient(void) {
         srvMaxFd = acceptFd;
     Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
-    LOGPRINT(INFO, newClient, "Server::acceptNewClient() - Welcome to our new Client !");
+    LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
 int Server::readClientRequest(Client *c) {
@@ -245,7 +245,7 @@ void Server::handleClientRequest(Client *c) {
         if (readClientRequest(c) != 0)
             return ;
     } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't YET readable"));
+        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet readable"));
 
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
         if (c->recvStatus != Client::COMPLETE) {
@@ -255,8 +255,18 @@ void Server::handleClientRequest(Client *c) {
         if (writeClientResponse(c) != 0)
             return ;
     } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't YET writable"));
+        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet writable"));
 }
+
+
+// UTILS
+
+std::string const Server::logInfo(void) {
+    std::string ret;
+    ret = name + " | " + "Listening Port " + std::to_string(port);
+    return (ret);
+}
+
 
 Server::ServerException::ServerException(std::string where, std::string error) {
     this->error = where + ": " + error;

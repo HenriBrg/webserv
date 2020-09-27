@@ -26,9 +26,9 @@ Request::~Request() {
 
 }
 
-
 // PARSING - No member methods
-// TODO : handle REQUEST LINE wrote in several time (for example, with telnet, "GET" + hit enter + "/ HTTP/1.0" + double hit enter, must work)
+// TODO : handle REQUEST LINE wrote in several time in telnet 
+// for example, with telnet, "GET" + hit enter + "/ HTTP/1.0" + double hit enter,must be parsed correctly and work)
 
 void	reqGetLine(std::string & buf, std::string & line) {
     
