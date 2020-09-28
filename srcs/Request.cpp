@@ -108,7 +108,6 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
     // Location NGinx : http://nginx.org/en/docs/beginners_guide.html
     // Faille de sécurité connue : Directory Traversal --> à gérer ultérieurement
-
     // 1) If URI requested match directly one of server's locations, we match here
 
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
@@ -145,7 +144,6 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 int Request::parseFile(std::vector<Location*> locations) {
 
     // TMP Location : Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-
     // Location(std::string uri, std::string root, std::string index, std::string methods) {
 
     int         i;
@@ -170,9 +168,7 @@ int Request::parseFile(std::vector<Location*> locations) {
                     file = file + "/" + reqLocation->index;
                 }
         }
-
         LOGPRINT(DEBUG, this->client, ("Request::parseFile() : File Assignedd : " + file));
-
         return (0);
     }
     return (-1); // Erreur 4XX
@@ -193,11 +189,13 @@ void Request::parse(std::vector<Location*> locations) {
 
 void Request::showReq(void) {
 
+    std::cout << std::endl;
     std::cout << "ReqBuf : " << reqBuf << std::endl;
     std::cout << "Method : " << method << std::endl;
     std::cout << "URI : " << uri << std::endl;
     std::cout << "HTTP Version : " << httpVersion << std::endl;
     std::cout << "Query : " << query << std::endl;
     std::cout << "File : " << file << std::endl;
+    std::cout << std::endl;
 
 }

@@ -198,8 +198,6 @@ int Server::readClientRequest(Client *c) {
                 // If we pass here, it means that the request is fully received
                 // TODO : if there is a body (chunked or not), we'll have to parse it
                     
-                // LOGGER
-
                 c->req.reqBuf = std::string(c->buf, x);
                 c->req.parse(locations);
                 c->recvStatus = Client::COMPLETE;
@@ -207,10 +205,6 @@ int Server::readClientRequest(Client *c) {
             } else { 
                 // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found) - We wait until its completion"));
-                
-                // std::cout << "c->buf        : "<< c->buf << std::endl;
-                // std::cout << "c->req.reqBuf : "<< c->req.reqBuf << std::endl;
-
                 return (EXIT_FAILURE);
             }
 

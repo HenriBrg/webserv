@@ -43,13 +43,13 @@ class Logger {
                 str += " | " + message;
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << std::setw(7) << " [INFO] " << END << str << std::endl;
+                    std::cout << YELLOW << " [INFO] " << END << str << std::endl;
                     break ;
                 case ERROR:
-                    std::cout << RED << std::setw(7) << " [ERROR] " << END << str << std::endl;
+                    std::cout << RED << " [ERROR] " << END << str << std::endl;
                     break ;
                 case DEBUG:
-                    std::cout << BLUE << std::setw(7) << " [DEBUG] " << END  << str << std::endl;
+                    std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
                     break ;
                 default:
                     break ;
@@ -63,13 +63,13 @@ class Logger {
             std::cout << getTimestamp();
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << std::setw(7) << " [INFO] " << END << message << std::endl;
+                    std::cout << YELLOW << " [INFO] " << END << message << std::endl;
                     break ;
                 case ERROR:
-                    std::cout << RED << std::setw(7) << " [ERROR] " << END << message << std::endl;
+                    std::cout << RED << " [ERROR] " << END << message << std::endl;
                     break ;
                 case DEBUG:
-                    std::cout << BLUE << std::setw(7) << " [DEBUG] " << END  << message << std::endl;
+                    std::cout << BLUE << " [DEBUG] " << END  << message << std::endl;
                     break ;
                 default:
                     break ;
