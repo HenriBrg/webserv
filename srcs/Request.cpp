@@ -1,6 +1,10 @@
 # include "../inc/Webserv.hpp"
 
 Request::Request(void) {
+    reset();
+}
+
+void Request::reset(void) {
 
     method.clear();
     uri.clear();
@@ -19,7 +23,7 @@ Request::Request(void) {
     body.clear();
     transferEncoding.clear();
     bodyLength = -1;
-    
+
 }
 
 Request::~Request() {
@@ -57,12 +61,11 @@ std::vector<std::string> split(const std::string & str, char delim) {
 
     // std::string::find_first_not_of searches the string for the first character that
     // does not match any of the characters specified in its arguments.
-
     while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
         end = str.find(delim, start);
         strings.push_back(str.substr(start, end - start));
     }
-    return strings;
+    return (strings);
 }
 
 int Request::parseRequestLine() {
@@ -74,11 +77,9 @@ int Request::parseRequestLine() {
     tab = split(line, ' ');
     if (tab.size() != 3)
         return (-1);
-
     method      = tab[0];
     uri         = tab[1];
     httpVersion = tab[2];
-
     return (0);
 }
 
@@ -99,7 +100,6 @@ void Request::parseQuery() {
         query = uri.substr(i + 1, tmp.size());
         uri = tmp.substr(0, i);
     }
-
     // TODO : stocker les params dans un vector<pair> ou map
 }
 
@@ -113,7 +113,6 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
-            // Point à éclaicir sur le le path de la ressource
             return ;
         }
     }
@@ -168,7 +167,7 @@ int Request::parseFile(std::vector<Location*> locations) {
                     file = file + "/" + reqLocation->index;
                 }
         }
-        LOGPRINT(DEBUG, this->client, ("Request::parseFile() : File Assignedd : " + file));
+        LOGPRINT(INFO, this->client, ("Request::parseFile() : File Assignedd : " + file));
         return (0);
     }
     return (-1); // Erreur 4XX
@@ -181,9 +180,11 @@ void Request::parse(std::vector<Location*> locations) {
     
     parseRequestLine();
     parseFile(locations);
+    
     // TODO 1 : On skip les headers pour le moment
     // TODO 2 : Parsing du body et gestion des requêtes chunked + tard
-    showReq();
+
+    // showReq();
 
 }
 

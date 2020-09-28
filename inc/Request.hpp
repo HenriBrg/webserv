@@ -55,7 +55,7 @@ class Request {
         void parse(std::vector<Location*> locations);
         void showReq(void);
 
-
+        void    reset(void);
         void	readline(std::string & b, std::string & line);
         int     parseRequestLine();
 

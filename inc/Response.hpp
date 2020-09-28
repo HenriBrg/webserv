@@ -33,6 +33,7 @@ class Response {
     public:
 
         Client *resClient;
+        std::string finalResponse;
 
         /* METHODS */
 
@@ -42,6 +43,7 @@ class Response {
 
         void handleResponse(Request * req);
         void get(Request * req);
+        void reset();
 
         
         /* MEMBERS */

@@ -1,7 +1,10 @@
 # include "../inc/Webserv.hpp"
 
 Response::Response(void) {
+    reset();
+}
 
+void Response::reset() {
     httpVersion.clear();
     signification.clear();
     allowedMethods.clear();
@@ -15,6 +18,7 @@ Response::Response(void) {
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
+    finalResponse.clear();
 
     statusCode = -1;
     contentLength = -1;
@@ -26,12 +30,8 @@ Response::~Response() {
 
 void Response::get(Request * req) {
 
-    // Pour l'instant on va au plus simple
-    char res[41] = "Hello dear Client ! Welcome to WEBSERV \n";
-    write(req->client->acceptFd, res, sizeof(res));
-    return ;
-
-    // If SEND() fail, we disconnet the client
+    statusCode = OK_200;
+    
 
 }
 

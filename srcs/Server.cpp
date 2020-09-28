@@ -221,10 +221,26 @@ int Server::readClientRequest(Client *c) {
 
 int Server::writeClientResponse(Client *c) {
 
+    // TODO : send in multiples call depending the response size
+
+    int ret = 0;
+
     c->res.handleResponse(&c->req);
+
+    // Pour l'instant on va au plus simple
+    // char res[41] = "Hello dear Client ! Welcome to WEBSERV \n";
+    // write(req->client->acceptFd, res, sizeof(res));
+    // return ;
+
+    if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
+        c->isConnected = 0; 
+        LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
+        return (ret);
+    }
+
     // We no longer need to read or write client
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
-    // A uptade quand on écrira la réponse en plusieurs fois
+    // A uptate quand on écrira la réponse en plusieurs fois
     FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
 
     return (0);
