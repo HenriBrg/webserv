@@ -17,15 +17,12 @@ class Config {
     public:
         
         int             run;
-        int             nfds;
 
         fd_set          readSet;
         fd_set          writeSet;
         fd_set          readSetBackup;
         fd_set          writeSetBackup;
-        // struct  timeval         timeout;
 
-        // TODO : OPTI : Vec ou List ?
         std::set<int>           activeFds;
         std::vector<Server*>    servers;
 
@@ -36,7 +33,7 @@ class Config {
         void    addFd(int fd);
         void    removeFd(int fd);
         void    resetFds();
-
+        void    clearConfig();
         void    init();
 
     private:

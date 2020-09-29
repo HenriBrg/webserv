@@ -66,18 +66,12 @@ class Server {
         /* Exceptions */
 
         class ServerException: public std::exception {
-
             private:
-
                 std::string error;
-                ServerException();
-
             public:
-
                 ServerException(std::string where, std::string error);
                 virtual ~ServerException() throw();
                 virtual const char *what() const throw();
-
         };
 };
 

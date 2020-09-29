@@ -32,18 +32,20 @@ class Response {
     
     public:
 
-        Client *resClient;
+        Client      *resClient;
         std::string finalResponse;
-
-        /* METHODS */
 
 
         Response();
         virtual ~Response();
-
-        void handleResponse(Request * req);
-        void get(Request * req);
         void reset();
+        void handleResponse(Request * req);
+        
+        /* METHODS */
+
+        void get(Request * req);
+
+
 
         
         /* MEMBERS */

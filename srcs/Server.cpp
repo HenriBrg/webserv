@@ -18,38 +18,19 @@ Server::Server(std::string name, int port): name(name), port(port) {
 
 Server::~Server() {
 
-    // std::vector<Client*>::iterator itb;
-    // std::vector<Client*>::iterator ite = clients.end();
+    std::vector<Client*>::iterator itb;
+    std::vector<Client*>::iterator ite = clients.end();
 
-    // for (itb = clients.begin(); itb < ite; itb++) {
-    //     delete *itb;
-    // }
-    // clients.clear();
+    for (itb = clients.begin(); itb < ite; itb++) {
+        delete *itb;
+    }
+    clients.clear();
 
     LOGPRINT(INFO, this, "Server - Closed");
     gConfig.removeFd(sockFd);
-    // FD_CLR(sockFd, &gConfig.readSet);
+    FD_CLR(sockFd, &gConfig.readSet);
 
 }
-
-
-// int Server::getMaxFdServer() {
-    
-//     std::vector<Client*>::iterator itb;
-//     std::vector<Client*>::iterator ite;
-
-//     ite = clients.end();
-//     for (itb = clients.begin(); itb != ite; itb++) {
- 
-//         if ((*itb)->readFd > srvMaxFd)
-//             srvMaxFd = (*itb)->readFd;
-//         if ((*itb)->writeFd > srvMaxFd)
-//             srvMaxFd = (*itb)->writeFd;
-
-//     }
-
-//     return (srvMaxFd);
-// }
 
 int Server::start() {
 
@@ -135,12 +116,11 @@ int Server::start() {
     // On ajoute à la liste des FD le socket du serveur
     // Un descripteur de fichier est considéré comme prêt s'il est possible d'effectuer l'opération d'entrées-sorties correspondante (par exemple, un read(2)) sans bloquer.
     // On va lire la requête du client, qui aura été écrite dans la socket du serveur, donc on veut être alerté du caractère lisible du fd
-    
+
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
 
     LOGPRINT(INFO, this, "");
-
     return (EXIT_SUCCESS);
 }
 
@@ -175,14 +155,9 @@ int Server::readClientRequest(Client *c) {
     ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
     x += ret;
 
-    if (ret == -1) {
+    if (ret == -1 || ret == 0) {
         c->isConnected = false;
-        LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
-        return (EXIT_FAILURE);
-    } else if (ret == 0) {
-        // If we pass here, it means that the connection has been closed by the client
-        c->isConnected = false;
-        LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned 0 : Error : " + std::string(strerror(errno))));
+        LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned " + std::to_string(ret) + " : Error : " + std::string(strerror(errno))));
         return (EXIT_FAILURE);
     } else {
         
@@ -191,31 +166,22 @@ int Server::readClientRequest(Client *c) {
         if (c->recvStatus == Client::HEADER) {
 
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
-
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\r"));
-
                 // An HTTP request has to end with "\r\n\r\n"
                 // If we pass here, it means that the request is fully received
-                // TODO : if there is a body (chunked or not), we'll have to parse it
-                    
                 c->req.reqBuf = std::string(c->buf, x);
                 c->req.parse(locations);
                 c->recvStatus = Client::COMPLETE;
-
             } else { 
                 // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found) - We wait until its completion"));
                 return (EXIT_FAILURE);
             }
-
         }
-        
     }
-
     if (c->recvStatus == Client::COMPLETE) {
         FD_SET(c->acceptFd, &gConfig.writeSetBackup);        
     }
- 
     return (0);
 }
 
@@ -224,25 +190,20 @@ int Server::writeClientResponse(Client *c) {
     // TODO : send in multiples call depending the response size
 
     int ret = 0;
-
     c->res.handleResponse(&c->req);
-
     // Pour l'instant on va au plus simple
     // char res[41] = "Hello dear Client ! Welcome to WEBSERV \n";
     // write(req->client->acceptFd, res, sizeof(res));
     // return ;
-
     if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
         c->isConnected = 0; 
         LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
         return (ret);
     }
-
     // We no longer need to read or write client
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
     // A uptate quand on écrira la réponse en plusieurs fois
     FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
-
     return (0);
 }
 
@@ -250,13 +211,11 @@ void Server::handleClientRequest(Client *c) {
 
     if (c->acceptFd == -1)
         return ;
-    
     if (FD_ISSET(c->acceptFd, &gConfig.readSet)) {
         if (readClientRequest(c) != 0)
             return ;
     } else
         LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet readable"));
-
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
         if (c->recvStatus != Client::COMPLETE) {
             LOGPRINT(ERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
@@ -269,22 +228,19 @@ void Server::handleClientRequest(Client *c) {
 }
 
 
-// UTILS
+// LOGGER
 
 std::string const Server::logInfo(void) {
     std::string ret;
-    ret = name + " | " + "Listening Port " + std::to_string(port);
+    ret = name + " | " + "Listening Port " + std::to_string(port) + " | Clients connected : " + std::to_string(clients.size());
     return (ret);
 }
-
 
 Server::ServerException::ServerException(std::string where, std::string error) {
     this->error = where + ": " + error;
 }
 
-Server::ServerException::~ServerException(void) throw() {
-    
-}
+Server::ServerException::~ServerException(void) throw() {}
 
 const char * Server::ServerException::what(void) const throw() {
     return this->error.c_str();

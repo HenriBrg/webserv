@@ -5,5 +5,6 @@
 #include <iostream>
 
 std::string		getTimestamp(void);
+int             putstrError(std::string str);
 
 # endif

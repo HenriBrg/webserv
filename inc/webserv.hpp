@@ -13,6 +13,5 @@
 
 extern Config gConfig;
 
-int        putstrError(std::string str);
 
 # endif

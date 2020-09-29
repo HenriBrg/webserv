@@ -15,7 +15,6 @@
 # include "Request.hpp"
 # include "Response.hpp"
 
-
 # define BUFMAX 4096
 
 class Server;
@@ -24,7 +23,6 @@ class Client {
     
     friend class Server;
     friend class Config;
-
 
     public:
 
@@ -39,6 +37,7 @@ class Client {
             ERROR
         };
 
+        // The client might disconnect while we're handle its request
         bool        isConnected;
 
         int         port;
@@ -57,13 +56,9 @@ class Client {
         void reset();
         std::string const logInfo(void);
 
-
-
     private:
 
         Client();
-
-
 
 };
 

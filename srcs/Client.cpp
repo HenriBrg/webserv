@@ -20,27 +20,21 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
 }
 
 Client::~Client() {
-
     FD_CLR(acceptFd, &gConfig.readSetBackup);
     FD_CLR(acceptFd, &gConfig.writeSetBackup);
     gConfig.removeFd(acceptFd);
     close(acceptFd);
-
 }
 
 void Client::reset() {
-
     // The client must remain connected to the server
     isConnected = true;
     // The server is now ready for a new request from this client
+    // TODO : add a status telling the client got response and stay connected ?
 	recvStatus = HEADER;
-
 	memset((void *)buf, 0, BUFMAX + 1);
 	FD_SET(acceptFd, &gConfig.readSetBackup);
-	// FD_CLR(acceptFd, &gConfig.readSet);
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
-	// FD_CLR(acceptFd, &gConfig.writeSet);
-
 }
 
 std::string const Client::logInfo(void) {
