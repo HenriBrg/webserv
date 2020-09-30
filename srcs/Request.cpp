@@ -89,7 +89,7 @@ int Request::parseRequestLine() {
 // We differenciate the storage of uri : http://www.domain.com/index.html
 // and the storage of the query : ?name1=value1
 
-void Request::parseQuery() {
+void Request::parseUriQueries() {
 
     int i = 0;
     std::string tmp = uri;
@@ -148,7 +148,6 @@ int Request::parseFile(std::vector<Location*> locations) {
     int         i;
     struct stat info;
 
-    parseQuery();
     assignLocation(locations);
 
     if (reqLocation) {
@@ -179,6 +178,8 @@ int Request::parseFile(std::vector<Location*> locations) {
 void Request::parse(std::vector<Location*> locations) {
     
     parseRequestLine();
+    parseUriQueries();
+
     parseFile(locations);
     
     // TODO 1 : On skip les headers pour le moment

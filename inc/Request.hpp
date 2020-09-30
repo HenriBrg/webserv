@@ -61,6 +61,7 @@ class Request {
 
         int     parseFile(std::vector<Location*> locations);
         void    parseQuery();
+        void    parseUriQueries();
         void    assignLocation(std::vector<Location*> locations);
 
 
