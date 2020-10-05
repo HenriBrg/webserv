@@ -61,8 +61,6 @@ class Server {
 
         std::string const logInfo(void);
 
-        // int getMaxFdServer();
-
         /* Exceptions */
 
         class ServerException: public std::exception {

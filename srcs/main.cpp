@@ -26,8 +26,6 @@ int main(int ac, char **av) {
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;
                 s->handleClientRequest(c);
-                // if (c->isConnected == false)
-                //     c->reset();
             }
         }
     }

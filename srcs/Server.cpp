@@ -4,7 +4,6 @@ Server::Server(std::string name, int port): name(name), port(port) {
     
     port = -1;
     sockFd = -1;
-    srvMaxFd = -1;
 
     bzero(&addr, sizeof(addr));
     
@@ -137,8 +136,6 @@ void Server::acceptNewClient(void) {
         LOGPRINT(ERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
         return ;
     }
-    if (acceptFd > srvMaxFd)
-        srvMaxFd = acceptFd;
     Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
@@ -192,14 +189,13 @@ int Server::writeClientResponse(Client *c) {
     int ret = 0;
     c->res.handleResponse(&c->req);
     // Pour l'instant on va au plus simple
-    // char res[41] = "Hello dear Client ! Welcome to WEBSERV \n";
-    // write(req->client->acceptFd, res, sizeof(res));
-    // return ;
-    if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
-        c->isConnected = 0; 
-        LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
-        return (ret);
-    }
+    char res[36] = "Hello Client ! Welcome to WEBSERV \n";
+    write(c->acceptFd, res, sizeof(res));
+    // if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
+    //     c->isConnected = 0; 
+    //     LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
+    //     return (ret);
+    // }
     // We no longer need to read or write client
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
     // A uptate quand on écrira la réponse en plusieurs fois
@@ -226,7 +222,6 @@ void Server::handleClientRequest(Client *c) {
     } else
         LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet writable"));
 }
-
 
 // LOGGER
 

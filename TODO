@@ -1,0 +1,8 @@
+1: Parsing Request
+2: CGI I/O - Ask for optimization instead of bad implement it
+3: Send in chunk
+
+
+Opti :
+
+-   Merge two string, instead of using "+" operator, use string.append()
