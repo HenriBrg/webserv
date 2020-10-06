@@ -6,7 +6,7 @@ int main(int ac, char **av) {
 
     Server *s;
 	Client *c;
-    
+
     gConfig.init();
     while (gConfig.run) {
         gConfig.resetFds();

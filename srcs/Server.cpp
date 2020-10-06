@@ -76,7 +76,7 @@ int Server::start() {
     // Le socket peut être relié à un port libre quelconque en utilisant le numéro 0. 
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); // Adresse de l'hôte
+    addr.sin_addr.s_addr = htonl(INADDR_ANY); // Adresse de l'hôte // 127.0.0.1:7777
     addr.sin_port = htons(port);
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
@@ -90,7 +90,7 @@ int Server::start() {
     // The listen() function places all incoming connection into a backlog queue
     // until accept() call accepts the connection.
 
-    if (listen(sockFd, 42) == -1)
+    if (listen(sockFd, 128) == -1)
         throw ServerException("Server::start : listen()", std::string(strerror(errno)));
 
     // ---------- 5) FCNTL ----------
@@ -184,6 +184,7 @@ int Server::readClientRequest(Client *c) {
 
 int Server::writeClientResponse(Client *c) {
 
+    
     // TODO : send in multiples call depending the response size
 
     int ret = 0;
