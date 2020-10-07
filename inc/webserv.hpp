@@ -13,5 +13,4 @@
 
 extern Config gConfig;
 
-
 # endif

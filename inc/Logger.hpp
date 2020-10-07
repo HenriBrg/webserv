@@ -37,7 +37,7 @@ class Logger {
             std::string str;
             std::string timestamp;
 
-            std::cout << getTimestamp();
+            std::cout << ft::getTimestamp();
             str = x->logInfo();
             if (!message.empty())
                 str += " | " + message;
@@ -60,7 +60,7 @@ class Logger {
         static void noClassLogPrint(int type, std::string const & message) {
 
             std::string timestamp;
-            std::cout << getTimestamp();
+            std::cout << ft::getTimestamp();
             switch (type) {
                 case INFO:
                     std::cout << YELLOW << " [INFO] " << END << message << std::endl;

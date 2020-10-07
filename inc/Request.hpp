@@ -58,15 +58,17 @@ class Request {
         void    reset(void);
         void	readline(std::string & b, std::string & line);
         int     parseRequestLine();
-
-        int     parseFile(std::vector<Location*> locations);
+        void    parseFile(std::vector<Location*> locations);
         void    parseQuery();
         void    parseUriQueries();
         void    assignLocation(std::vector<Location*> locations);
+        void    parseHeaders();
+        void    fillHeader(std::string const key, std::string const value);
 
+        
+        std::string const logInfo(void);
 
         /* MEMBERS */
-
 
         Client          *client;
         std::string     reqBuf;
@@ -132,7 +134,7 @@ class Request {
         // The Content-Type entity-header field indicates the media type of the entity-body sent to the recipient or,
         // in the case of the HEAD method, the media type that would have been sent, had the request been a GET.
         // Content-Type: text/html; charset=ISO-8859-4
-        std::map<int, std::string> contentType;
+        std::string contentType;
 
         // All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT), without exception
         std::string date;
@@ -158,7 +160,13 @@ class Request {
 
         // The Transfer-Encoding header specifies the form of encoding used to safely transfer the payload body to the user.
         // Transfer-Encoding: gzip, chunked
-        std::map<int, std::string> transferEncoding;
+        std::string transferEncoding;
+
+
+        // https://www.hostinger.fr/tutoriels/keep-alive/
+        // Keep-Alive permet au navigateur du visiteur de télécharger tout le contenu (comme JavaScript, CSS, images, vidéos, etc.) via une connexion TCP persistante au lieu de faire des demandes différentes pour chaque fichier
+		std::string	keepAlive; 
+
 
         
         // Chunked : Data is sent in a series of chunks. The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk

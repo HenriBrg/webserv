@@ -4,7 +4,22 @@
 #include <string>
 #include <iostream>
 
-std::string		getTimestamp(void);
-int             putstrError(std::string str);
+namespace ft {
+
+    std::string		getTimestamp(void);
+    int             putstrError(std::string str);
+    void	        getLine(std::string & buf, std::string & line);
+    std::vector<std::string> split(const std::string & str, char delim);
+	std::string     trim(const std::string& str);
+	void            deleteCarriageReturn(std::string &str);
+
+
+}
+
+namespace utils {
+
+	void deleteCarriageReturn(std::string &str);
+
+}
 
 # endif

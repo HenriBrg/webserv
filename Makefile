@@ -6,9 +6,9 @@ _YELLOW		=	\e[33m
 _BLUE		=	\e[34m
 _END		=	\e[0m
 
-ifndef VERBOSE
-.SILENT:
-endif
+# ifndef VERBOSE
+# .SILENT:
+# endif
 
 # VARIABLES
 
@@ -45,7 +45,7 @@ $(DOBJS):
 	mkdir $(DOBJS)
 
 $(DOBJS)%.o: $(DSRCS)%.cpp
-	$(CC)  -I $(DHEADERS) -c $< -o $@
+	$(CC) -I $(DHEADERS) -c $< -o $@
 
 # CLEAR
 
@@ -58,3 +58,7 @@ fclean: clean
 re: fclean all
 
 .PHONY: all clean re fclean
+
+# TODO : Header Recompilation
+# -include *.d
+# https://stackoverflow.com/questions/35676039/makefile-rebuild-with-modified-header-files

@@ -1,8 +1,17 @@
-1: Parsing Request
-2: CGI I/O - Ask for optimization instead of bad implement it
-3: Send in chunk
+TODO DOCS :
 
+    select  : http://www.kegel.com/c10k.html
+    proxy   : https://www.geeksforgeeks.org/creating-a-proxy-webserver-in-python-set-1/?ref=lbp
+    https   : https://www.whoishostingthis.com/compare/ssl-certificates/resources/
 
-Opti :
+TODO CODE :
 
--   Merge two string, instead of using "+" operator, use string.append()
+    1: Parsing Request
+    2: CGI I/O - Ask for optimization instead of bad implement it
+    3: Send in chunk even before coding POST
+
+TODO OPTI :
+
+    Map / Tab string ? ...
+    Merge two string, instead of using "+" operator, use string.append()
+
