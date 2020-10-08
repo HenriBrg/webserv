@@ -4,7 +4,14 @@ Request::Request(void) {
     reset();
 }
 
+// Keep Track after (no)successfull served response ?
+
+Request::~Request() {
+    reset();
+}
+
 void Request::reset(void) {
+
     method.clear();
     uri.clear();
     httpVersion.clear();
@@ -22,12 +29,8 @@ void Request::reset(void) {
     transferEncoding.clear();
     bodyLength = -1;
     contentLength = -1;
-}
+    _reqBody.clear();
 
-// Keep Track after (no)successfull served response ?
-
-Request::~Request() {
-    reset();
 }
 
 int Request::parseRequestLine() {
@@ -146,9 +149,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
 
 }
 
-
 void Request::parseHeaders() {
-
 
     std::size_t pos;
     std::string  line;
@@ -171,6 +172,32 @@ void Request::parseHeaders() {
 
 }
 
+void Request::parseBody() {
+
+}
+
+void Request::checkBody() {
+
+    size_t bodyOffset;
+
+    // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
+
+    if (contentLength > 0 || transferEncoding == "chunked") {
+
+        if (transferEncoding == "chunked") {
+            LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in ckunks"));
+        } else
+            LOGPRINT(INFO, this, ("Request::checkBody() : Body not chunked | Content-Length = " + std::to_string(contentLength)));
+        
+        client->recvStatus = Client::BODY;
+        _reqBody = std::string(reqBuf);
+        bodyOffset = _reqBody.find("\r\n\r\n");
+        _reqBody.erase(0, bodyOffset + 4);
+        memset(client->buf, 0, BUFMAX + 1);
+    } else
+        client->recvStatus = Client::COMPLETE;
+
+}
 
 // TODO : Parsing Chunked
 
@@ -179,6 +206,7 @@ void Request::parse(std::vector<Location*> locations) {
     parseUriQueries();
     parseFile(locations);
     parseHeaders();
+    checkBody();
 }
 
 // UTILS

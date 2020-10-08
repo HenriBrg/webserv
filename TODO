@@ -15,3 +15,27 @@ TODO OPTI :
     Map / Tab string ? ...
     Merge two string, instead of using "+" operator, use string.append()
 
+TODO CONFIG : 
+
+    1: CGI -> Quid des paramètres de la configuration
+    2: Pourquoi / Comment gérer les CGI PHP 
+
+    https://computer.howstuffworks.com/cgi.htm
+    https://www.reddit.com/r/C_Programming/comments/gse04e/when_can_send_return_fewer_bytes_than_expected/
+
+
+REMEMBER ERRORS :
+
+https://stackoverflow.com/questions/1880509/socket-send-error-as-broken-pipe
+https://stackoverflow.com/questions/39718967/getting-connection-reset-by-peer-during-tcp-socket-connection
+
+
+
+
+
+
+
+
+
+
+

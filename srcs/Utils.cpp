@@ -65,7 +65,6 @@ namespace utils {
 
 	void deleteCarriageReturn(std::string &str) {
 		size_t pos = str.find_last_of('\r');
-
 		if (pos != std::string::npos)
 			str.erase(pos);
 	}

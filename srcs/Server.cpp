@@ -132,6 +132,8 @@ void Server::acceptNewClient(void) {
     // S'il n'y a pas de connexion en attente dans la file, et si la socket n'est pas marquée comme non bloquante, accept() se met en attente d'une connexion.
     // Si la socket est non bloquante, et qu'aucune connexion n'est présente dans la file, accept() échoue avec l'erreur EAGAIN.
     bzero(&clientAddr, addrSize);
+    // Ici, accept() remplit clientAddr des infos du client qu'il aura passé à connect()
+    // La requête en elle même est à lire chez le socket du client et non le socket du serveur
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
         LOGPRINT(ERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
         return ;
@@ -163,18 +165,22 @@ int Server::readClientRequest(Client *c) {
         if (c->recvStatus == Client::HEADER) {
 
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
-                LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\r"));
+                LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\n"));
                 // An HTTP request has to end with "\r\n\r\n"
                 // If we pass here, it means that the request is fully received
                 c->req.reqBuf = std::string(c->buf, x);
                 c->req.parse(locations);
-                c->recvStatus = Client::COMPLETE;
+
+
             } else { 
                 // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found) - We wait until its completion"));
                 return (EXIT_FAILURE);
             }
         }
+    }
+    if (c->recvStatus == Client::BODY) {
+        c->req.parseBody();
     }
     if (c->recvStatus == Client::COMPLETE) {
         FD_SET(c->acceptFd, &gConfig.writeSetBackup);        

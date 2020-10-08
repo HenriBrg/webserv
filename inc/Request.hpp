@@ -64,6 +64,9 @@ class Request {
         void    assignLocation(std::vector<Location*> locations);
         void    parseHeaders();
         void    fillHeader(std::string const key, std::string const value);
+        
+        void    checkBody();
+        void    parseBody();
 
         
         std::string const logInfo(void);
@@ -72,6 +75,8 @@ class Request {
 
         Client          *client;
         std::string     reqBuf;
+        std::string     _reqBody;
+        
         int             bodyLength;
         Location        *reqLocation;
         std::string     file;
