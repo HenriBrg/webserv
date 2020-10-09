@@ -22,7 +22,7 @@
 // DEBUG : soucis temporaire juste pour différencier output
 
 # define INFO 1
-# define ERROR 2
+# define LOGERROR 2
 # define DEBUG 3
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
@@ -45,7 +45,7 @@ class Logger {
                 case INFO:
                     std::cout << YELLOW << " [INFO] " << END << str << std::endl;
                     break ;
-                case ERROR:
+                case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << str << std::endl;
                     break ;
                 case DEBUG:
@@ -65,7 +65,7 @@ class Logger {
                 case INFO:
                     std::cout << YELLOW << " [INFO] " << END << message << std::endl;
                     break ;
-                case ERROR:
+                case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << message << std::endl;
                     break ;
                 case DEBUG:

@@ -66,7 +66,9 @@ class Request {
         void    fillHeader(std::string const key, std::string const value);
         
         void    checkBody();
-        void    parseBody();
+        void    parseChunkedBody();
+        void    parseSingleBody();
+
 
         
         std::string const logInfo(void);
@@ -165,8 +167,7 @@ class Request {
 
         // The Transfer-Encoding header specifies the form of encoding used to safely transfer the payload body to the user.
         // Transfer-Encoding: gzip, chunked
-        std::string transferEncoding;
-
+        std::map<int, std::string> transferEncoding;
 
         // https://www.hostinger.fr/tutoriels/keep-alive/
         // Keep-Alive permet au navigateur du visiteur de télécharger tout le contenu (comme JavaScript, CSS, images, vidéos, etc.) via une connexion TCP persistante au lieu de faire des demandes différentes pour chaque fichier

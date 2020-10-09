@@ -135,7 +135,7 @@ void Server::acceptNewClient(void) {
     // Ici, accept() remplit clientAddr des infos du client qu'il aura passé à connect()
     // La requête en elle même est à lire chez le socket du client et non le socket du serveur
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
-        LOGPRINT(ERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
+        LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
         return ;
     }
     Client *newClient = new Client(this, acceptFd, clientAddr);
@@ -156,7 +156,7 @@ int Server::readClientRequest(Client *c) {
 
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
-        LOGPRINT(ERROR, c, ("Server::readClientRequest : recv() returned " + std::to_string(ret) + " : Error : " + std::string(strerror(errno))));
+        LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned " + std::to_string(ret) + " : Error : " + std::string(strerror(errno))));
         return (EXIT_FAILURE);
     } else {
         
@@ -171,21 +171,25 @@ int Server::readClientRequest(Client *c) {
                 c->req.reqBuf = std::string(c->buf, x);
                 c->req.parse(locations);
 
-
             } else { 
                 // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
-                LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found) - We wait until its completion"));
+                LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found yet) - We wait until its completion"));
                 return (EXIT_FAILURE);
             }
         }
+        if (c->recvStatus == Client::BODY) {
+            // https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+            if ((c->req.transferEncoding[0] == "chunked"))
+                c->req.parseChunkedBody();
+            else if (c->req.contentLength > 0)
+                c->req.parseSingleBody();
+        }
+        if (c->recvStatus == Client::COMPLETE) {
+            FD_SET(c->acceptFd, &gConfig.writeSetBackup);        
+        }
     }
-    if (c->recvStatus == Client::BODY) {
-        c->req.parseBody();
-    }
-    if (c->recvStatus == Client::COMPLETE) {
-        FD_SET(c->acceptFd, &gConfig.writeSetBackup);        
-    }
-    return (0);
+
+    return (EXIT_SUCCESS);
 }
 
 int Server::writeClientResponse(Client *c) {
@@ -207,7 +211,7 @@ int Server::writeClientResponse(Client *c) {
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
     // A uptate quand on écrira la réponse en plusieurs fois
     FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
-    return (0);
+    return (EXIT_SUCCESS);
 }
 
 void Server::handleClientRequest(Client *c) {
@@ -221,7 +225,7 @@ void Server::handleClientRequest(Client *c) {
         LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet readable"));
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
         if (c->recvStatus != Client::COMPLETE) {
-            LOGPRINT(ERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
+            LOGPRINT(LOGERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
             return ;
         }
         if (writeClientResponse(c) != 0)

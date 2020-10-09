@@ -31,7 +31,7 @@ int Config::getMaxFds(void) {
 void Config::addFd(int fd) {
     std::pair<std::set<int>::iterator, bool> ret = activeFds.insert(fd);
     if (ret.second == false)
-        NOCLASSLOGPRINT(ERROR, ("Config::addFd() : FD " + std::to_string(fd) + " already exists in the activeFds"));
+        NOCLASSLOGPRINT(LOGERROR, ("Config::addFd() : FD " + std::to_string(fd) + " already exists in the activeFds"));
 }
 
 void Config::removeFd(int fd) {

@@ -36,9 +36,7 @@ class Client {
             BODY,
             COMPLETE,
             WAIT,
-            ERROR
-
-            
+            ERROR            
         };
 
         // The client might disconnect while we're handle its request

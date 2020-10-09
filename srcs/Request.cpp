@@ -114,7 +114,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
     size_t i = 0;
     std::vector<std::string> multiValues;
 
-    if (key == "Accept-Charset" || key == "Accept-Language" || key == "Content-Language") {
+    if (key == "Accept-Charset" || key == "Accept-Language" || key == "Content-Language"  || key == "Transfer-Encoding") {
         multiValues = ft::split(value, ',');
         while (!multiValues.empty() && i < multiValues.size()) {
             if (key == "Accept-Charset")
@@ -123,6 +123,8 @@ void Request::fillHeader(std::string const key, std::string const value) {
                 acceptLanguage[i] = multiValues[i];
             else if (key == "Content-Language")
                 contentLanguage[i] = multiValues[i];
+            else if (key == "Transfer-Encoding")
+                transferEncoding[i] = multiValues[i];
             i++;
         }
     }
@@ -144,8 +146,6 @@ void Request::fillHeader(std::string const key, std::string const value) {
         referer = value;
     else if (key == "User-Agent")
         userAgent = value;
-    else if (key == "Transfer-Encoding")
-        transferEncoding = value;
 
 }
 
@@ -164,17 +164,35 @@ void Request::parseHeaders() {
         key = ft::trim(line.substr(0, pos));
         utils::deleteCarriageReturn(key);
         if (key.empty())
-            continue ;
+            continue ; // Continue or break ? Or error 4XX
         value = ft::trim(line.substr(pos + 1));
+        
+        // if (value.empty())
+        // Continue or break ? Or error 4XX
+
         utils::deleteCarriageReturn(value);
         fillHeader(key, value);
     }
 
 }
 
-void Request::parseBody() {
+void Request::parseChunkedBody() {
 
 }
+
+void Request::parseSingleBody() {
+
+    char *tmp = client->buf;
+
+    // Body
+    if (contentLength < 0) {
+        client->recvStatus = Client::ERROR;
+        return ;
+    }
+
+
+}
+
 
 void Request::checkBody() {
 
@@ -182,17 +200,16 @@ void Request::checkBody() {
 
     // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
 
-    if (contentLength > 0 || transferEncoding == "chunked") {
-
-        if (transferEncoding == "chunked") {
-            LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in ckunks"));
-        } else
-            LOGPRINT(INFO, this, ("Request::checkBody() : Body not chunked | Content-Length = " + std::to_string(contentLength)));
-        
+    if (contentLength > 0 || transferEncoding[0] == "chunked") {
         client->recvStatus = Client::BODY;
+        if (transferEncoding[0] == "chunked") {
+            LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
+        } else
+            LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         _reqBody = std::string(reqBuf);
         bodyOffset = _reqBody.find("\r\n\r\n");
         _reqBody.erase(0, bodyOffset + 4);
+        // Headers already parsed from that point
         memset(client->buf, 0, BUFMAX + 1);
     } else
         client->recvStatus = Client::COMPLETE;
