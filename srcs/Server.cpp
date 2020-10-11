@@ -164,6 +164,7 @@ int Server::readClientRequest(Client *c) {
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
 
+            // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\n"));
                 // An HTTP request has to end with "\r\n\r\n"
@@ -178,6 +179,7 @@ int Server::readClientRequest(Client *c) {
             }
         }
         if (c->recvStatus == Client::BODY) {
+            // Body start after the \r\n\r\n of headers
             // https://en.wikipedia.org/wiki/Chunked_transfer_encoding
             if ((c->req.transferEncoding[0] == "chunked"))
                 c->req.parseChunkedBody();
@@ -211,6 +213,19 @@ int Server::writeClientResponse(Client *c) {
     FD_CLR(c->acceptFd, &gConfig.readSetBackup);
     // A uptate quand on écrira la réponse en plusieurs fois
     FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
+  
+  
+  
+
+
+    exit(0);
+
+
+
+
+
+
+
     return (EXIT_SUCCESS);
 }
 
@@ -228,6 +243,11 @@ void Server::handleClientRequest(Client *c) {
             LOGPRINT(LOGERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
             return ;
         }
+
+        
+        c->req.showReq();
+
+
         if (writeClientResponse(c) != 0)
             return ;
     } else

@@ -54,6 +54,7 @@ class Request {
 
         void parse(std::vector<Location*> locations);
         void showReq(void);
+        void showFullHeadersReq(void);
 
         void    reset(void);
         void	readline(std::string & b, std::string & line);
@@ -96,7 +97,7 @@ class Request {
         std::string uri;
         std::string httpVersion;
         // Everything after '?' inside URI
-        std::string query;
+        std::string uriQueries;
 
 
         /* 2) Request Headers Fields - Ordered Alphabetically */
@@ -140,6 +141,8 @@ class Request {
 
         // The Content-Type entity-header field indicates the media type of the entity-body sent to the recipient or,
         // in the case of the HEAD method, the media type that would have been sent, had the request been a GET.
+        // Dans les requêtes, (telles que POST ou PUT), le client indique au serveur quel type de données a réellement été envoyé.
+        // Dans les réponses, un en-tête Content-Type indique au client le type de contenu réellement renvoyé.
         // Content-Type: text/html; charset=ISO-8859-4
         std::string contentType;
 
@@ -163,7 +166,7 @@ class Request {
 
         // If we receive that body : "a=1&b=2"
         // We will parse it as : {1: {"a": "1"}, 2: {"b": "2"}}
-        std::map<int, std::pair<std::string, std::string> > body;
+        // std::map<int, std::pair<std::string, std::string> > uriQueries;
 
         // The Transfer-Encoding header specifies the form of encoding used to safely transfer the payload body to the user.
         // Transfer-Encoding: gzip, chunked

@@ -69,4 +69,15 @@ namespace utils {
 			str.erase(pos);
 	}
 
+	void displayHeaderMap(std::map<int, std::string> data, std::string headerName) {
+		if (data.empty())
+			return ;
+		std::map<int, std::string>::iterator it = data.begin();
+		std::map<int, std::string>::iterator ite = data.end();
+		for (; it != ite; it++) {
+			std::cout << headerName << " : " << it->second;
+		}
+		std::cout << std::endl;
+	}
+
 }

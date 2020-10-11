@@ -25,7 +25,7 @@ void Request::reset(void) {
     host.clear();
     referer.clear();
     userAgent.clear();
-    body.clear();
+    uriQueries.clear();
     transferEncoding.clear();
     bodyLength = -1;
     contentLength = -1;
@@ -62,7 +62,7 @@ void Request::parseUriQueries() {
     while (tmp[i] && tmp[i] != '?')
         i++;
     if (tmp[i] == '?') {
-        query = uri.substr(i + 1, tmp.size());
+        uriQueries = uri.substr(i + 1, tmp.size());
         uri = tmp.substr(0, i);
     }
 }
@@ -109,6 +109,8 @@ void Request::parseFile(std::vector<Location*> locations) {
 
 }
 
+// TODO : case insensitive string comparaison to handle multiple client type
+
 void Request::fillHeader(std::string const key, std::string const value) {
 
     size_t i = 0;
@@ -134,7 +136,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
         contentLength = std::stoi(value);
     else if (key == "Content-Location")
         contentLocation = value;
-    else if (key == "Content-Type")
+    else if (key == "Content-Type" || key == "Content-type")
         contentType = value;
     else if (key == "Authorization")
         authorization = value;
@@ -182,14 +184,27 @@ void Request::parseChunkedBody() {
 
 void Request::parseSingleBody() {
 
-    char *tmp = client->buf;
+    char        *newBodyRead = client->buf;
+    size_t      size;
 
-    // Body
+    client->req._reqBody.append(newBodyRead);
     if (contentLength < 0) {
         client->recvStatus = Client::ERROR;
         return ;
     }
-
+    /* We check if body is fully received by comparing its length with the Content-Length header value */
+    /* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
+    size = client->req._reqBody.length();
+    if (size >= contentLength) {
+        client->recvStatus = Client::COMPLETE;
+        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
+         + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
+        memset(newBodyRead, 0, BUFMAX + 1);
+    } else {
+        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not yet received"));
+        client->req._reqBody.append(newBodyRead);
+        memset(newBodyRead, 0, BUFMAX + 1);
+    }
 
 }
 
@@ -199,17 +214,16 @@ void Request::checkBody() {
     size_t bodyOffset;
 
     // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
-
     if (contentLength > 0 || transferEncoding[0] == "chunked") {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
         } else
             LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
-        _reqBody = std::string(reqBuf);
+        _reqBody = std::string(client->buf);
         bodyOffset = _reqBody.find("\r\n\r\n");
         _reqBody.erase(0, bodyOffset + 4);
-        // Headers already parsed from that point
+        // Headers already parsed from that point, next body will be read within client->buf and appened in parseChunkedBody() or parseSingleBody()
         memset(client->buf, 0, BUFMAX + 1);
     } else
         client->recvStatus = Client::COMPLETE;
@@ -230,20 +244,71 @@ void Request::parse(std::vector<Location*> locations) {
 
 std::string const Request::logInfo(void) {
     std::string ret;
-    ret = "Request Logger | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri + \
+    ret = "Request | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri + \
     " | Location Assigned : " + reqLocation->uri;
     return (ret);
 }
 
-void Request::showReq(void) {
+
+void Request::showFullHeadersReq(void) {
+
+    std::string indent("    > ");
+ 
+    std::cout << std::endl;
+    std::cout << "    * Detailed Request Infos";
 
     std::cout << std::endl;
-    std::cout << "ReqBuf : " << reqBuf << std::endl;
-    std::cout << "Method : " << method << std::endl;
-    std::cout << "URI : " << uri << std::endl;
-    std::cout << "HTTP Version : " << httpVersion << std::endl;
-    std::cout << "Query : " << query << std::endl;
-    std::cout << "File : " << file << std::endl;
+    std::cout << std::endl;
+
+
+
+
+    utils::displayHeaderMap(acceptCharset, (indent + "Accept-Charset"));
+    utils::displayHeaderMap(acceptCharset, (indent + "Accept-Language"));
+    utils::displayHeaderMap(acceptCharset, (indent + "Content-Language"));
+    utils::displayHeaderMap(acceptCharset, (indent + "Transfer-Encoding"));
+
+    std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
+
+    if (!uriQueries.empty())
+        std::cout << indent << "Queries : " << uriQueries << std::endl;
+    if (!authorization.empty())
+        std::cout << indent << "Authorization : " << authorization << std::endl;
+    if (!contentLocation.empty())
+        std::cout << indent << "Content-Location : " << contentLocation << std::endl;
+    if (!contentType.empty())
+        std::cout << indent << "Content-Type : " << contentType << std::endl;
+    if (!date.empty())
+        std::cout << indent << "Date : " << date << std::endl;
+    if (!host.empty())
+        std::cout << indent << "Host : " << host << std::endl;
+    if (!referer.empty())
+        std::cout << indent << "Referer : " << referer << std::endl;
+    if (!userAgent.empty())
+        std::cout << indent << "User-Agent : " << userAgent << std::endl;
+    if (!keepAlive.empty())
+        std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
+
+}
+
+void Request::showReq(void) {
+
+    std::string indent("    > ");
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "    * Global Request Infos \n\n";
+    std::cout << indent << "Method : " << method << std::endl;
+    std::cout << indent << "URI : " << uri << std::endl;
+    std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
+    std::cout << indent << "File Assigned : " << file << std::endl;
+    std::cout << indent << "Body : " << _reqBody << std::endl;
+    std::cout << indent << "Body Length : " << std::to_string(bodyLength) << std::endl;
+
+    showFullHeadersReq();
+
+    std::cout << std::endl;
     std::cout << std::endl;
 
 }
