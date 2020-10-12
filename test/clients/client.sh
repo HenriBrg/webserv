@@ -17,4 +17,7 @@
 
 # ---------------- POST ----------------
 
-curl -ivd @payload http://localhost:7777
+
+curl -ivd @payloads/smallBody http://localhost:7777
+# Pourquoi Transfert-Encoding n'est-il pas vide ?
+
