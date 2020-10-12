@@ -17,7 +17,7 @@
 # include "Request.hpp"
 # include "Response.hpp"
 
-# define BUFMAX 512 // Temporary to simulate body - 32768 
+# define BUFMAX 32768 // Temporary to simulate body - 32768 
 
 class Server;
 

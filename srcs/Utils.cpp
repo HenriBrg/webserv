@@ -74,8 +74,16 @@ namespace utils {
 			return ;
 		std::map<int, std::string>::iterator it = data.begin();
 		std::map<int, std::string>::iterator ite = data.end();
+		std::map<int, std::string>::iterator tmp;
+
+		std::cout << headerName << " : ";
 		for (; it != ite; it++) {
-			std::cout << headerName << " : " << it->second;
+			std::cout << it->second;
+
+			tmp = data.end();
+			--tmp;
+			if (it != tmp)
+				std::cout << ", ";
 		}
 		std::cout << std::endl;
 	}

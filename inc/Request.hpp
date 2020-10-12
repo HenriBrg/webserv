@@ -55,6 +55,7 @@ class Request {
         void parse(std::vector<Location*> locations);
         void showReq(void);
         void showFullHeadersReq(void);
+        void showBody();
 
         void    reset(void);
         void	readline(std::string & b, std::string & line);
@@ -100,33 +101,43 @@ class Request {
         std::string uriQueries;
 
 
+        /* Not mandatory headers, but here to improve global understanding */
+
+        /* "Accept" : "text/html, application/xhtml+xml, application/xml;q=0.9, image/webp"
+        The Accept header lists the MIME types of media resources that the agent is willing to process. */
+
+
+
         /* 2) Request Headers Fields - Ordered Alphabetically */
 
-        // Accept-Charset: Charset-1, Charset-2, ...
-        // { 1: "utf-8", 2: "iso-8859-1;q=0.5" }
+        // Accept-Charset: Charset-1, Charset-2, ... ===> { 1: "utf-8", 2: "iso-8859-1;q=0.5" }
         // For character set negotiation, the client can use this header to tell the server which character sets it can handle or it prefers
+        // NB : Si on a pas la ressource dans le format souhaité, en théorie on retourne 406 mais en pratique on ignore pour qu'une réponse, bien qu'imparfaite, soit quand même retournée
         std::map<int, std::string> acceptCharset;
-        // Si on a pas la ressource dans le format souhaité, en théorie on retourne 406 mais en pratique on ignore pour qu'une réponse, bien qu'imparfaite, soit quand même retournée
 
         // Accept-Language: language-1, language-2, ...
         // Accept-Language: da, en-gb;q=0.8, en;q=0.7
         // The client can use the Accept-Language header to tell the server what languages it can handle or it prefers.
         // If the server has multiple versions of the requested document (e.g., in English, Chinese, French), it can check this header to decide which version to return. This process is called language negotiation
-        // The optional qvalue represents an acceptable quality level for non preferred languages on a scale of 0 to
+        // The optional qvalue represents an acceptable quality level for non preferred languages
         std::map<int, std::string> 	acceptLanguage;
 
         // Authorization : credentials
+        // Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l
         // Used by the client to supply its credential (username/password) to access protected resources.
         std::string authorization;
 
+
+        // UPDT : à priori Content-Language est uniquement utile en response, à confirmer
         // Content-Language: mi, en
         // Describes the natural language(s) of the intended audience for the enclosed entity
+        // Define which language the document is intended to.
         std::map<int, std::string> contentLanguage;
+
 
         // Content-Length: 3495
         // The Content-Length entity-header field indicates the size of the entity-body, in decimal number of OCTETs,
-        // sent to the recipient or, in the case of the HEAD method,
-        // the size of the entity-body that would have been sent, had the request been a GET. 
+        // sent to the recipient or, in the case of the HEAD method, the size of the entity-body that would have been sent, had the request been a GET. 
         // Used by POST request, to inform the server the length of the request body
         int contentLength;
 
@@ -146,7 +157,7 @@ class Request {
         // Content-Type: text/html; charset=ISO-8859-4
         std::string contentType;
 
-        // All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT), without exception
+        // All HTTP date/timestamps MUST be represented in Greenwich Mean Time (GMT), without exception
         std::string date;
 
         // The Host request header specifies the host and port number of the server to which the request is being sent.

@@ -22,6 +22,10 @@
 #define NOT_IMPLEMENTED_501				501
 #define SERVICE_UNAVAILABLE_503			503
 
+// In HTTP, content negotiation is the mechanism that is used for serving different representations of a resource at the same URI,
+// so that the user agent can specify which is best suited for the user (for example, which language of a
+// document, which image format, or which content encoding).
+
 
 class Client;
 
@@ -44,8 +48,6 @@ class Response {
         /* METHODS */
 
         void get(Request * req);
-
-
 
         
         /* MEMBERS */
