@@ -12,7 +12,9 @@
 #                                           -H "Host: developer.cdn.mozilla.net" \
 #                                           -H "Referer: https://developer.mozilla.org/fr/docs/Web/JavaScript" \
 #                                           -H "User-Agent: PostmanRuntime/7.26.5" \
-                                          
+
+# 1/2/3 OK
+
 # ---------------- POST ----------------
 
-curl -ivd @oayload http://localhost:7777
+curl -ivd @payload http://localhost:7777

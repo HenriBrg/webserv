@@ -123,8 +123,8 @@ void Request::fillHeader(std::string const key, std::string const value) {
                 acceptCharset[i] = multiValues[i];
             else if (key == "Accept-Language")
                 acceptLanguage[i] = multiValues[i];
-            // else if (key == "Content-Language")
-            //     contentLanguage[i] = multiValues[i];
+            else if (key == "Content-Language")
+                contentLanguage[i] = multiValues[i];
             else if (key == "Transfer-Encoding")
                 transferEncoding[i] = multiValues[i];
             i++;
@@ -255,7 +255,7 @@ void Request::showFullHeadersReq(void) {
     std::string indent("    > ");
  
     std::cout << std::endl;
-    std::cout << "    * Detailed Request Infos";
+    std::cout << "    ~ Details";
 
     std::cout << std::endl;
     std::cout << std::endl;
@@ -264,6 +264,7 @@ void Request::showFullHeadersReq(void) {
     utils::displayHeaderMap(acceptLanguage, (indent + "Accept-Language"));
     utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
     utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
+
 
     if (!uriQueries.empty())
         std::cout << indent << "Queries : " << uriQueries << std::endl;
@@ -284,15 +285,16 @@ void Request::showFullHeadersReq(void) {
     if (!keepAlive.empty())
         std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
 
+    std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
+    std::cout << indent << "Body : " << _reqBody << std::endl;
+
+    
 }
 
 void Request::showBody() {
     std::string indent("    > ");
     std::cout << std::endl;
-    std::cout << "    * Body Request \n\n";
-    std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     // std::cout << indent << "(Server) Body Length : " << std::to_string(bodyLength) << std::endl;
-    std::cout << indent << "Body (100 first bytes) : " << _reqBody.substr(0, 100) << std::endl;
 }
 
 
@@ -300,17 +302,17 @@ void Request::showReq(void) {
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
 
-    std::cout << GREEN << "    REQUEST BEGIN ------------------------" << END;
+    std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
     std::cout << std::endl << std::endl;
-    std::cout << "    * Global Request Infos \n\n";
+    std::cout << "    ~ Global \n\n";
     std::cout << indent << "Method : " << method << std::endl;
     std::cout << indent << "URI : " << uri << std::endl;
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
-    std::cout << indent << "File Assigned : " << file << std::endl;
+    std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
     showFullHeadersReq();
     showBody();
     std::cout << std::endl;
-    std::cout << GREEN << "    --------------------------- REQUEST END" << END;
+    std::cout << GREEN << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
 }
 

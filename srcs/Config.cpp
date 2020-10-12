@@ -44,6 +44,7 @@ void Config::resetFds() {
 }
 
 void Config::init() {
+    std::cout << std::endl;
     std::string n1("Server One");
     std::string n2("Server Two");
     Server *s1 = new Server(n1, 7777);
