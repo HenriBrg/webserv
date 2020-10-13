@@ -88,4 +88,27 @@ namespace utils {
 		std::cout << std::endl;
 	}
 
+	int strHexaToDecimal(std::string strHexa) {    
+
+		int ret = 0; 
+		int base = 1; 
+		int size = strHexa.size(); 
+
+		for (int i = size - 1; i >= 0; --i) {    
+			if (strHexa[i] >= '0' && strHexa[i] <= '9') { 
+				ret += (strHexa[i] - 48) * base;
+				base = base * 16; 
+			} 
+			else if (strHexa[i] >= 'A' && strHexa[i] <= 'F') { 
+				ret += (strHexa[i] - 55)*base; 
+				base = base * 16; 
+			} 
+			else if (strHexa[i] >= 'a' && strHexa[i] <= 'f') { 
+				ret += (strHexa[i] - 87)*base; 
+				base = base * 16; 
+			} 
+		}
+		return (ret); 
+	} 
+
 }

@@ -85,6 +85,9 @@ class Request {
         Location        *reqLocation;
         std::string     file;
 
+        // Chunked Body variables
+        int chunkLineBytesSize;
+
 
         // Read this if you're not familiar with HTTP Requests
         // (100% Best Documentation) => https://developer.mozilla.org/fr/docs/Web/HTTP/Headers 

@@ -29,6 +29,7 @@ void Request::reset(void) {
     transferEncoding.clear();
     _currentParsedReqBodyLength = -1;
     contentLength = -1;
+    chunkLineBytesSize = -1;
     _reqBody.clear();
 
 }
@@ -178,7 +179,37 @@ void Request::parseHeaders() {
 
 }
 
+
+// Really good article
+// https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+
 void Request::parseChunkedBody() {
+
+    size_t      separator;
+    std::string tmp;
+
+    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
+
+    // if (_reqBody.empty() == false)
+    // LOGPRINT(INFO, this, ("Request::parseChunkedBody() : reqBody isn't empty, this is strange. Go debug it"));
+
+    _reqBody.append(client->buf);
+    while (42) {
+
+        separator = _reqBody.find("\r\n");
+        if (separator == std::string::npos)
+            break ;
+        if (chunkLineBytesSize == -1) {
+            tmp = _reqBody.substr(0, separator);
+            chunkLineBytesSize = utils::strHexaToDecimal(tmp);
+            _reqBody.erase(0, tmp.size() + 2 );
+        }
+        if (chunkLineBytesSize > 0) {
+
+        }
+        
+
+    }
 
 }
 
@@ -210,6 +241,7 @@ void Request::checkBody() {
     size_t bodyOffset;
 
     // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
+    // TODO : si plusieurs encoding, itérer dessus pour matcher "chunked"
     if (contentLength > 0 || transferEncoding[0] == "chunked") {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {
@@ -289,7 +321,6 @@ void Request::showFullHeadersReq(void) {
 
     std::cout << indent << "Body : " << _reqBody << std::endl;
 
-    
 }
 
 void Request::showBody() {

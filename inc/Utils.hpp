@@ -20,6 +20,7 @@ namespace utils {
 
 	void deleteCarriageReturn(std::string &str);
 	void displayHeaderMap(std::map<int, std::string> data, std::string headerName);
+	int strHexaToDecimal(std::string strHexa);
 
 }
 
