@@ -81,7 +81,7 @@ class Request {
         std::string     reqBuf;
         std::string     _reqBody;
         
-        int             bodyLength;
+        int             _currentParsedReqBodyLength;
         Location        *reqLocation;
         std::string     file;
 

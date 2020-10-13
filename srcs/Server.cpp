@@ -150,9 +150,20 @@ int Server::readClientRequest(Client *c) {
     // En temps normal, le nombre d'octets reçus est retourné
     // Si aucun message n'est disponible sur la socket, la valeur -1 est renvoyée. En fait il faut juste réessayer + tard
     // La valeur de retour sera 0 si le pair a effectué un arrêt normal.  
-    int x = strlen(c->buf);
-    ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
-    x += ret;
+   
+    // OLD WAY
+    // int x = strlen(c->buf);
+    // ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
+    // x += ret;
+    // c->buf[x] = '\0';
+    // c->req.reqBuf = std::string(c->buf, x);
+
+
+    // NEW WAY
+    // int x = strlen(c->buf);
+    ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
+    // x += ret;
+
 
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
@@ -160,7 +171,7 @@ int Server::readClientRequest(Client *c) {
         return (EXIT_FAILURE);
     } else {
         
-        c->buf[x] = '\0';
+        c->buf[ret] = '\0';
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
 
@@ -169,7 +180,10 @@ int Server::readClientRequest(Client *c) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\n"));
                 // An HTTP request has to end with "\r\n\r\n"
                 // If we pass here, it means that the request is fully received
-                c->req.reqBuf = std::string(c->buf, x);
+                
+                // TO DELETE/AVOID so that we don't duplicate too much buffers
+                c->req.reqBuf = std::string(c->buf, ret);
+                
                 c->req.parse(locations);
 
             } else { 
@@ -215,15 +229,7 @@ int Server::writeClientResponse(Client *c) {
     FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
   
   
-  
-
-
     exit(0);
-
-
-
-
-
 
 
     return (EXIT_SUCCESS);

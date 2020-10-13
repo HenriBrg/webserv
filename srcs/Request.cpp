@@ -27,7 +27,7 @@ void Request::reset(void) {
     userAgent.clear();
     uriQueries.clear();
     transferEncoding.clear();
-    bodyLength = -1;
+    _currentParsedReqBodyLength = -1;
     contentLength = -1;
     _reqBody.clear();
 
@@ -187,22 +187,18 @@ void Request::parseSingleBody() {
     char        *newBodyRead = client->buf;
     size_t      size;
 
-    client->req._reqBody.append(newBodyRead);
-    if (contentLength < 0) {
-        client->recvStatus = Client::ERROR;
-        return ;
-    }
+    _reqBody.append(newBodyRead);
     /* We check if body is fully received by comparing its length with the Content-Length header value */
     /* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
-    size = client->req._reqBody.length();
+    size = _reqBody.length();
+    _currentParsedReqBodyLength = size;
     if (size >= contentLength) {
         client->recvStatus = Client::COMPLETE;
         LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
          + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
         memset(newBodyRead, 0, BUFMAX + 1);
     } else {
-        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not yet received"));
-        client->req._reqBody.append(newBodyRead);
+        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not fully received yet"));
         memset(newBodyRead, 0, BUFMAX + 1);
     }
 
@@ -238,6 +234,7 @@ void Request::parse(std::vector<Location*> locations) {
     parseFile(locations);
     parseHeaders();
     checkBody();
+    reqBuf.clear(); 
 }
 
 // UTILS
@@ -284,8 +281,12 @@ void Request::showFullHeadersReq(void) {
         std::cout << indent << "User-Agent : " << userAgent << std::endl;
     if (!keepAlive.empty())
         std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
+    
+    std::cout << std::endl;
 
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
+    std::cout << indent << "_currentParsedReqBodyLength = " << std::to_string(_currentParsedReqBodyLength) << std::endl;
+
     std::cout << indent << "Body : " << _reqBody << std::endl;
 
     
