@@ -37,8 +37,8 @@ TODO CONFIG :
         - Parsing Chunk
         - Parsing config
         - CGI
-        
         - Formation de la reponse et envoie -> doc todo
+        
         - Opti : leaks mem - socket - clear socket select
         - drive doc
         - 
