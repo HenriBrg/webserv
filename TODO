@@ -24,6 +24,29 @@ TODO CONFIG :
     https://www.reddit.com/r/C_Programming/comments/gse04e/when_can_send_return_fewer_bytes_than_expected/
 
 
+
+-----------------
+
+    DONE 
+        - Structure du serveur 
+        - Acceptation du client
+        - Parsing requete
+    
+    TODO :
+
+        - Parsing Chunk
+        - Parsing config
+        - CGI
+        
+        - Formation de la reponse et envoie -> doc todo
+        - Opti : leaks mem - socket - clear socket select
+        - drive doc
+        - 
+
+
+    2: CGI I/O - Ask for optimization instead of bad implement it
+
+
 REMEMBER ERRORS :
 
 https://stackoverflow.com/questions/1880509/socket-send-error-as-broken-pipe
