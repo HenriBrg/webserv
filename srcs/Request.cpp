@@ -32,6 +32,8 @@ void Request::reset(void) {
     chunkLineBytesSize = -1;
     _reqBody.clear();
 
+    _optiChunkOffset = 0;
+
 }
 
 int Request::parseRequestLine() {
@@ -182,35 +184,54 @@ void Request::parseHeaders() {
 
 // Really good article
 // https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+// Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
+// Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
 
 void Request::parseChunkedBody() {
 
+    // TODO : max body configuration
     size_t      separator;
     std::string tmp;
 
-    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
-
     // if (_reqBody.empty() == false)
-    // LOGPRINT(INFO, this, ("Request::parseChunkedBody() : reqBody isn't empty, this is strange. Go debug it"));
-
+    //      LOGPRINT(INFO, this, ("Request::parseChunkedBody() : reqBody isn't empty, this is strange. Go debug it"));
+    // If body is parsed in multiple recv(), this append() will be usefull, else, it will append nothing.
     _reqBody.append(client->buf);
+    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
 
-        separator = _reqBody.find("\r\n");
-        if (separator == std::string::npos)
+        separator = _reqBody.find("\r\n", _optiChunkOffset);
+        if (separator == std::string::npos) {
+            LOGPRINT(LOGERROR, this, ("Request::parseSingleBody() : no <CR><LF> in chunk - invalid request"));
             break ;
+        }
         if (chunkLineBytesSize == -1) {
-            tmp = _reqBody.substr(0, separator);
+            tmp = _reqBody.substr(_optiChunkOffset, separator - _optiChunkOffset);
             chunkLineBytesSize = utils::strHexaToDecimal(tmp);
-            _reqBody.erase(0, tmp.size() + 2 );
+            /* Delete hexa value + "\r\n" */
+            _reqBody.erase(_optiChunkOffset, tmp.size() + 2);
+            tmp.clear();
         }
         if (chunkLineBytesSize > 0) {
-
+            separator = _reqBody.find("\r\n", _optiChunkOffset);
+            if (separator == std::string::npos)
+                break ;
+            _optiChunkOffset = separator;
+            _reqBody.erase(separator, 2);
+            chunkLineBytesSize = -1;
+        } else if (chunkLineBytesSize == 0) {
+            /* END of chunks */
+            separator = _reqBody.find("\r\n", _optiChunkOffset);
+            /* Delete the last "\r\n" which indicate the end */
+            if (separator != std::string::npos)
+                _reqBody.erase(separator, 2);
+            client->recvStatus = Client::COMPLETE;
+            break ;
         }
         
-
     }
-
+    memset(client->buf, 0, BUFMAX + 1);
+    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End chunked body parsing"));
 }
 
 void Request::parseSingleBody() {

@@ -82,6 +82,7 @@ class Request {
         std::string     _reqBody;
         
         int             _currentParsedReqBodyLength;
+        int             _optiChunkOffset;
         Location        *reqLocation;
         std::string     file;
 

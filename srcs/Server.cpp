@@ -145,7 +145,7 @@ void Server::acceptNewClient(void) {
 
 int Server::readClientRequest(Client *c) {
 
-    int ret;
+    int ret = -1;
 
     // En temps normal, le nombre d'octets reçus est retourné
     // Si aucun message n'est disponible sur la socket, la valeur -1 est renvoyée. En fait il faut juste réessayer + tard
@@ -199,6 +199,7 @@ int Server::readClientRequest(Client *c) {
                 c->req.parseChunkedBody();
             else if (c->req.contentLength > 0)
                 c->req.parseSingleBody();
+            // else -> error 4XX ?
         }
         if (c->recvStatus == Client::COMPLETE) {
             FD_SET(c->acceptFd, &gConfig.writeSetBackup);        
