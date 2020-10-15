@@ -47,17 +47,24 @@ class Response {
             ERROR
         };
 
+        /* GLOBAL */
 
         Response();
         virtual ~Response();
         void reset();
         void resDispatch(Request * req);
-        int requestValidition(Request * req);
+
+        /* CONTROL */
+
+        void methodControl(Request * req);
+        void authControl(Request * req);
+
         std::string const logInfo(void);
+        void  errorHandler(void);
         
         /* METHODS */
 
-        void (Response::*methodFctPtr)(Request * req);
+        void (Response::*_methodFctPtr)(Request * req);
         void getReq(Request * req);
         void headReq(Request * req);
         void putReq(Request * req);
@@ -66,8 +73,6 @@ class Response {
         void traceReq(Request * req);
         void optionsReq(Request * req);
         void deleteReq(Request * req);
-
-
         
         /* MEMBERS */
 
@@ -80,7 +85,7 @@ class Response {
         
         std::string httpVersion;
         int         statusCode;
-        std::string signification;
+        std::string reason;
 
 
         /* 2) Headers */

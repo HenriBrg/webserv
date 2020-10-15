@@ -6,7 +6,7 @@ Response::Response(void) {
 
 void Response::reset() {
     httpVersion.clear();
-    signification.clear();
+    reason.clear();
     allowedMethods.clear();
     contentLanguage.clear();
     contentLocation.clear();
@@ -23,23 +23,29 @@ void Response::reset() {
     statusCode = -1;
     contentLength = -1;
     sendStatus = Response::PREPARE;
-    methodFctPtr = nullptr;
+    _methodFctPtr = nullptr;
 
 }
 
 Response::~Response() {
+    reset();
+}
+
+void Response::authControl(Request * req) {
+
+    /* Base 64 Deal ... */
 
 }
 
-// TODO : avoid doing function mapping for each requests
+void Response::methodControl(Request * req) {
 
-int Response::requestValidition(Request * req) {
+    /* TODO : Avoid doing function mapping for each requests
+    store it in servers instead */
 
+    typedef void (Response::*ptr)(Request * req);
+	std::map<std::string, ptr> tab;
     std::vector<std::string>    allowedMethods;
     std::vector<std::string>::iterator    tmp;
-
-    typedef void	(Response::*ptr)(Request * req);
-	std::map<std::string, ptr> tab;
 
     tab["GET"] = &Response::getReq;
 	tab["HEAD"] = &Response::headReq;
@@ -53,22 +59,30 @@ int Response::requestValidition(Request * req) {
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
+        LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
         sendStatus = Response::ERROR;
-        LOGPRINT(LOGERROR, this, ("Response::controlRequestValidity() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
-        return (-1);
+        statusCode = METHOD_NOT_ALLOWED_405;
     } else
-        methodFctPtr = tab[req->method];
-    if (methodFctPtr != nullptr)
-
+        _methodFctPtr = tab[req->method];
     tab.clear();
-    return (0);
 }
 
 void Response::resDispatch(Request * req) {
 
-    if (requestValidition(req) == -1)
+    methodControl(req);
+    authControl(req);
+    /* Errors Checking Here */
+    if (sendStatus == Response::ERROR) {
+        LOGPRINT(LOGERROR, this, ("Response::resDispatch() : Error raised : " + std::to_string(statusCode) + " | Ending client connection"));
         return ;
-    (this->*methodFctPtr)(req);
+    } else {
+        (this->*_methodFctPtr)(req);
+    }
+    /* New Check - After CGI step */
+    if (sendStatus == Response::ERROR) {
+
+    }
+
 
 }
 

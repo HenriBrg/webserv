@@ -236,8 +236,7 @@ int Server::writeClientResponse(Client *c) {
         c->res.resDispatch(&c->req);
     }
 
-    exit(0);
-
+    exit(0); // Tempo
     return (EXIT_SUCCESS);
 }
 

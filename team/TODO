@@ -19,11 +19,11 @@ CGI :
     - Comprendre le CGI
     - Tout est à faire
 
-
 NGINX :
 
     - Parser la configuration (sachant qu'on a le droit à <algorithm>)
     - Comprendre les paramètres du CGI dans la configuration
+    - Ajouter le paramètre auth dans chaque location
 
 Réponse :
 

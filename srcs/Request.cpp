@@ -133,8 +133,8 @@ void Request::fillHeader(std::string const key, std::string const value) {
             i++;
         }
     }
-    // else if (key == "Keep-Alive")
-    //     keepAlive = value;
+    else if (key == "Keep-Alive")
+        keepAlive = value;
     else if (key == "Content-Length")
         contentLength = std::stoi(value);
     // else if (key == "Content-Location")
@@ -189,13 +189,12 @@ void Request::parseHeaders() {
 
 void Request::parseChunkedBody() {
 
-    // TODO : max body configuration
+    // TODO : max body configuration REQUEST_ENTITY_TOO_LARGE_413
+    // TODO : trigger error (set response flags) as soon as we see that body is longer that max_body, instead of parsing it entirely directly
+
     size_t      separator;
     std::string tmp;
 
-    // if (_reqBody.empty() == false)
-    //      LOGPRINT(INFO, this, ("Request::parseChunkedBody() : reqBody isn't empty, this is strange. Go debug it"));
-    // If body is parsed in multiple recv(), this append() will be usefull, else, it will append nothing.
     _reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
@@ -236,7 +235,7 @@ void Request::parseChunkedBody() {
 
 void Request::parseSingleBody() {
 
-    // TODO : max body configuration
+    // TODO : max body configuration and error in response
 
     char        *newBodyRead = client->buf;
     size_t      size;
