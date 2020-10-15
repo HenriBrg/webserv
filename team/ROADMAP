@@ -1,0 +1,17 @@
+ROADMAP Serveur / Client :
+
+1. Mise sous écoute du serveur et tracking des connexions entrantes en appelant select() sur le socket du serveur
+2. Dès qu'un client se connecte à 127.0.0.1:XXXX, la fonction select() se débloque. On itère sur tous nos serveurs (définit par la configuration)
+    pour trouver celui qui a été contacté (grâce à FD_ISSET)
+3. Une fois le serveur ciblé identifié, on accepte le client avec accept(), qui nous retourne un socket poitant sur le client, dans lequel on doit
+   lire sa requête avec read() ou recv()
+4. Selon la taile de la requête et de notre buffer de lecture, on lis N fois dans le socket du client jusqu'à trouver le pattern \r\n\r\n qui indique
+   la terminaison de sa requête. On fait ensuite matcher la requête avec la location nGinx, si pas de match, erreur 4XX
+5. Ensuite, on parse la requête lue depuis le buffer, on range dans nos string/map les valeurs envoyées des headers de requête
+6. S'il y a un body, on le saura grâce au header Content-Length ou Transfer-Encoding, on le parse jusqu'au bout et on le stock dans _reqBody
+7. Une fois la lecture de la requête terminée, la requête est dans l'état COMPLETE, on pourra donc commencer à former la réponse 
+8. Selon la méthode de requête (GET, POST ...), on ira ou non exécuté le CGI, auquel on passera des informations via execve(path, args)
+9. On récupère l'output du CGI. On forme la réponse et on la send(). On retire de select le tracking du socket du client.
+10. On delete le client lié au serveur et de nouveau, le serveur se met à l'écoute d'autre client grâce à select() qui va freeze
+
+-----------

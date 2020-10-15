@@ -1,0 +1,64 @@
+Réseau / Serveur / Client / Select / Sockets :
+
+    Best :  https://www.frameip.com/c-mode-connecte/
+            https://www.bogotobogo.com/cplusplus/sockets_server_client.php
+    
+    https://www.lowtek.com/sockets/select.html
+    https://www.youtube.com/watch?v=s3o5tixMFho
+    https://notes.shichao.io/unp/ch6/#readset-writeset-and-exceptset-as-value-result-arguments
+    http://beej.us/guide/bgnet/html/
+    http://vidalc.chez.com/lf/socket.html
+    https://github.com/HenriBrg/Global/blob/master/R%C3%A9seaux/Prog.md
+    https://broux.developpez.com/articles/c/sockets/#
+    http://www.kegel.com/c10k.html
+
+
+HTTP / Headers / Body / Methods :
+
+    https://www.youtube.com/watch?v=4t2lcdSvYEI
+    https://stackoverflow.com/questions/4726515/what-http-response-headers-are-required
+    https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+    https://stackoverflow.com/questions/4157104/c-http-server-chunked-data-transfer
+    https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#:~:text=14.13%20Content%2DLength,the%20request%20been%20a%20GET.
+
+CGI :
+
+    https://www.developpez.net/forums/d151285/php/langage/php-js-quoi-sert-php-cgi-exe-repertoire-php/
+    https://perso.liris.cnrs.fr/lionel.medini/enseignement/M1IF03/Tutoriels/Tutoriel_CGI_SSI.pdf
+    https://computer.howstuffworks.com/cgi.htm
+    https://www.reddit.com/r/C_Programming/comments/gse04e/when_can_send_return_fewer_bytes_than_expected/
+
+NGINX :
+
+    http://www.rgonzo.us/shiny/books/Nginx%20HTTP%20Server%20-%20Unknown.pdf
+    https://www.codeooze.com/webdesign/http2-wireshark-analysis-02/
+    https://www.docker.com/blog/how-to-use-the-official-nginx-docker-image/
+    https://www.linode.com/docs/web-servers/nginx/nginx-installation-and-basic-setup/
+    https://www.linode.com/docs/web-servers/nginx/slightly-more-advanced-configurations-for-nginx/
+    https://mondedie.fr/d/9343-comment-bien-configurer-les-location-nginx
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+STRESS TEST :
+
+    https://www.interserver.net/tips/kb/http-load-testing-siege/
+    https://github.com/JoeDog/siege
+
+AUTRES :
+
+    https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+
+
+BONUS :
+
+    PROXY : https://www.geeksforgeeks.org/creating-a-proxy-webserver-in-python-set-1/?ref=lbp
+    SSL   : https://www.whoishostingthis.com/compare/ssl-certificates/resources/
+
+SOLUTIONS TO ERRORS ENCOUNTERED :
+
+    https://stackoverflow.com/questions/1880509/socket-send-error-as-broken-pipe
+    https://stackoverflow.com/questions/39718967/getting-connection-reset-by-peer-during-tcp-socket-connection
+
+

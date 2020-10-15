@@ -24,7 +24,7 @@ DOBJS	= ./comp/
 
 # SOURCES
 
-SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp
+SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp methods.cpp
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 # COMPILATION

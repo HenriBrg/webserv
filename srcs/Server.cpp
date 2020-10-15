@@ -8,8 +8,8 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET POST");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
@@ -202,36 +202,41 @@ int Server::readClientRequest(Client *c) {
             // else -> error 4XX ?
         }
         if (c->recvStatus == Client::COMPLETE) {
-            FD_SET(c->acceptFd, &gConfig.writeSetBackup);        
+            LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we know handle response"));
+            FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
+            c->req.showReq();
         }
     }
 
     return (EXIT_SUCCESS);
 }
 
+// OLD WAY
+// Pour l'instant on va au plus simple
+// char res[36] = "Hello Client ! Welcome to WEBSERV \n";
+// write(c->acceptFd, res, sizeof(res));
+
+// c->res.handleResponse(&c->req);
+// // if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
+// //     c->isConnected = 0; 
+// //     LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
+// //     return (ret);
+// // }
+// FD_CLR(c->acceptFd, &gConfig.readSetBackup);
+// FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
+
+// exit(0);
+
+
 int Server::writeClientResponse(Client *c) {
 
-    
-    // TODO : send in multiples call depending the response size
-
     int ret = 0;
-    c->res.handleResponse(&c->req);
-    // Pour l'instant on va au plus simple
-    char res[36] = "Hello Client ! Welcome to WEBSERV \n";
-    write(c->acceptFd, res, sizeof(res));
-    // if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
-    //     c->isConnected = 0; 
-    //     LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
-    //     return (ret);
-    // }
-    // We no longer need to read or write client
-    FD_CLR(c->acceptFd, &gConfig.readSetBackup);
-    // A uptate quand on écrira la réponse en plusieurs fois
-    FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
-  
-  
-    exit(0);
 
+    if (c->res.sendStatus == Response::PREPARE) {
+        c->res.resDispatch(&c->req);
+    }
+
+    exit(0);
 
     return (EXIT_SUCCESS);
 }
@@ -250,11 +255,6 @@ void Server::handleClientRequest(Client *c) {
             LOGPRINT(LOGERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
             return ;
         }
-
-        
-        c->req.showReq();
-
-
         if (writeClientResponse(c) != 0)
             return ;
     } else
@@ -273,7 +273,9 @@ Server::ServerException::ServerException(std::string where, std::string error) {
     this->error = where + ": " + error;
 }
 
-Server::ServerException::~ServerException(void) throw() {}
+Server::ServerException::~ServerException(void) throw() {
+
+}
 
 const char * Server::ServerException::what(void) const throw() {
     return this->error.c_str();

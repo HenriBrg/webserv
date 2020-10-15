@@ -2,7 +2,7 @@
 
 # Requêtes de test, pas nécessairement cohérentes
 
-# curl -iv "http://localhost:7777"
+curl -v "http://localhost:7777"
 # curl -iv "http://localhost:7777/?a=1&b=2" -H "Content-type: application/x-www-form-urlencoded"
 
 #  curl -iv "http://localhost:7777/?a=1&b=2" -H "Accept-Language: da, en-gb;q=0.8, en;q=0.7" \
@@ -27,5 +27,5 @@
 # curl -ivd @payloads/smallBody http://localhost:7777
 # curl -ivd @payloads/mediumBody http://localhost:7777
 
-curl -iv --data "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n" \
-         http://localhost:7777 -H "Transfer-Encoding: chunked, gzip"
+# curl -iv --data "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n" \
+        #  http://localhost:7777 -H "Transfer-Encoding: chunked, gzip"

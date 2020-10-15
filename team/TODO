@@ -1,0 +1,35 @@
+
+HTTP / Headers /  / Methods :
+
+    - Comprendre tous les headers, s'assurer du bon classement entre ceux liés à la requête et ceux liés à la réponse
+    - Tester davantage le correct parsing des headers / body
+    - Identifier les éléments d'un requête qui conduise à une erreur client 4XX et ceux sur lesquels une erreur fera juste qu'on l'ignore
+    - Comprendre les différences entre chaque méthodes (GET, TRACE, ...)
+    - QUID des requête sur un dossier : GET /folder/ HTTP/1.1 ? Le sujet parle d'autoindex
+    - Mettre en place les pages d'erreurs
+    - QUID du serveur par défaut dans le sujet ?
+
+BODY :
+    - Tester à fond, avec des énormes body
+    - Gérer le max_body de configuration
+    - 
+
+CGI :
+
+    - Comprendre le CGI
+    - Tout est à faire
+
+
+NGINX :
+
+    - Parser la configuration (sachant qu'on a le droit à <algorithm>)
+    - Comprendre les paramètres du CGI dans la configuration
+
+Réponse :
+
+    - Tout est à faire
+
+AUTRES :
+
+    Leaks de mémoire, de fd
+    S'assurer de bien tout reset entre chaque client, si un même client fait plusieurs requêtes

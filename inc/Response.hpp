@@ -39,15 +39,34 @@ class Response {
         Client      *resClient;
         std::string finalResponse;
 
+        int sendStatus;
+        enum resStatus {
+            PREPARE,
+            SENDING,
+            DONE,
+            ERROR
+        };
+
 
         Response();
         virtual ~Response();
         void reset();
-        void handleResponse(Request * req);
+        void resDispatch(Request * req);
+        int requestValidition(Request * req);
+        std::string const logInfo(void);
         
         /* METHODS */
 
-        void get(Request * req);
+        void (Response::*methodFctPtr)(Request * req);
+        void getReq(Request * req);
+        void headReq(Request * req);
+        void putReq(Request * req);
+        void postReq(Request * req);
+        void connectReq(Request * req);
+        void traceReq(Request * req);
+        void optionsReq(Request * req);
+        void deleteReq(Request * req);
+
 
         
         /* MEMBERS */
