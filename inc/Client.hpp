@@ -2,9 +2,8 @@
 # define CLIENT_HPP
 
 # include <iostream>
+# include <fstream>
 # include <unistd.h>
-
-
 
 # include <sys/select.h>
 # include <sys/time.h>

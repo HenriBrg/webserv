@@ -23,6 +23,7 @@ void Response::reset() {
     statusCode = -1;
     contentLength = -1;
     sendStatus = Response::PREPARE;
+    _errorFileName.clear();
     _methodFctPtr = nullptr;
 
 }
@@ -31,9 +32,28 @@ Response::~Response() {
     reset();
 }
 
-void Response::authControl(Request * req) {
+/* https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Authorization */
 
-    /* Base 64 Deal ... */
+void Response::authControl(Request * req) {
+    
+    std::vector<std::string> tab;
+
+    if (!req->authorization.empty()) {
+
+        tab = ft::split(req->authorization, ' ');
+        if (tab.size() < 2)
+            LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
+        if (tab[0] != "Basic" && tab[1] != "BASIC")
+            LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
+        if (ft::decodeBase64(tab[1]) != req->authorization) {
+            LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
+            sendStatus = Response::ERROR;
+            statusCode = UNAUTHORIZED_401;
+            _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
+            return ;
+        } else
+            LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
+    }
 
 }
 
@@ -62,6 +82,7 @@ void Response::methodControl(Request * req) {
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
         sendStatus = Response::ERROR;
         statusCode = METHOD_NOT_ALLOWED_405;
+        _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
     } else
         _methodFctPtr = tab[req->method];
     tab.clear();
@@ -71,16 +92,11 @@ void Response::resDispatch(Request * req) {
 
     methodControl(req);
     authControl(req);
-    /* Errors Checking Here */
+    // ... TODO : Additionnal controls
+    (this->*_methodFctPtr)(req);
     if (sendStatus == Response::ERROR) {
-        LOGPRINT(LOGERROR, this, ("Response::resDispatch() : Error raised : " + std::to_string(statusCode) + " | Ending client connection"));
+        _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
         return ;
-    } else {
-        (this->*_methodFctPtr)(req);
-    }
-    /* New Check - After CGI step */
-    if (sendStatus == Response::ERROR) {
-
     }
 
 

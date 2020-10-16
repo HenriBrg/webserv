@@ -8,8 +8,8 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD", "root:pass");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 

@@ -2,6 +2,33 @@
 
 namespace ft {
 
+
+	std::string decodeBase64(std::string & token) {
+
+		int val = 0;
+		int valb = -8;
+		unsigned char c;
+		std::string out;
+		std::vector<int> tab(256, -1);
+		std::string::iterator it = token.begin();
+		std::string::iterator itend = token.end();
+
+		for (int i = 0; i < 64; i++)
+			tab["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i; 
+		for (; it != itend; it++) {
+			c = *it;
+			if (tab[c] == -1) break;
+			val = (val << 6) + tab[c];
+			valb += 6;
+			if (valb >= 0) {
+				out.push_back(char((val >> valb) & 0xFF));
+				valb -= 8;
+			}
+		}
+		return out;
+
+	}
+
 	void	getLine(std::string & buf, std::string & line) {
 		size_t pos;
 

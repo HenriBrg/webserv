@@ -12,6 +12,7 @@ namespace ft {
     std::vector<std::string> split(const std::string & str, char delim);
 	std::string     trim(const std::string& str);
 	void            deleteCarriageReturn(std::string &str);
+	std::string 	decodeBase64(std::string & token);
 
 
 }
