@@ -19,10 +19,11 @@ void Response::reset() {
     transfertEncoding.clear();
     wwwAuthenticate.clear();
     finalResponse.clear();
+    _resBody.clear();
 
-    statusCode = -1;
+    _statusCode = -1;
     contentLength = -1;
-    sendStatus = Response::PREPARE;
+    _sendStatus = Response::PREPARE;
     _errorFileName.clear();
     _methodFctPtr = nullptr;
 
@@ -46,10 +47,10 @@ void Response::authControl(Request * req) {
         if (tab[0] != "Basic" && tab[1] != "BASIC")
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
         if (ft::decodeBase64(tab[1]) != req->authorization) {
-            LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
-            sendStatus = Response::ERROR;
-            statusCode = UNAUTHORIZED_401;
+            _sendStatus = Response::ERROR;
+            _statusCode = UNAUTHORIZED_401;
             _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
+            LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
         } else
             LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
@@ -67,22 +68,20 @@ void Response::methodControl(Request * req) {
     std::vector<std::string>    allowedMethods;
     std::vector<std::string>::iterator    tmp;
 
-    tab["GET"] = &Response::getReq;
-	tab["HEAD"] = &Response::headReq;
-	tab["PUT"] = &Response::putReq;
-	tab["POST"] = &Response::postReq;
-	tab["CONNECT"] = &Response::connectReq;
-	tab["TRACE"] = &Response::traceReq;
-	tab["OPTIONS"] = &Response::optionsReq;
-	tab["DELETE"] = &Response::deleteReq;
+    tab["GET"]     = & Response::getReq;
+	tab["PUT"]     = & Response::putReq;
+	tab["POST"]    = & Response::postReq;
+	tab["HEAD"]    = & Response::headReq;
+	tab["TRACE"]   = & Response::traceReq;
+	tab["DELETE"]  = & Response::deleteReq;
+	tab["CONNECT"] = & Response::connectReq;
+	tab["OPTIONS"] = & Response::optionsReq; 
 
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
+        setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
-        sendStatus = Response::ERROR;
-        statusCode = METHOD_NOT_ALLOWED_405;
-        _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
     } else
         _methodFctPtr = tab[req->method];
     tab.clear();
@@ -94,16 +93,68 @@ void Response::resDispatch(Request * req) {
     authControl(req);
     // ... TODO : Additionnal controls
     (this->*_methodFctPtr)(req);
-    if (sendStatus == Response::ERROR) {
+    if (_sendStatus == Response::ERROR) {
         _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
         return ;
     }
 
+}
+
+void Response::resBuild(Request * req) {
+    
+    std::map<int, std::string> reasonMap;
+    
+    reasonMap[200] = "OK";
+    reasonMap[201] = "Created";
+    reasonMap[202] = "Accepted";
+    reasonMap[204] = "No Content";
+    reasonMap[305] = "Use Proxy";
+    reasonMap[400] = "Bad Request";
+    reasonMap[401] = "Unauthorized";
+    reasonMap[404] = "Not Found";
+    reasonMap[405] = "Method Not Allowed";
+    reasonMap[413] = "Request Entity Too Large";
+    reasonMap[414] = "Request-URI Too Long";
+    reasonMap[495] = "SSL Certificate Error";
+    reasonMap[500] = "Internal Server Error";
+    reasonMap[501] = "Not Implemented";
+    reasonMap[503] = "Service Unavailable";
+
+    httpVersion = "HTTP/1.1";
+    reason = reasonMap[_statusCode];
+    server = "webserv-42";
+    date = ft::getDate();
+
+    if (!_resBody.empty())
+        contentLength = _resBody.size();
+
+
 
 }
 
+/* Body */
+
+void Response::addBody(Request * req) {
+
+    // TODO LATER
+
+}
+
+
+/* Errors Settings */
+
+void Response::setErrorParameters(Request * req, int sendStatus, int code) {
+
+    _sendStatus = sendStatus;
+    _statusCode = code;
+    _errorFileName = "error.html";
+
+}
+
+/* Utils */
+
 std::string const Response::logInfo(void) {
     std::string ret;
-    ret = "Response | To Client with Socket : " + std::to_string(resClient->acceptFd) + " | Method : " + resClient->req.method + " | Response Status : " + std::to_string(sendStatus);
+    ret = "Response | To Client with Socket : " + std::to_string(resClient->acceptFd) + " | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
     return (ret);
 }

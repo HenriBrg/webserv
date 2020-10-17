@@ -12,6 +12,8 @@ class Location {
         std::string                 index;
         std::string                 methods; // Currently it need to be GET,POST,PUT
         std::string                 auth;
+        std::string                 cgiPath;
+
         
 
         // Pour la phase de développement pré-parsing, on utilisera ces locations :
@@ -19,12 +21,13 @@ class Location {
         // Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
         // Location *newLoc2 = new Location("/", "./www", "page.html", "GET POST");
 
-        Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth) {
+        Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth, std::string _cgiPath) {
             uri = _uri;
             root = _root;
             index = _index;
             methods = _methods;
             auth = _auth;
+            cgiPath = _cgiPath;
         };
 
         private:

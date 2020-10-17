@@ -8,8 +8,8 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD", "root:pass");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD", "root:pass", "./www/cgi_tester");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi_tester");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
@@ -232,9 +232,19 @@ int Server::writeClientResponse(Client *c) {
 
     int ret = 0;
 
-    if (c->res.sendStatus == Response::PREPARE) {
+    if (c->res._sendStatus == Response::PREPARE) {
+
         c->res.resDispatch(&c->req);
+        c->res.resBuild(&c->req);
+        c->res._sendStatus = Response::SENDING;
+
+        // if (!c->res._resBody.empty())
+        //     addBody(c->res);
+
+
     }
+
+
 
     exit(0); // Tempo
     return (EXIT_SUCCESS);

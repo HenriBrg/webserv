@@ -15,6 +15,8 @@ Réseau / Serveur / Client / Select / Sockets :
 
 HTTP / Headers / Body / Methods :
 
+    http://httpbin.org/ --> /headers permet de voir la requête, beaucoup de possibilités / Valable aussi en https
+
     https://www.youtube.com/watch?v=4t2lcdSvYEI
     https://stackoverflow.com/questions/4726515/what-http-response-headers-are-required
     https://en.wikipedia.org/wiki/Chunked_transfer_encoding
@@ -45,6 +47,8 @@ STRESS TEST :
 
     https://www.interserver.net/tips/kb/http-load-testing-siege/
     https://github.com/JoeDog/siege
+    https://www.w3schools.com/python/ref_requests_response.asp
+    
 
 AUTRES :
 

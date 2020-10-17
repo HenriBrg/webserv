@@ -34,3 +34,12 @@ AUTRES :
 
     Leaks de mémoire, de fd
     S'assurer de bien tout reset entre chaque client, si un même client fait plusieurs requêtes
+
+
+
+-----------------------
+
+Questions :
+
+    - rootPath pour le cgi => inutile non ?
+    - QUID extension du CGI ?

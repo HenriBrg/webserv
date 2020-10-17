@@ -2,11 +2,34 @@
 
 void Response::getReq(Request * req) {
 
-    LOGPRINT(INFO, this, ("Response::getReq() : Calling GET Request Function"));
+    int cgiUp = 0;
+	struct stat	buffer;
 
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
+    if (stat(req->file.c_str(), &buffer) == 0)
+        return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
+   
+    if (stat(req->reqLocation->cgiPath.c_str(), &buffer) == 0)
+        if ((buffer.st_mode & S_IEXEC) != 0)
+            cgiUp = 1;
     
+    cgiUp = 0; // ---------------------------------> Temporary to test without CGI !
+    if (cgiUp == 1) {
+
+
+
+    } else {
+
+        _statusCode = OK_200;
+
+    }
+
+
+    // LOGPRINT(INFO, this, ("Response::getReq() : CGI DOWN"));
+    // LOGPRINT(INFO, this, ("Response::getReq() : CGI UP"));
+    // LOGPRINT(INFO, this, ("Response::getReq() : Succesfull GET Request"));
+
 }
 
 void Response::headReq(Request * req) {
@@ -88,8 +111,8 @@ void Response::negotiateAcceptCharset(Request * req) {
         return ;
     else {
         LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
-        sendStatus = Response::ERROR;
-        statusCode = BAD_REQUEST_400;
+        _sendStatus = Response::ERROR;
+        _statusCode = BAD_REQUEST_400;
         _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
 
     }

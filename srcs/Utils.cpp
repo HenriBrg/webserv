@@ -86,6 +86,35 @@ namespace ft {
 		return (result);
 	}
 
+	std::string 	getDate(void) {
+		struct timeval 	tv;
+		struct tm 		time;
+		struct timezone tz;
+		char 			buffer[1000];
+		std::string 	date;
+
+		gettimeofday(&tv, &tz);
+		strptime(std::to_string(tv.tv_sec).c_str(), "%s", &time);
+		strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S CEST", &time);
+		date = buffer;
+		return (date);
+	}
+
+	std::string 	getLastModifDate(std::string file) {
+		struct stat 	info;
+		std::string 	sec;
+		struct tm 		time;
+		std::string 	date;
+		char 			buffer[1000];
+
+		stat(file.c_str(), &info);
+		sec = std::to_string(info.st_mtime).c_str();
+		strptime(sec.c_str(), "%s", &time);
+		strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S CEST", &time);
+		date = buffer;
+		return (date);
+	}
+
 }
 
 namespace utils {

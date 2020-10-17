@@ -9,18 +9,21 @@
 # include "Server.hpp"
 # include "Location.hpp"
 
-#define OK_200							200
-#define CREATED_201						201
-#define ACCEPTED_202					202
-#define NO_CONTENT_204					204
-#define BAD_REQUEST_400					400
-#define UNAUTHORIZED_401				401
-#define NOT_FOUND_404 					404
-#define METHOD_NOT_ALLOWED_405			405
-#define REQUEST_ENTITY_TOO_LARGE_413	413
-#define INTERNAL_ERROR_500				500
-#define NOT_IMPLEMENTED_501				501
-#define SERVICE_UNAVAILABLE_503			503
+# define OK_200							200
+# define CREATED_201					201
+# define ACCEPTED_202					202
+# define NO_CONTENT_204					204
+# define USE_PROXY_305                  305	
+# define BAD_REQUEST_400				400
+# define UNAUTHORIZED_401				401
+# define NOT_FOUND_404 					404
+# define METHOD_NOT_ALLOWED_405			405
+# define REQUEST_ENTITY_TOO_LARGE_413	413
+# define REQUEST_URI_TOO_LONG           414
+# define SSL_CERTIFICATE_ERROR          495
+# define INTERNAL_ERROR_500				500
+# define NOT_IMPLEMENTED_501			501
+# define SERVICE_UNAVAILABLE_503		503
 
 // In HTTP, content negotiation is the mechanism that is used for serving different representations of a resource at the same URI,
 // so that the user agent can specify which is best suited for the user (for example, which language of a
@@ -40,7 +43,7 @@ class Response {
         std::string _errorFileName;
         std::string finalResponse;
 
-        int sendStatus;
+        int _sendStatus;
         enum resStatus {
             PREPARE,
             SENDING,
@@ -54,6 +57,7 @@ class Response {
         virtual ~Response();
         void    reset();
         void    resDispatch(Request * req);
+        void    resBuild(Request * req);
 
         /* CONTROL */
 
@@ -75,23 +79,31 @@ class Response {
         void    deleteReq(Request * req);
         void    (Response::*_methodFctPtr)(Request * req);
 
+        /* BODY */
+
+        void addBody(Request * req);
+
         /* UTILS METHODS */
 
         void negotiateAcceptLanguage(Request * req);
         void negotiateAcceptCharset(Request * req);
+
+        /* ERRORS */
+
+        void setErrorParameters(Request * req, int sendStatus, int code);
 
         
         /* MEMBERS */
 
         // https://web.maths.unsw.edu.au/~lafaye/CCM/internet/http.htm
 
-        std::string body;
+        std::string _resBody;
 
         
         /* 1) Ligne de statut */
         
         std::string httpVersion;
-        int         statusCode;
+        int         _statusCode;
         std::string reason;
 
 

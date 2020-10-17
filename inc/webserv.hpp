@@ -5,6 +5,7 @@
 # include <iostream>
 # include <iomanip>
 # include <errno.h>  
+# include <signal.h>
 
 # include "Config.hpp"
 # include "Client.hpp"
