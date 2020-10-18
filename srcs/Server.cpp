@@ -177,7 +177,7 @@ int Server::readClientRequest(Client *c) {
 
             // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
-                LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern : \\r\\n\\r\\n"));
+                LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 // An HTTP request has to end with "\r\n\r\n"
                 // If we pass here, it means that the request is fully received
                 
@@ -236,17 +236,20 @@ int Server::writeClientResponse(Client *c) {
 
         c->res.resDispatch(&c->req);
         c->res.resBuild(&c->req);
+        c->res.resFormat();
         c->res._sendStatus = Response::SENDING;
-
         // if (!c->res._resBody.empty())
-        //     addBody(c->res);
-
-
     }
 
-
-
-    exit(0); // Tempo
+    
+    ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
+    if (ret == -1)
+        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
+    
+    
+    FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
+    
+    
     return (EXIT_SUCCESS);
 }
 

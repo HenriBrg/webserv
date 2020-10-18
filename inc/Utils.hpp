@@ -26,4 +26,14 @@ namespace utils {
 
 }
 
+namespace responseUtils {
+
+	std::string	getContentType(std::string file);
+	std::string getReasonPhrase(Response * res);
+	void headerFormat(std::string & respStr, std::string key, int value);
+	void headerFormat(std::string & respStr, std::string key, std::string value);
+	void headerFormat(std::string & respStr, std::string key, std::map<int, std::string> value);
+
+}
+
 # endif

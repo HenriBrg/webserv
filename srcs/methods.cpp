@@ -7,9 +7,9 @@ void Response::getReq(Request * req) {
 
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
-    if (stat(req->file.c_str(), &buffer) == 0)
+    if (stat(req->file.c_str(), &buffer) == -1)
         return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
-   
+  
     if (stat(req->reqLocation->cgiPath.c_str(), &buffer) == 0)
         if ((buffer.st_mode & S_IEXEC) != 0)
             cgiUp = 1;
@@ -21,6 +21,8 @@ void Response::getReq(Request * req) {
 
     } else {
 
+        // For testing in advance, not the right place
+        _resFile = req->file;
         _statusCode = OK_200;
 
     }
@@ -78,6 +80,8 @@ void Response::negotiateAcceptLanguage(Request * req) {
     std::string tmp;
     std::string backup = req->file;
 
+    if (req->acceptCharset.empty())
+        return ;
     while (i < req->acceptLanguage.size()) {
         if (req->acceptLanguage[i].empty())
             continue ;
@@ -101,6 +105,8 @@ void Response::negotiateAcceptCharset(Request * req) {
     int i = 0;
     int isUTF8 = 0;
 
+    if (req->acceptCharset.empty())
+        return ;
     while (i < req->acceptCharset.size()) {
         if (req->acceptLanguage[i].empty())
             if (req->acceptLanguage[i] == "utf-8")
@@ -113,7 +119,7 @@ void Response::negotiateAcceptCharset(Request * req) {
         LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
         _sendStatus = Response::ERROR;
         _statusCode = BAD_REQUEST_400;
-        _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
+        _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
 
     }
 

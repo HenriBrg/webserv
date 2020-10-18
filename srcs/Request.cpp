@@ -264,7 +264,7 @@ void Request::checkBody() {
 
     // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
     // TODO : si plusieurs encoding, itérer dessus pour matcher "chunked"
-    if (contentLength > 0 || transferEncoding[0] == "chunked") {
+    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));

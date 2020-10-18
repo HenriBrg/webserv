@@ -11,6 +11,7 @@ Réseau / Serveur / Client / Select / Sockets :
     https://github.com/HenriBrg/Global/blob/master/R%C3%A9seaux/Prog.md
     https://broux.developpez.com/articles/c/sockets/#
     http://www.kegel.com/c10k.html
+    https://beej.us/guide/bgnet/pdf/bgnet_a4_c_1.pdf --> PARTIAL SEND()
 
 
 HTTP / Headers / Body / Methods :

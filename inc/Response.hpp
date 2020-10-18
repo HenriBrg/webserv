@@ -41,7 +41,8 @@ class Response {
 
         Client      *resClient;
         std::string _errorFileName;
-        std::string finalResponse;
+        std::string _resFile;
+        std::string formatedResponse;
 
         int _sendStatus;
         enum resStatus {
@@ -58,6 +59,7 @@ class Response {
         void    reset();
         void    resDispatch(Request * req);
         void    resBuild(Request * req);
+        void    resFormat(void);
 
         /* CONTROL */
 
@@ -112,7 +114,7 @@ class Response {
         // Cet entête doit être envoyée si le serveur répond avec un statut 405 Method Not Allowed pour indiquer quelles méthodes peuvent être utilisées pour la requête.
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Allow
         // Allow: GET, POST, HEAD
-        std::string allowedMethods;
+        std::string allow;
 
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Content-Language
         std::map<int, std::string> contentLanguage;

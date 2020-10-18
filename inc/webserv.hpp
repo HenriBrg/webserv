@@ -3,6 +3,11 @@
 
 # include <string>
 # include <iostream>
+
+// Forbidden !
+# include <fstream>
+# include <sstream>
+
 # include <iomanip>
 # include <errno.h>  
 # include <signal.h>

@@ -7,7 +7,7 @@ Response::Response(void) {
 void Response::reset() {
     httpVersion.clear();
     reason.clear();
-    allowedMethods.clear();
+    allow.clear();
     contentLanguage.clear();
     contentLocation.clear();
     contentType.clear();
@@ -18,8 +18,9 @@ void Response::reset() {
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
-    finalResponse.clear();
+    formatedResponse.clear();
     _resBody.clear();
+    _resFile.clear();
 
     _statusCode = -1;
     contentLength = -1;
@@ -49,7 +50,8 @@ void Response::authControl(Request * req) {
         if (ft::decodeBase64(tab[1]) != req->authorization) {
             _sendStatus = Response::ERROR;
             _statusCode = UNAUTHORIZED_401;
-            _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
+            _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
+
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
         } else
@@ -80,6 +82,7 @@ void Response::methodControl(Request * req) {
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
+        // TODO : set response header allowedMethods !
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
@@ -89,12 +92,14 @@ void Response::methodControl(Request * req) {
 
 void Response::resDispatch(Request * req) {
 
+    // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
     methodControl(req);
+
     authControl(req);
     // ... TODO : Additionnal controls
     (this->*_methodFctPtr)(req);
     if (_sendStatus == Response::ERROR) {
-        _errorFileName = "error.html"; /* TO UPDATE when we will have one html file per error */
+        _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
         return ;
     }
 
@@ -102,33 +107,78 @@ void Response::resDispatch(Request * req) {
 
 void Response::resBuild(Request * req) {
     
-    std::map<int, std::string> reasonMap;
+
+    // 1) Status Line
     
-    reasonMap[200] = "OK";
-    reasonMap[201] = "Created";
-    reasonMap[202] = "Accepted";
-    reasonMap[204] = "No Content";
-    reasonMap[305] = "Use Proxy";
-    reasonMap[400] = "Bad Request";
-    reasonMap[401] = "Unauthorized";
-    reasonMap[404] = "Not Found";
-    reasonMap[405] = "Method Not Allowed";
-    reasonMap[413] = "Request Entity Too Large";
-    reasonMap[414] = "Request-URI Too Long";
-    reasonMap[495] = "SSL Certificate Error";
-    reasonMap[500] = "Internal Server Error";
-    reasonMap[501] = "Not Implemented";
-    reasonMap[503] = "Service Unavailable";
-
     httpVersion = "HTTP/1.1";
-    reason = reasonMap[_statusCode];
-    server = "webserv-42";
+    reason = responseUtils::getReasonPhrase(this);
+
+    // 2) Headers
+    
+    allow.clear();             // Unless Error 405
+
+    contentLanguage[0] = "fr";          // contentLanguage always to "fr"
+
+
+    contentLocation.clear();            // We don't care
+    contentType[0] = responseUtils::getContentType(_resFile);
+    lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
+    location.clear();                   // Use only with 300 status code
     date = ft::getDate();
+    retryAfter.clear();
+    server = "webserv-42";              // Config file or hard-coded ?
+    
+    // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
+    transfertEncoding.clear();
+    if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
+        transfertEncoding[0] = "chunked";
+    wwwAuthenticate.clear();            // Unless an authorization was asked ?
 
-    if (!_resBody.empty())
-        contentLength = _resBody.size();
+    // 3) Others
+    if (req->method != "HEAD") {
 
+        std::ifstream fd(_resFile);
+        std::stringstream buffer;
+        buffer << fd.rdbuf();
+        _resBody = buffer.str();
 
+    }
+    
+    contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+    contentLength = contentLength ? contentLength : -1;
+
+}
+
+void Response::resFormat(void) {
+
+    formatedResponse.clear();
+
+    // 1) Status Line
+    formatedResponse.append(httpVersion);
+    formatedResponse.append(" " + std::to_string(_statusCode) + " ");
+    formatedResponse.append(reason);
+    formatedResponse.append("\r\n");
+
+    // 2) Headers
+
+    // if (_statusCode == METHOD_NOT_ALLOWED_405)
+    //     ...
+
+    responseUtils::headerFormat(formatedResponse, "Allow", allow);
+    responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
+    responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
+    responseUtils::headerFormat(formatedResponse, "Content-Location", contentLocation);
+    responseUtils::headerFormat(formatedResponse, "Content-Type", contentType);
+    responseUtils::headerFormat(formatedResponse, "Last-Modified", lastModified);
+    responseUtils::headerFormat(formatedResponse, "Location", location);
+    responseUtils::headerFormat(formatedResponse, "Date", date);
+    responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
+    responseUtils::headerFormat(formatedResponse, "Host", server);
+    responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
+    // QUID de www-authenticate ?
+    formatedResponse.append("\r\n");
+    if (contentLength > 0)
+        formatedResponse.append(_resBody);
 
 }
 
@@ -147,7 +197,8 @@ void Response::setErrorParameters(Request * req, int sendStatus, int code) {
 
     _sendStatus = sendStatus;
     _statusCode = code;
-    _errorFileName = "error.html";
+    _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
+
 
 }
 
