@@ -47,7 +47,7 @@ class Logger {
                 str += " | " + message;
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << " [INFO] " << END << str << std::endl;
+                    std::cout << YELLOW << " [INFOS] " << END << str << std::endl;
                     break ;
                 case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << str << std::endl;
@@ -67,7 +67,7 @@ class Logger {
             std::cout << ft::getTimestamp();
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << " [INFO] " << END << message << std::endl;
+                    std::cout << YELLOW << " [INFOS] " << END << message << std::endl;
                     break ;
                 case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << message << std::endl;

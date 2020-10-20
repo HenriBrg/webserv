@@ -33,8 +33,8 @@ class Config {
         void    addFd(int fd);
         void    removeFd(int fd);
         void    resetFds();
-        void    clearConfig();
         void    init();
+        void    webservShutdown(int signal);
 
     private:
 

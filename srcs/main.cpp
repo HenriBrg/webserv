@@ -8,6 +8,8 @@ int main(int ac, char **av) {
 	Client *c;
 
     gConfig.init();
+    signal(SIGINT, gConfig.webservShutdown);
+
     while (gConfig.run) {
         gConfig.resetFds();
         NOCLASSLOGPRINT(INFO, ("Select call with maxFds = " + std::to_string(gConfig.getMaxFds()) + "\n"));

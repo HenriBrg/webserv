@@ -147,62 +147,35 @@ int Server::readClientRequest(Client *c) {
 
     int ret = -1;
 
-    // En temps normal, le nombre d'octets reçus est retourné
-    // Si aucun message n'est disponible sur la socket, la valeur -1 est renvoyée. En fait il faut juste réessayer + tard
-    // La valeur de retour sera 0 si le pair a effectué un arrêt normal.  
-   
-    // OLD WAY
-    // int x = strlen(c->buf);
-    // ret = recv(c->acceptFd, c->buf + x, BUFMAX - x, 0);
-    // x += ret;
-    // c->buf[x] = '\0';
-    // c->req.reqBuf = std::string(c->buf, x);
-
-
-    // NEW WAY
-    // int x = strlen(c->buf);
     ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
-    // x += ret;
-
-
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
         LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned " + std::to_string(ret) + " : Error : " + std::string(strerror(errno))));
         return (EXIT_FAILURE);
     } else {
-        
         c->buf[ret] = '\0';
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
-
             // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                // An HTTP request has to end with "\r\n\r\n"
-                // If we pass here, it means that the request is fully received
-                
-                // TO DELETE/AVOID so that we don't duplicate too much buffers
-                c->req.reqBuf = std::string(c->buf, ret);
-                
+                c->req.reqBuf = std::string(c->buf, ret); // ----> We should delete it for optimization
                 c->req.parse(locations);
-
             } else { 
-                // If we pass here, it means that the request isn't fully received, so we'll have to recall recv
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found yet) - We wait until its completion"));
                 return (EXIT_FAILURE);
             }
         }
         if (c->recvStatus == Client::BODY) {
-            // Body start after the \r\n\r\n of headers
-            // https://en.wikipedia.org/wiki/Chunked_transfer_encoding
             if ((c->req.transferEncoding[0] == "chunked"))
                 c->req.parseChunkedBody();
             else if (c->req.contentLength > 0)
                 c->req.parseSingleBody();
-            // else -> error 4XX ?
+            // TODO : else error 4XX ?
         }
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we know handle response"));
+            FD_CLR(c->acceptFd, &gConfig.readSetBackup);
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
             c->req.showReq();
         }
@@ -211,62 +184,57 @@ int Server::readClientRequest(Client *c) {
     return (EXIT_SUCCESS);
 }
 
-// OLD WAY
-// Pour l'instant on va au plus simple
-// char res[36] = "Hello Client ! Welcome to WEBSERV \n";
-// write(c->acceptFd, res, sizeof(res));
-
-// c->res.handleResponse(&c->req);
-// // if ((ret = send(c->acceptFd, c->res.finalResponse.c_str(), c->res.finalResponse.length(), 0)) == -1) {
-// //     c->isConnected = 0; 
-// //     LOGPRINT(ERROR, c, ("Server::writeClientResponse : send() returned -1 : Error : " + std::string(strerror(errno))));
-// //     return (ret);
-// // }
-// FD_CLR(c->acceptFd, &gConfig.readSetBackup);
-// FD_CLR(c->acceptFd, &gConfig.writeSetBackup); 
-
-// exit(0);
-
-
 int Server::writeClientResponse(Client *c) {
 
     int ret = 0;
 
     if (c->res._sendStatus == Response::PREPARE) {
-
         c->res.resDispatch(&c->req);
         c->res.resBuild(&c->req);
         c->res.resFormat();
         c->res._sendStatus = Response::SENDING;
-        // if (!c->res._resBody.empty())
     }
 
-    
-    ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
-    if (ret == -1)
-        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
-    
-    
-    FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
-    
-    
+    if (c->res._sendStatus == Response::ERROR) {
+        // TODO - Here we should receive and handle errors which habe been set inside dispatch(), methods & cgi, build()
+    }
+
+    if (c->res._sendStatus == Response::SENDING) {
+        ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
+        if (ret == -1) {
+            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
+            return EXIT_FAILURE;
+            // Boolean on client connection status
+        }
+        c->res._bytesSent += ret;
+        if (c->res._bytesSent >= c->res.formatedResponse.size()) {
+            // In theory to fit perfectly, we should use == and not >=
+            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+            c->res._sendStatus = Response::DONE;
+        } else
+            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+    }
+
+    if (c->res._sendStatus == Response::DONE) {
+        FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
+        gConfig.removeFd(c->acceptFd);
+        
+        // close(c->acceptFd); -----------> When close and what are the collaterals ?
+    }
+
     return (EXIT_SUCCESS);
 }
 
 void Server::handleClientRequest(Client *c) {
 
-    if (c->acceptFd == -1)
-        return ;
     if (FD_ISSET(c->acceptFd, &gConfig.readSet)) {
         if (readClientRequest(c) != 0)
             return ;
     } else
         LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet readable"));
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
-        if (c->recvStatus != Client::COMPLETE) {
-            LOGPRINT(LOGERROR, c, ("Server::handleClientRequest() : Client Request isn't fully received yet"));
+        if (c->recvStatus != Client::COMPLETE)
             return ;
-        }
         if (writeClientResponse(c) != 0)
             return ;
     } else

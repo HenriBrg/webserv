@@ -43,3 +43,25 @@ Questions :
 
     - rootPath pour le cgi => inutile non ?
     - QUID extension du CGI ?
+
+
+-----------------------
+
+Erreurs détectées à corriger
+
+- Client netcat / telnet
+    
+    -> nc 127.0.0.1 8888
+       GET / HTTP/1.1
+    
+    -> telnet ...
+
+Problème : parsing des headers en plusieurs recv() à gérer
+
+
+-----------------------
+
+TODO Urgent :
+
+Delete client après traitement
+Fix erreur CTRL C double free

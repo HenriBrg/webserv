@@ -78,13 +78,21 @@ void Request::parseUriQueries() {
 
 void Request::assignLocation(std::vector<Location*> vecLocs) {
 
+    Location * root;
+
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
+        
+        if (vecLocs[i]->uri == "/")
+            root = vecLocs[i]; // ------------------------------------------------> A confirmer
+
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
             LOGPRINT(INFO, this, ("Request::assignLocation() : Location assigned"));
             return ;
         }
     }
+
+    reqLocation = root;
 }
 
 // Example : 
@@ -300,6 +308,24 @@ std::string const Request::logInfo(void) {
     return (ret);
 }
 
+void Request::showReq(void) {
+    std::string indent("    > ");
+    std::cout << std::endl << std::endl;
+
+    std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
+    std::cout << std::endl << std::endl;
+    std::cout << "    ~ Global \n\n";
+    std::cout << indent << "Method : " << method << std::endl;
+    std::cout << indent << "URI : " << uri << std::endl;
+    std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
+    std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
+    showFullHeadersReq();
+    
+
+    std::cout << std::endl;
+    std::cout << GREEN << "    ------------------------------- END" << END;
+    std::cout << std::endl << std::endl;
+}
 
 void Request::showFullHeadersReq(void) {
 
@@ -350,23 +376,3 @@ void Request::showBody() {
     std::cout << std::endl;
     // std::cout << indent << "(Server) Body Length : " << std::to_string(bodyLength) << std::endl;
 }
-
-
-void Request::showReq(void) {
-    std::string indent("    > ");
-    std::cout << std::endl << std::endl;
-
-    std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
-    std::cout << std::endl << std::endl;
-    std::cout << "    ~ Global \n\n";
-    std::cout << indent << "Method : " << method << std::endl;
-    std::cout << indent << "URI : " << uri << std::endl;
-    std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
-    std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
-    showFullHeadersReq();
-    showBody();
-    std::cout << std::endl;
-    std::cout << GREEN << "    ------------------------------- END" << END;
-    std::cout << std::endl << std::endl;
-}
-

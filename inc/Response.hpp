@@ -43,6 +43,7 @@ class Response {
         std::string _errorFileName;
         std::string _resFile;
         std::string formatedResponse;
+        int         _bytesSent;
 
         int _sendStatus;
         enum resStatus {

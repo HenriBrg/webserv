@@ -1,26 +1,45 @@
 #include "../inc/Webserv.hpp"
 
-void exitCTRLC(int signal) {
-    (void)signal;
-    gConfig.run = 0;
-}
-
 Config::Config() {
     run = 1;
     FD_ZERO(&readSet);
     FD_ZERO(&writeSet);
     FD_ZERO(&readSetBackup);
     FD_ZERO(&writeSetBackup);
-    signal(SIGINT, exitCTRLC);
 }
 
-void Config::clearConfig() {
-    // TODO
-    return ;
+void Config::webservShutdown(int signal) {
+
+    (void)signal;
+
+    Server      *srv;
+    std::vector<Client*>::iterator        itCli;
+    std::vector<Location*>::iterator      itLoc;
+    std::vector<Server*>::iterator        itSrv;
+
+    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); ++itSrv) {
+        srv = *itSrv;
+        for (itCli = srv->clients.begin(); itCli != srv->clients.end(); ++itCli)
+            delete *itCli;
+        for (itLoc = srv->locations.begin(); itLoc != srv->locations.end(); ++itLoc)
+            delete *itLoc;
+    }
+    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); ++itSrv)
+        delete *itSrv;
+    gConfig.servers.clear();
+    activeFds.clear();
+    
+    FD_ZERO(&readSet);
+    FD_ZERO(&writeSet);
+    FD_ZERO(&readSetBackup);
+    FD_ZERO(&writeSetBackup);
+
+    NOCLASSLOGPRINT(LOGERROR, ("Shutting down Webserv ... Good bye !"));
+    exit(EXIT_SUCCESS);
 }
 
 Config::~Config() {
-    clearConfig();
+    webservShutdown(0);
 }
 
 int Config::getMaxFds(void) {
@@ -31,7 +50,7 @@ int Config::getMaxFds(void) {
 void Config::addFd(int fd) {
     std::pair<std::set<int>::iterator, bool> ret = activeFds.insert(fd);
     if (ret.second == false)
-        NOCLASSLOGPRINT(LOGERROR, ("Config::addFd() : FD " + std::to_string(fd) + " already exists in the activeFds"));
+        NOCLASSLOGPRINT(LOGERROR, ("Config::addFd() : FD " + std::to_string(fd) + " already exists in the activeFds. Bad things will happen !"));
 }
 
 void Config::removeFd(int fd) {

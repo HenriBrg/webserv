@@ -27,6 +27,7 @@ void Response::reset() {
     _sendStatus = Response::PREPARE;
     _errorFileName.clear();
     _methodFctPtr = nullptr;
+    _bytesSent = 0;
 
 }
 
