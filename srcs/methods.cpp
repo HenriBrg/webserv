@@ -35,37 +35,22 @@ void Response::getReq(Request * req) {
 }
 
 void Response::headReq(Request * req) {
-    // std::cout << "void Response::headReq(Request * req)" << std::endl;
 
 }
 
 void Response::putReq(Request * req) {
-    // std::cout << "void Response::putReq(Request * req)" << std::endl;
 
 }
 
 void Response::postReq(Request * req) {
-    // std::cout << "void Response::postReq(Request * req)" << std::endl;
 
 }
 
-void Response::connectReq(Request * req) {
-    // std::cout << "void Response::connectReq(Request * req)" << std::endl;
-
-}
-
-void Response::traceReq(Request * req) {
-    // std::cout << "void Response::traceReq(Request * req)" << std::endl;
-
-}
-
-void Response::optionsReq(Request * req) {
-    // std::cout << "void Response::optionsReq(Request * req)" << std::endl;
+void Response::patchReq(Request * req) {
 
 }
 
 void Response::deleteReq(Request * req) {
-    // std::cout << "void Response::deleteReq(Request * req)" << std::endl;
 
 }
 
@@ -117,9 +102,7 @@ void Response::negotiateAcceptCharset(Request * req) {
         return ;
     else {
         LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
-        _sendStatus = Response::ERROR;
-        _statusCode = BAD_REQUEST_400;
-        _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
+        setErrorParameters(req, Response::ERROR, BAD_REQUEST_400);
 
     }
 

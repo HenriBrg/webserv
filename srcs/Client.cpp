@@ -4,7 +4,9 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
     server(server), 
     acceptFd(acceptFd) {
 
-    isConnected = true;
+    isConnected = true; // TODO : handle client-side de-connection
+    isServed = false;
+
     ip = inet_ntoa(clientAddr.sin_addr);
     port = htons(clientAddr.sin_port);
     req.client = this;
@@ -20,21 +22,34 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
 }
 
 Client::~Client() {
-    FD_CLR(acceptFd, &gConfig.readSetBackup);
-    FD_CLR(acceptFd, &gConfig.writeSetBackup);
+
+    if (buf)
+        free(buf);
+    
+    // FD_CLR(acceptFd, &gConfig.readSetBackup);
+    // FD_CLR(acceptFd, &gConfig.writeSetBackup);
+
     gConfig.removeFd(acceptFd);
     close(acceptFd);
 }
 
 void Client::reset() {
-    // The client must remain connected to the server
+
+    // We reset everything, except port, acceptFd, server, ip
+
+    memset((void*)buf, 0, BUFMAX + 1);
+    strbuf.clear();
+
     isConnected = true;
-    // The server is now ready for a new request from this client
-    // TODO : add a status telling the client got response and stay connected ?
+    isServed = false;
 	recvStatus = HEADER;
-	memset((void *)buf, 0, BUFMAX + 1);
+
+    req.reset();
+    res.reset();
+
 	FD_SET(acceptFd, &gConfig.readSetBackup);
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
+
 }
 
 std::string const Client::logInfo(void) {

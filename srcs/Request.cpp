@@ -12,9 +12,21 @@ Request::~Request() {
 
 void Request::reset(void) {
 
+    client = nullptr;
+    reqLocation = nullptr;
+    reqBuf.clear();
+    _reqBody.clear();
+
+    _currentParsedReqBodyLength = -1;
+    contentLength = -1;
+    chunkLineBytesSize = -1;
+    _optiChunkOffset = 0;
+    file.clear();
+
     method.clear();
     uri.clear();
     httpVersion.clear();
+    uriQueries.clear();
     acceptCharset.clear();
     acceptLanguage.clear();
     authorization.clear();
@@ -27,12 +39,7 @@ void Request::reset(void) {
     userAgent.clear();
     uriQueries.clear();
     transferEncoding.clear();
-    _currentParsedReqBodyLength = -1;
-    contentLength = -1;
-    chunkLineBytesSize = -1;
-    _reqBody.clear();
-
-    _optiChunkOffset = 0;
+    keepAlive.clear();
 
 }
 
@@ -209,7 +216,8 @@ void Request::parseChunkedBody() {
 
         separator = _reqBody.find("\r\n", _optiChunkOffset);
         if (separator == std::string::npos) {
-            LOGPRINT(LOGERROR, this, ("Request::parseSingleBody() : no <CR><LF> in chunk - invalid request"));
+            client->recvStatus = Client::ERROR;
+            LOGPRINT(LOGERROR, this, ("Request::parseSingleBody() : no <CR><LF> in chunk - invalid request - disconnecting client"));
             break ;
         }
         if (chunkLineBytesSize == -1) {
@@ -222,7 +230,7 @@ void Request::parseChunkedBody() {
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
             if (separator == std::string::npos)
-                break ;
+                break ; // ---> Error XXX ?
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;
@@ -232,6 +240,7 @@ void Request::parseChunkedBody() {
             /* Delete the last "\r\n" which indicate the end */
             if (separator != std::string::npos)
                 _reqBody.erase(separator, 2);
+            // else ---> Error XXX ?
             client->recvStatus = Client::COMPLETE;
             break ;
         }
@@ -245,33 +254,30 @@ void Request::parseSingleBody() {
 
     // TODO : max body configuration and error in response
 
-    char        *newBodyRead = client->buf;
     size_t      size;
+    char        *newBodyRead = client->buf;
 
     _reqBody.append(newBodyRead);
     /* We check if body is fully received by comparing its length with the Content-Length header value */
     /* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
     size = _reqBody.length();
     _currentParsedReqBodyLength = size;
+    memset(newBodyRead, 0, BUFMAX + 1);
     if (size >= contentLength) {
         client->recvStatus = Client::COMPLETE;
         LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
          + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
-        memset(newBodyRead, 0, BUFMAX + 1);
-    } else {
+    } else
         LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not fully received yet"));
-        memset(newBodyRead, 0, BUFMAX + 1);
-    }
 
 }
-
 
 void Request::checkBody() {
 
     size_t bodyOffset;
 
     // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
-    // TODO : si plusieurs encoding, itérer dessus pour matcher "chunked"
+    // TODO : si plusieurs encoding, itérer dessus pour matcher "chunked", du moins retourner erreur si gzpi, deflate, car on gèrera pas à priori
     if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {

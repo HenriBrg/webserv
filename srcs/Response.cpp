@@ -5,7 +5,9 @@ Response::Response(void) {
 }
 
 void Response::reset() {
+
     httpVersion.clear();
+    _statusCode = -1;
     reason.clear();
     allow.clear();
     contentLanguage.clear();
@@ -18,16 +20,19 @@ void Response::reset() {
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
+
+
+    resClient = nullptr;
+    _errorFileName.clear();
     formatedResponse.clear();
+    _bytesSent = 0;
+    _sendStatus = Response::PREPARE;
     _resBody.clear();
     _resFile.clear();
 
-    _statusCode = -1;
     contentLength = -1;
-    _sendStatus = Response::PREPARE;
     _errorFileName.clear();
     _methodFctPtr = nullptr;
-    _bytesSent = 0;
 
 }
 
@@ -49,10 +54,7 @@ void Response::authControl(Request * req) {
         if (tab[0] != "Basic" && tab[1] != "BASIC")
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
         if (ft::decodeBase64(tab[1]) != req->authorization) {
-            _sendStatus = Response::ERROR;
-            _statusCode = UNAUTHORIZED_401;
-            _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
-
+            setErrorParameters(req, Response::ERROR, UNAUTHORIZED_401);
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
         } else
@@ -75,34 +77,36 @@ void Response::methodControl(Request * req) {
 	tab["PUT"]     = & Response::putReq;
 	tab["POST"]    = & Response::postReq;
 	tab["HEAD"]    = & Response::headReq;
-	tab["TRACE"]   = & Response::traceReq;
 	tab["DELETE"]  = & Response::deleteReq;
-	tab["CONNECT"] = & Response::connectReq;
-	tab["OPTIONS"] = & Response::optionsReq; 
+	tab["PATCH"]   = & Response::patchReq;
+
 
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
+
     if (tmp == allowedMethods.end()) {
-        // TODO : set response header allowedMethods !
+        // TODO : set response header allow !
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
         _methodFctPtr = tab[req->method];
+    
     tab.clear();
 }
 
 void Response::resDispatch(Request * req) {
 
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
-    methodControl(req);
 
+    methodControl(req);
     authControl(req);
     // ... TODO : Additionnal controls
-    (this->*_methodFctPtr)(req);
-    if (_sendStatus == Response::ERROR) {
-        _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
+    
+    if (_sendStatus == Response::ERROR)
         return ;
-    }
+    (this->*_methodFctPtr)(req);
+    if (_sendStatus == Response::ERROR)
+        return ;
 
 }
 
@@ -200,13 +204,13 @@ void Response::setErrorParameters(Request * req, int sendStatus, int code) {
     _statusCode = code;
     _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
 
-
 }
 
 /* Utils */
 
 std::string const Response::logInfo(void) {
     std::string ret;
+    
     ret = "Response | To Client with Socket : " + std::to_string(resClient->acceptFd) + " | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
     return (ret);
 }

@@ -76,9 +76,7 @@ class Response {
         void    headReq(Request * req);
         void    putReq(Request * req);
         void    postReq(Request * req);
-        void    connectReq(Request * req);
-        void    traceReq(Request * req);
-        void    optionsReq(Request * req);
+        void    patchReq(Request * req);
         void    deleteReq(Request * req);
         void    (Response::*_methodFctPtr)(Request * req);
 

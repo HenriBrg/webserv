@@ -8,38 +8,45 @@ Config::Config() {
     FD_ZERO(&writeSetBackup);
 }
 
-void Config::webservShutdown(int signal) {
+void handleCTRLC(int s) {
+    write(1, "\b\b", 2);
+    NOCLASSLOGPRINT(DEBUG, "SIGINT Signal detected !");
+    exit(EXIT_FAILURE);
+}
 
-    (void)signal;
+void Config::webservShutdown() {
 
-    Server      *srv;
+    Server                                *srv;
     std::vector<Client*>::iterator        itCli;
     std::vector<Location*>::iterator      itLoc;
     std::vector<Server*>::iterator        itSrv;
 
-    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); ++itSrv) {
+    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); itSrv++) {
         srv = *itSrv;
-        for (itCli = srv->clients.begin(); itCli != srv->clients.end(); ++itCli)
+        for (itCli = srv->clients.begin(); itCli != srv->clients.end(); itCli++)
             delete *itCli;
-        for (itLoc = srv->locations.begin(); itLoc != srv->locations.end(); ++itLoc)
+        for (itLoc = srv->locations.begin(); itLoc != srv->locations.end(); itLoc++)
             delete *itLoc;
     }
-    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); ++itSrv)
-        delete *itSrv;
-    gConfig.servers.clear();
-    activeFds.clear();
-    
-    FD_ZERO(&readSet);
-    FD_ZERO(&writeSet);
-    FD_ZERO(&readSetBackup);
-    FD_ZERO(&writeSetBackup);
 
-    NOCLASSLOGPRINT(LOGERROR, ("Shutting down Webserv ... Good bye !"));
-    exit(EXIT_SUCCESS);
+    for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); itSrv++) {
+        gConfig.removeFd(((*itSrv)->sockFd));
+        delete *itSrv;
+    }
+
+    gConfig.servers.clear();
+    gConfig.activeFds.clear();
+    
+    FD_ZERO(&gConfig.readSet);
+    FD_ZERO(&gConfig.writeSet);
+    FD_ZERO(&gConfig.readSetBackup);
+    FD_ZERO(&gConfig.writeSetBackup);
+
+    NOCLASSLOGPRINT(INFO, ("Shutting down Webserv, good bye !"));
 }
 
 Config::~Config() {
-    webservShutdown(0);
+    webservShutdown();
 }
 
 int Config::getMaxFds(void) {
@@ -60,6 +67,44 @@ void Config::removeFd(int fd) {
 void Config::resetFds() {
     readSet = readSetBackup;
     writeSet = writeSetBackup;
+}
+
+void Config::showFDSETS() {
+
+    int x = 0;
+    std::string tmp;
+    std::set<int>::iterator it = activeFds.begin();
+
+    for (; it != activeFds.end(); it++) {
+        if (FD_ISSET(*it, &gConfig.readSet)) {
+            tmp += std::to_string(*it) + " - ";
+            x++;
+        }
+    }
+    if (x)
+        tmp = tmp.substr(0, tmp.size() - 2);
+        
+
+    NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Inside gConfig.readSet, " + std::to_string(x) + " sockets are watched on their read status"));
+    if (x)
+        NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Here is the list : " + tmp));
+   
+    x = 0;
+    tmp.clear();
+    it = activeFds.begin();
+    for (; it != activeFds.end(); it++) {
+        if (FD_ISSET(*it, &gConfig.writeSet)) {
+            tmp += (std::to_string(*it) + " - ");
+            x++;
+        }
+    }
+    if (x)
+        tmp = tmp.substr(0, tmp.size() - 2);
+
+    NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets are watched on their write status"));
+    if (x)
+        NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Here is the list : " + tmp));
+
 }
 
 void Config::init() {

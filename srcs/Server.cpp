@@ -15,21 +15,7 @@ Server::Server(std::string name, int port): name(name), port(port) {
 
 }
 
-Server::~Server() {
-
-    std::vector<Client*>::iterator itb;
-    std::vector<Client*>::iterator ite = clients.end();
-
-    for (itb = clients.begin(); itb < ite; itb++) {
-        delete *itb;
-    }
-    clients.clear();
-
-    LOGPRINT(INFO, this, "Server - Closed");
-    gConfig.removeFd(sockFd);
-    FD_CLR(sockFd, &gConfig.readSet);
-
-}
+Server::~Server() {}
 
 int Server::start() {
 
@@ -77,12 +63,9 @@ int Server::start() {
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY); // Adresse de l'hôte // 127.0.0.1:7777
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(port);              // --------------> Voir post Slack sel-melc 21/10/2020
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
-
-    //  printf("--> %" PRIu32 "\n", addr.sin_addr.s_addr);
-    //  printf("--> %" PRIu16 "\n", addr.sin_port);
 
     // ---------- 4) LISTEN ----------
 
@@ -118,7 +101,6 @@ int Server::start() {
 
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
-
     LOGPRINT(INFO, this, "");
     return (EXIT_SUCCESS);
 }
@@ -138,6 +120,9 @@ void Server::acceptNewClient(void) {
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
         return ;
     }
+
+    // TODO : if too many client, reject new ones
+
     Client *newClient = new Client(this, acceptFd, clientAddr);
     clients.push_back(newClient);
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
@@ -159,10 +144,10 @@ int Server::readClientRequest(Client *c) {
             // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                c->req.reqBuf = std::string(c->buf, ret); // ----> We should delete it for optimization
+                c->req.reqBuf = std::string(c->buf); // ----> We should find a way to avoid dupllication for optimization
                 c->req.parse(locations);
             } else { 
-                LOGPRINT(INFO, c, ("Server::readClientRequest() : Incomplete Request (pattern \\r\\n\\r\\r not found yet) - We wait until its completion"));
+                LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
                 return (EXIT_FAILURE);
             }
         }
@@ -179,6 +164,10 @@ int Server::readClientRequest(Client *c) {
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
             c->req.showReq();
         }
+        if (c->recvStatus == Client::ERROR) {
+            c->isConnected = false;
+            LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Error"));
+        }
     }
 
     return (EXIT_SUCCESS);
@@ -188,16 +177,25 @@ int Server::writeClientResponse(Client *c) {
 
     int ret = 0;
 
+    c->res.resClient = c;
     if (c->res._sendStatus == Response::PREPARE) {
+        
         c->res.resDispatch(&c->req);
-        c->res.resBuild(&c->req);
-        c->res.resFormat();
+        NOCLASSLOGPRINT(DEBUG, ("1"));
+
+        if (c->res._sendStatus != Response::ERROR) {
+            c->res.resBuild(&c->req);
+            c->res.resFormat();
+        }
         c->res._sendStatus = Response::SENDING;
     }
 
-    if (c->res._sendStatus == Response::ERROR) {
-        // TODO - Here we should receive and handle errors which habe been set inside dispatch(), methods & cgi, build()
-    }
+    NOCLASSLOGPRINT(DEBUG, ("2"));
+
+
+    // if (c->res._sendStatus == Response::ERROR) {
+    //     // TODO - Here we should receive and handle errors from precedent loop through select()
+    // }
 
     if (c->res._sendStatus == Response::SENDING) {
         ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
@@ -218,8 +216,9 @@ int Server::writeClientResponse(Client *c) {
     if (c->res._sendStatus == Response::DONE) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         gConfig.removeFd(c->acceptFd);
-        
-        // close(c->acceptFd); -----------> When close and what are the collaterals ?
+        c->isConnected = true;
+        // -----------> If we don't close, the socket will be use until the end of program and socket's status will be CLOSE_WAIT (run lsof -iTCP to see it, without closing of course)
+        close(c->acceptFd);
     }
 
     return (EXIT_SUCCESS);
@@ -231,14 +230,14 @@ void Server::handleClientRequest(Client *c) {
         if (readClientRequest(c) != 0)
             return ;
     } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet readable"));
+        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't readable"));
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
         if (c->recvStatus != Client::COMPLETE)
             return ;
         if (writeClientResponse(c) != 0)
             return ;
     } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't yet writable"));
+        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't writable"));
 }
 
 // LOGGER

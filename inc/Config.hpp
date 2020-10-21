@@ -12,6 +12,8 @@
 
 # include "Server.hpp"
 
+void    handleCTRLC(int s);
+
 class Config {
     
     public:
@@ -34,12 +36,14 @@ class Config {
         void    removeFd(int fd);
         void    resetFds();
         void    init();
-        void    webservShutdown(int signal);
+        static void    webservShutdown();
+        void    showFDSETS();
+
 
     private:
 
-
-
 };
 
-#endif
+
+
+# endif

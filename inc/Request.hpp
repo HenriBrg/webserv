@@ -191,9 +191,8 @@ class Request {
         // Keep-Alive permet au navigateur du visiteur de télécharger tout le contenu (comme JavaScript, CSS, images, vidéos, etc.) via une connexion TCP persistante au lieu de faire des demandes différentes pour chaque fichier
 		std::string	keepAlive; 
 
-
-        
-        // Chunked : Data is sent in a series of chunks. The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk
+        // Chunked : Data is sent in a series of chunks.
+        // The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk
 
     private:
 

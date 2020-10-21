@@ -28,6 +28,7 @@
 # define INFO 1
 # define LOGERROR 2
 # define DEBUG 3
+# define SELECT 4
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
@@ -47,7 +48,7 @@ class Logger {
                 str += " | " + message;
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << " [INFOS] " << END << str << std::endl;
+                    std::cout << YELLOW << " [INFO]  " << END << str << std::endl;
                     break ;
                 case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << str << std::endl;
@@ -67,7 +68,7 @@ class Logger {
             std::cout << ft::getTimestamp();
             switch (type) {
                 case INFO:
-                    std::cout << YELLOW << " [INFOS] " << END << message << std::endl;
+                    std::cout << YELLOW << " [INFO]  " << END << message << std::endl;
                     break ;
                 case LOGERROR:
                     std::cout << RED << " [ERROR] " << END << message << std::endl;
@@ -75,6 +76,8 @@ class Logger {
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << message << std::endl;
                     break ;
+                case SELECT:
+                    std::cout << GREEN << " [SELECT] " << GREEN  << message << std::endl;
                 default:
                     break ;
             }

@@ -29,7 +29,6 @@ class Client {
 
 
         // Etat de réception de la requête
-        int         recvStatus;
         enum {
             HEADER,
             BODY,
@@ -40,6 +39,8 @@ class Client {
 
         // The client might disconnect while we're handle its request
         bool        isConnected;
+        bool        isServed;
+        int         recvStatus;
 
         int         port;
         int         acceptFd;

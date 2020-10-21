@@ -17,6 +17,7 @@ BODY :
 CGI :
 
     - Comprendre le CGI
+    - CGI avec 
     - Tout est à faire
 
 NGINX :
@@ -35,33 +36,20 @@ AUTRES :
     Leaks de mémoire, de fd
     S'assurer de bien tout reset entre chaque client, si un même client fait plusieurs requêtes
 
-
-
 -----------------------
 
 Questions :
 
     - rootPath pour le cgi => inutile non ?
     - QUID extension du CGI ?
-
-
------------------------
-
-Erreurs détectées à corriger
-
-- Client netcat / telnet
-    
-    -> nc 127.0.0.1 8888
-       GET / HTTP/1.1
-    
-    -> telnet ...
-
-Problème : parsing des headers en plusieurs recv() à gérer
-
-
------------------------
+    - Output du CGI (à écrire dans un fichier) tellement fat (100 000 0000 bytes) qu'on devra passer pas select() pour le lire
 
 TODO Urgent :
 
-Delete client après traitement
-Fix erreur CTRL C double free
+    - TDD SHELL or Python
+    - TODO --> grep -rin TODO  srcs/*.cpp
+    - Parsing des headers en plusieurs recv() à gérer (telnet, netcat)
+
+SNIFFER :
+
+    sudo tcpdump -nvX -i lo0

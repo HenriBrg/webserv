@@ -8,11 +8,12 @@ int main(int ac, char **av) {
 	Client *c;
 
     gConfig.init();
-    signal(SIGINT, gConfig.webservShutdown);
+    signal(SIGINT, handleCTRLC);
 
     while (gConfig.run) {
         gConfig.resetFds();
-        NOCLASSLOGPRINT(INFO, ("Select call with maxFds = " + std::to_string(gConfig.getMaxFds()) + "\n"));
+        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL"));
+        gConfig.showFDSETS();
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
@@ -27,7 +28,33 @@ int main(int ac, char **av) {
             std::vector<Client*>::iterator itc = s->clients.begin();
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;
+
+                // std::cout << std::to_string(!!c->isConnected) << std::endl;
+
+                if (c->isConnected == false) {
+                    delete c;
+                    itc = s->clients.erase(itc);
+                    if (s->clients.empty())
+                        break ;
+                    else {
+                        itc = s->clients.begin();
+                        continue ;
+                    }
+                }
+
                 s->handleClientRequest(c);
+                
+                if (c->res._sendStatus == Response::DONE) {
+                    delete c;
+                    itc = s->clients.erase(itc);
+                    if (s->clients.empty())
+                        break ;
+                    else {
+                        itc = s->clients.begin();
+                        continue ;
+                    }
+                }
+
             }
         }
     }
