@@ -32,6 +32,9 @@ int main(int ac, char **av) {
                 // std::cout << std::to_string(!!c->isConnected) << std::endl;
 
                 if (c->isConnected == false) {
+
+                    NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 1"));
+
                     delete c;
                     itc = s->clients.erase(itc);
                     if (s->clients.empty())
@@ -43,8 +46,11 @@ int main(int ac, char **av) {
                 }
 
                 s->handleClientRequest(c);
-                
-                if (c->res._sendStatus == Response::DONE) {
+
+                if (c->isConnected == false) {
+
+                    NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 2"));
+
                     delete c;
                     itc = s->clients.erase(itc);
                     if (s->clients.empty())
@@ -54,6 +60,19 @@ int main(int ac, char **av) {
                         continue ;
                     }
                 }
+
+                // if (c->res._sendStatus == Response::DONE) {
+                //     NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 3"));
+
+                //     delete c;
+                //     itc = s->clients.erase(itc);
+                //     if (s->clients.empty())
+                //         break ;
+                //     else {
+                //         itc = s->clients.begin();
+                //         continue ;
+                //     }
+                // }
 
             }
         }

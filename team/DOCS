@@ -67,3 +67,8 @@ SOLUTIONS TO ERRORS ENCOUNTERED :
     https://stackoverflow.com/questions/39718967/getting-connection-reset-by-peer-during-tcp-socket-connection
 
 
+TCP :
+
+https://www.ibm.com/support/knowledgecenter/en/SSLTBW_2.1.0/com.ibm.zos.v2r1.halu101/constatus.htm
+https://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html
+https://stackoverflow.com/questions/246859/http-1-0-vs-1-1

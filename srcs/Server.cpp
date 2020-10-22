@@ -160,7 +160,7 @@ int Server::readClientRequest(Client *c) {
         }
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we know handle response"));
-            FD_CLR(c->acceptFd, &gConfig.readSetBackup);
+            // FD_CLR(c->acceptFd, &gConfig.readSetBackup);
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
             c->req.showReq();
         }
@@ -215,10 +215,10 @@ int Server::writeClientResponse(Client *c) {
 
     if (c->res._sendStatus == Response::DONE) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
-        gConfig.removeFd(c->acceptFd);
-        c->isConnected = true;
+        // gConfig.removeFd(c->acceptFd);
+        // c->isConnected = false;
         // -----------> If we don't close, the socket will be use until the end of program and socket's status will be CLOSE_WAIT (run lsof -iTCP to see it, without closing of course)
-        close(c->acceptFd);
+        // close(c->acceptFd);
     }
 
     return (EXIT_SUCCESS);
