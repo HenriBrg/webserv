@@ -26,8 +26,8 @@ Client::~Client() {
     if (buf)
         free(buf);
     
-    // FD_CLR(acceptFd, &gConfig.readSetBackup);
-    // FD_CLR(acceptFd, &gConfig.writeSetBackup);
+    FD_CLR(acceptFd, &gConfig.readSetBackup);
+    FD_CLR(acceptFd, &gConfig.writeSetBackup);
 
     gConfig.removeFd(acceptFd);
     close(acceptFd);
@@ -47,7 +47,7 @@ void Client::reset() {
     req.reset();
     res.reset();
 
-	FD_SET(acceptFd, &gConfig.readSetBackup);
+	// FD_SET(acceptFd, &gConfig.readSetBackup);
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
 
 }

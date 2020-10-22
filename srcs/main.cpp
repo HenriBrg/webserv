@@ -12,7 +12,7 @@ int main(int ac, char **av) {
 
     while (gConfig.run) {
         gConfig.resetFds();
-        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL"));
+        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL\n\n"));
         gConfig.showFDSETS();
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its = gConfig.servers.begin();
@@ -31,19 +31,19 @@ int main(int ac, char **av) {
 
                 // std::cout << std::to_string(!!c->isConnected) << std::endl;
 
-                if (c->isConnected == false) {
+                // if (c->isConnected == false) {
 
-                    NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 1"));
+                //     NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 1"));
 
-                    delete c;
-                    itc = s->clients.erase(itc);
-                    if (s->clients.empty())
-                        break ;
-                    else {
-                        itc = s->clients.begin();
-                        continue ;
-                    }
-                }
+                //     delete c;
+                //     itc = s->clients.erase(itc);
+                //     if (s->clients.empty())
+                //         break ;
+                //     else {
+                //         itc = s->clients.begin();
+                //         continue ;
+                //     }
+                // }
 
                 s->handleClientRequest(c);
 

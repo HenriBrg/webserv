@@ -124,6 +124,7 @@ void Server::acceptNewClient(void) {
     // TODO : if too many client, reject new ones
 
     Client *newClient = new Client(this, acceptFd, clientAddr);
+    newClient->req.client = newClient;
     clients.push_back(newClient);
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
@@ -135,7 +136,11 @@ int Server::readClientRequest(Client *c) {
     ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
-        LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned " + std::to_string(ret) + " : Error : " + std::string(strerror(errno))));
+        if (ret == 0)
+            LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
+        if (ret == -1)
+            LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
+
         return (EXIT_FAILURE);
     } else {
         c->buf[ret] = '\0';
@@ -164,10 +169,10 @@ int Server::readClientRequest(Client *c) {
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
             c->req.showReq();
         }
-        if (c->recvStatus == Client::ERROR) {
-            c->isConnected = false;
-            LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Error"));
-        }
+        // if (c->recvStatus == Client::ERROR) {
+        //     c->isConnected = false;
+        //     LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Error"));
+        // }
     }
 
     return (EXIT_SUCCESS);
@@ -215,6 +220,9 @@ int Server::writeClientResponse(Client *c) {
 
     if (c->res._sendStatus == Response::DONE) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
+        c->reset();
+        c->req.client = c;
+
         // gConfig.removeFd(c->acceptFd);
         // c->isConnected = false;
         // -----------> If we don't close, the socket will be use until the end of program and socket's status will be CLOSE_WAIT (run lsof -iTCP to see it, without closing of course)

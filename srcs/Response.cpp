@@ -182,7 +182,7 @@ void Response::resFormat(void) {
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
     // QUID de www-authenticate ?
     formatedResponse.append("\r\n");
-    if (contentLength > 0)
+    if (contentLength > 0) // TODO or chunked 
         formatedResponse.append(_resBody);
 
 }
