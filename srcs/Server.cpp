@@ -8,7 +8,7 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,TRACE,HEAD", "root:pass", "./www/cgi_tester");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET", "root:pass", "./www/cgi_tester");
     Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi_tester");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
@@ -137,7 +137,7 @@ int Server::readClientRequest(Client *c) {
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
         if (ret == 0)
-            LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
+            LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
         if (ret == -1)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
 
@@ -186,20 +186,19 @@ int Server::writeClientResponse(Client *c) {
     if (c->res._sendStatus == Response::PREPARE) {
         
         c->res.resDispatch(&c->req);
-        NOCLASSLOGPRINT(DEBUG, ("1"));
 
         if (c->res._sendStatus != Response::ERROR) {
             c->res.resBuild(&c->req);
             c->res.resFormat();
+            c->res.showRes();
+            c->res._sendStatus = Response::SENDING;
         }
-        c->res._sendStatus = Response::SENDING;
+        // TODO ELSE CASE
+
     }
 
-    NOCLASSLOGPRINT(DEBUG, ("2"));
-
-
     // if (c->res._sendStatus == Response::ERROR) {
-    //     // TODO - Here we should receive and handle errors from precedent loop through select()
+    //     // TODO - Here we should receive and handle errors from precedent loop through select() or if resBuild() resFormat() generate errors
     // }
 
     if (c->res._sendStatus == Response::SENDING) {

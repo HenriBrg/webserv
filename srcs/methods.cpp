@@ -7,25 +7,29 @@ void Response::getReq(Request * req) {
 
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
-    if (stat(req->file.c_str(), &buffer) == -1)
+    if (stat(req->file.c_str(), &buffer) == -1) {
+        LOGPRINT(LOGERROR, this, ("Response::getReq() : The function stat() has returned -1 on the requested file which is "  + req->file));
         return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
+    }
   
     if (stat(req->reqLocation->cgiPath.c_str(), &buffer) == 0)
         if ((buffer.st_mode & S_IEXEC) != 0)
             cgiUp = 1;
     
-    cgiUp = 0; // ---------------------------------> Temporary to test without CGI !
     if (cgiUp == 1) {
+        LOGPRINT(INFO, this, ("Response::getReq() : CGI is present and executable. Its path is : " + req->reqLocation->cgiPath));
 
-
+        execCGI(req);
 
     } else {
+        LOGPRINT(INFO, this, ("Response::getReq() : No CGI present"));
 
         // For testing in advance, not the right place
-        _resFile = req->file;
-        _statusCode = OK_200;
 
     }
+
+    _resFile = req->file;
+    _statusCode = OK_200;
 
 
     // LOGPRINT(INFO, this, ("Response::getReq() : CGI DOWN"));

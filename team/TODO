@@ -40,14 +40,14 @@ AUTRES :
 
 Questions :
 
-    - rootPath pour le cgi => inutile non ?
     - QUID extension du CGI ?
     - Output du CGI (à écrire dans un fichier) tellement fat (100 000 0000 bytes) qu'on devra passer pas select() pour le lire
+    - QUID du TIME_WAIT ? https://vincent.bernat.ch/fr/blog/2014-tcp-time-wait-state-linux#resume
+
 
 TODO Urgent :
 
-    - TDD SHELL or Python
-    - TODO --> grep -rin TODO  srcs/*.cpp
+    - grep -rin TODO  srcs/*.cpp
     - Parsing des headers en plusieurs recv() à gérer (telnet, netcat)
 
 SNIFFER :

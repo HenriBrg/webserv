@@ -80,24 +80,25 @@ void Response::methodControl(Request * req) {
 	tab["DELETE"]  = & Response::deleteReq;
 	tab["PATCH"]   = & Response::patchReq;
 
-
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
-
     if (tmp == allowedMethods.end()) {
         // TODO : set response header allow !
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
-    } else
+    } else {
+
+        LOGPRINT(INFO, this, ("Server::methodControl() : Method " + *tmp + " authorized"));
         _methodFctPtr = tab[req->method];
+
+    }
     
     tab.clear();
 }
 
 void Response::resDispatch(Request * req) {
 
-    // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
-
+    // DON'T PASS INTO / DEBUG THE FUNCTION methodControl, it causes LLDB crash !
     methodControl(req);
     authControl(req);
     // ... TODO : Additionnal controls
@@ -114,39 +115,32 @@ void Response::resBuild(Request * req) {
     
 
     // 1) Status Line
-    
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(this);
 
     // 2) Headers
-    
-    allow.clear();             // Unless Error 405
-
-    contentLanguage[0] = "fr";          // contentLanguage always to "fr"
-
-
-    contentLocation.clear();            // We don't care
+    allow.clear();                                                   // Unless Error 405
+    contentLanguage[0] = "fr";                                       // contentLanguage always to "fr"
+    contentLocation.clear();                                         // We don't care
     contentType[0] = responseUtils::getContentType(_resFile);
-    lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
-    location.clear();                   // Use only with 300 status code
+    lastModified = ft::getLastModifDate(_resFile);                   // Is here the right place to call ?
+    location.clear();                                                // Use only with 300 status code
     date = ft::getDate();
     retryAfter.clear();
-    server = "webserv-42";              // Config file or hard-coded ?
+    server = "webserv";                                              // Config file or hard-coded ?
     
-    // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
-    transfertEncoding.clear();
-    if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
+    transfertEncoding.clear();                                      // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
+    if (req->transferEncoding.size() &&
+        req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
         transfertEncoding[0] = "chunked";
-    wwwAuthenticate.clear();            // Unless an authorization was asked ?
+    wwwAuthenticate.clear();                                         // Unless an authorization was asked ?
 
     // 3) Others
     if (req->method != "HEAD") {
-
         std::ifstream fd(_resFile);
         std::stringstream buffer;
         buffer << fd.rdbuf();
         _resBody = buffer.str();
-
     }
     
     contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
@@ -211,6 +205,67 @@ void Response::setErrorParameters(Request * req, int sendStatus, int code) {
 std::string const Response::logInfo(void) {
     std::string ret;
     
-    ret = "Response | To Client with Socket : " + std::to_string(resClient->acceptFd) + " | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
+    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n° " + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
     return (ret);
+}
+
+
+void Response::showRes(void) {
+
+    std::string indent("    > ");
+    std::cout << std::endl << std::endl;
+
+    std::cout << MAGENTA << "    RESPONSE THAT WILL BE SENT ----------------" << END;
+    std::cout << std::endl << std::endl;
+    std::cout << "    ~ Global \n\n";
+
+    std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
+    std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
+    std::cout << indent << "Reason : " << reason << std::endl;
+
+    showFullHeadersRes();    
+
+    std::cout << std::endl;
+    std::cout << MAGENTA << "    ------------------------------- END" << END;
+    std::cout << std::endl << std::endl;
+}
+
+
+
+void Response::showFullHeadersRes(void) {
+
+    std::string indent("    > ");
+ 
+    std::cout << std::endl;
+    std::cout << "    ~ Details";
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    utils::displayHeaderMap(contentLocation, (indent + "Content-Location"));
+    utils::displayHeaderMap(contentType, (indent + "Content-Type"));
+    utils::displayHeaderMap(wwwAuthenticate, (indent + "WWW-Authenticate"));
+    utils::displayHeaderMap(transfertEncoding, (indent + "Transfer-Encoding"));
+
+    if (!lastModified.empty())
+        std::cout << indent << "Last-Modified : " << lastModified << std::endl;
+    if (!location.empty())
+        std::cout << indent << "Location : " << location << std::endl;
+    if (!date.empty())
+        std::cout << indent << "Date : " << date << std::endl;
+    if (!retryAfter.empty())
+        std::cout << indent << "Retry-After: " << retryAfter << std::endl;
+    if (!server.empty())
+        std::cout << indent << "Server : " << server << std::endl;
+
+    std::cout << std::endl;
+
+    std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
+    if (!_errorFileName.empty())
+        std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
+    if (!_resFile.empty())
+        std::cout << indent << "_resFile : " << _resFile << std::endl;
+
+    // std::cout << indent << "Body : " << _resBody << std::endl;
+
 }

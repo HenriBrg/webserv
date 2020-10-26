@@ -12,8 +12,12 @@ int main(int ac, char **av) {
 
     while (gConfig.run) {
         gConfig.resetFds();
-        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL\n\n"));
+        
+        std::cout << std::endl << std::endl;
+        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL"));
         gConfig.showFDSETS();
+        std::cout << std::endl << std::endl;
+        
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
@@ -29,28 +33,9 @@ int main(int ac, char **av) {
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;
 
-                // std::cout << std::to_string(!!c->isConnected) << std::endl;
-
-                // if (c->isConnected == false) {
-
-                //     NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 1"));
-
-                //     delete c;
-                //     itc = s->clients.erase(itc);
-                //     if (s->clients.empty())
-                //         break ;
-                //     else {
-                //         itc = s->clients.begin();
-                //         continue ;
-                //     }
-                // }
-
                 s->handleClientRequest(c);
 
                 if (c->isConnected == false) {
-
-                    NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 2"));
-
                     delete c;
                     itc = s->clients.erase(itc);
                     if (s->clients.empty())
@@ -60,19 +45,6 @@ int main(int ac, char **av) {
                         continue ;
                     }
                 }
-
-                // if (c->res._sendStatus == Response::DONE) {
-                //     NOCLASSLOGPRINT(DEBUG, ("DESTROY CLIENT 3"));
-
-                //     delete c;
-                //     itc = s->clients.erase(itc);
-                //     if (s->clients.empty())
-                //         break ;
-                //     else {
-                //         itc = s->clients.begin();
-                //         continue ;
-                //     }
-                // }
 
             }
         }

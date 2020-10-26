@@ -23,14 +23,14 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
 
 Client::~Client() {
 
-    if (buf)
-        free(buf);
-    
+    LOGPRINT(DISCONNECT, this, ("Request::~Client() : Client destructor is called"));
+
+    free(buf);
     FD_CLR(acceptFd, &gConfig.readSetBackup);
     FD_CLR(acceptFd, &gConfig.writeSetBackup);
-
     gConfig.removeFd(acceptFd);
     close(acceptFd);
+
 }
 
 void Client::reset() {

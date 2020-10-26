@@ -7,19 +7,27 @@
 # include "Server.hpp"
 # include "Utils.hpp"
 
-// TODO : ADD LOG FILE
-// TODO : ADD TIMESTAMP
-
 // Utiliser std::cout << __LINE__ << std::endl;
 // Utiliser std::cout << __FILE__ << std::endl;
 // Utiliser std::cout << __DATE__ << std::endl;
 // Utiliser std::cout << __TIME__ << std::endl;
 
+// https://stackoverflow.com/a/2616912/10830328
+
+# define BLACK		"\033[1;30m"
 # define RED		"\033[1;31m"
 # define GREEN		"\033[1;32m"
 # define YELLOW		"\033[1;33m"
+# define MAGENTA	"\033[1;35m"
 # define BLUE		"\033[1;36m"
+# define WHITE	    "\033[1;37m"
+ 
 # define END		"\033[1;0m"
+
+# define BCKBLACK	"\033[1;41m"
+# define BCKWHITE	"\033[1;47m"
+
+
 
 // INFO  : routine
 // ERROR : syscall fail
@@ -28,7 +36,7 @@
 # define INFO 1
 # define LOGERROR 2
 # define DEBUG 3
-# define SELECT 4
+# define DISCONNECT 4
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
@@ -56,6 +64,8 @@ class Logger {
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
                     break ;
+                case DISCONNECT:
+                    std::cout << YELLOW << " [DISCONNECT] " << END  << str << std::endl;
                 default:
                     break ;
             }
@@ -76,8 +86,6 @@ class Logger {
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << message << std::endl;
                     break ;
-                case SELECT:
-                    std::cout << GREEN << " [SELECT] " << GREEN  << message << std::endl;
                 default:
                     break ;
             }

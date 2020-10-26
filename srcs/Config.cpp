@@ -85,9 +85,9 @@ void Config::showFDSETS() {
         tmp = tmp.substr(0, tmp.size() - 2);
         
 
-    NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Inside gConfig.readSet, " + std::to_string(x) + " sockets are watched on their read status"));
+    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.readSet, " + std::to_string(x) + " sockets are watched on their read status"));
     if (x)
-        NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Here is the list : " + tmp));
+        NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Here is the list : " + tmp));
    
     x = 0;
     tmp.clear();
@@ -101,9 +101,9 @@ void Config::showFDSETS() {
     if (x)
         tmp = tmp.substr(0, tmp.size() - 2);
 
-    NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets are watched on their write status"));
+    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets are watched on their write status"));
     if (x)
-        NOCLASSLOGPRINT(DEBUG, ("Config::showFDSETS() : Here is the list : " + tmp));
+        NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Here is the list : " + tmp));
 
 }
 

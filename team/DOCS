@@ -26,6 +26,8 @@ HTTP / Headers / Body / Methods :
 
 CGI :
 
+    http://httpd.apache.org/docs/2.4/howto/cgi.html
+
     https://www.developpez.net/forums/d151285/php/langage/php-js-quoi-sert-php-cgi-exe-repertoire-php/
     https://perso.liris.cnrs.fr/lionel.medini/enseignement/M1IF03/Tutoriels/Tutoriel_CGI_SSI.pdf
     https://computer.howstuffworks.com/cgi.htm

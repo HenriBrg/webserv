@@ -80,6 +80,11 @@ class Response {
         void    deleteReq(Request * req);
         void    (Response::*_methodFctPtr)(Request * req);
 
+        /* CGI */
+
+        void    execCGI(Request * req);
+        char    **buildCGIEnv(Request * req);
+
         /* BODY */
 
         void addBody(Request * req);
@@ -88,6 +93,9 @@ class Response {
 
         void negotiateAcceptLanguage(Request * req);
         void negotiateAcceptCharset(Request * req);
+        void showFullHeadersRes(void);
+        void showRes(void);
+
 
         /* ERRORS */
 

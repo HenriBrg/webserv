@@ -1,3 +1,6 @@
+# include "../inc/Webserv.hpp"
+
+
 
 // https://computer.howstuffworks.com/cgi3.htm
 // https://www.nginx.com/resources/wiki/start/topics/examples/full/
@@ -20,3 +23,19 @@
 # SERVER_SOFTWARE : The name and version of the software the server is running.
 
 */
+
+char Response::**buildCGIEnv(Request * req) {
+
+    char **env;
+
+
+}
+
+void Response::execCGI(Request * req) {
+
+    char **env;
+
+
+
+
+}

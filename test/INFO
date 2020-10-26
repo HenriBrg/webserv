@@ -1,0 +1,19 @@
+Clients :
+
+    Code :
+
+    - curl :
+    - python
+    - telnet : KO (parser request line en plusieurs fois)
+    - netcat : KO (parser request line en plusieurs fois)
+
+
+    Navigateur :
+
+    - Firefox : OK
+    - Safari : OK
+    - Chrome : KO
+    - Postman :
+
+
+TIME_WAIT : C'est normal => man netcat
