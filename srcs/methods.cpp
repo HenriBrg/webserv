@@ -91,7 +91,7 @@ void Response::negotiateAcceptLanguage(Request * req)
         req->file = path;
         return ;
     }
-    LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
+    LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
     //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }
 
@@ -107,6 +107,6 @@ void Response::negotiateAcceptCharset(Request * req)
         if ((*it).second == "utf-8" || (*it).second == "*")
             return ;
     }
-    LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
+    LOGPRINT(INFO, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
     //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }

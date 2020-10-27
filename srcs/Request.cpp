@@ -62,8 +62,8 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
     
     std::map<std::string, std::string> ret;
 
-    ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
-    ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
+    // ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
+    // ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
     ret["Authorization"] = authorization;
     ret["Content-Language"] = mapToStr(contentLanguage, ',');
     ret["Content-Length"] = std::to_string(contentLength);

@@ -196,25 +196,16 @@ void Response::format(void)
         formatedResponse.append(_resBody);
 }
 
-
-
-
 /*  -----------------------------------  LOGGER ---------------------------------------------------- */
-
-
-
-
 
 std::string const Response::logInfo(void) {
     std::string ret;
     ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
     return (ret);
 }
-<<<<<<< HEAD
 
 
 void Response::showRes(void) {
-
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
     std::cout << MAGENTA << "    RESPONSE THAT WILL BE SENT ----------------" << END;

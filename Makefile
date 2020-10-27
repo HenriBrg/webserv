@@ -25,11 +25,7 @@ DOBJS	= ./comp/
 HEADERS = ./inc/*
 # SOURCES
 
-<<<<<<< HEAD
 SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp Methods.cpp CGI.cpp
-=======
-SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp methods.cpp
->>>>>>> alex
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 # COMPILATION

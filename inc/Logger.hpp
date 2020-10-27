@@ -65,7 +65,7 @@ class Logger {
                     std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
                     break ;
                 case DISCONNECT:
-                    std::cout << YELLOW << " [DISCONNECT] " << END  << str << std::endl;
+                    std::cout << YELLOW << " [CLOSE] " << END  << str << std::endl;
                 default:
                     break ;
             }
