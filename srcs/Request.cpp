@@ -178,26 +178,71 @@ void Request::parseFile(std::vector<Location*> locations) {
 
 // TODO : case insensitive string comparaison to handle multiple client type
 
+
+
+/* Functions for filling headers value(s) into corresponding variables */
+
+// Main function
 void Request::fillHeader(std::string const key, std::string const value) {
 
-    size_t i = 0;
-    std::vector<std::string> multiValues;
+    if (key == "Content-Language" || key == "Transfer-Encoding")
+        fillMultiValHeaders(key, value);
+    else if (key == "Accept-Charset" || key == "Accept-Language")
+        fillMultiWeightValHeaders(key, value);
+    else
+        fillUniqueValHeaders(key, value);
+}
 
-    if (key == "Accept-Charset" || key == "Accept-Language" || key == "Content-Language"  || key == "Transfer-Encoding") {
-        multiValues = ft::split(value, ',');
-        while (!multiValues.empty() && i < multiValues.size()) {
+// If the variable can have multiple values => map is used to stored them
+// Map key is index after split and map value is request value
+// Example => Content-Language: de-DE, en-CA
+void Request::fillMultiValHeaders(std::string const key, std::string const value)
+{
+    std::vector<std::string> multiValues = ft::split(value, ',');
+
+    for (size_t count = 0; count < multiValues.size(); count++)
+    {
+        if (key == "Content-Language")
+            contentLanguage[count] = multiValues[count];
+        else if (key == "Transfer-Encoding")
+            transferEncoding[count] = multiValues[count];
+    }
+}
+
+// If the variable can have multiple weighted values => multimap is used to stored them
+// Map key is weight after split and map value is request value
+// Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5
+void Request::fillMultiWeightValHeaders(std::string const key, std::string const value)
+{
+    std::vector<std::string> multiValues = ft::split(value, ',');
+    size_t weightPos(0);
+
+    for (size_t count = 0; count < multiValues.size(); count++)
+    {
+        multiValues[count] = ft::trim(multiValues[count]);
+        if ((weightPos = multiValues[count].find(";q=")) == std::string::npos) // If no weigth then key is 1.0
+        {
             if (key == "Accept-Charset")
-                acceptCharset[i] = multiValues[i];
+                acceptCharset.insert(std::make_pair(1.0, multiValues[count]));
             else if (key == "Accept-Language")
-                acceptLanguage[i] = multiValues[i];
-            else if (key == "Content-Language")
-                contentLanguage[i] = multiValues[i];
-            else if (key == "Transfer-Encoding")
-                transferEncoding[i] = multiValues[i];
-            i++;
+                acceptLanguage.insert(std::make_pair(1.0, multiValues[count]));
+        }
+        else // If weight then key is specified weight
+        {
+            multiValues[count].replace(weightPos, 3, " ");
+            std::vector<std::string> weight = ft::split(multiValues[count], ' ');
+            if (key == "Accept-Charset")
+                acceptCharset.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
+            else if (key == "Accept-Language")
+                acceptLanguage.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
         }
     }
-    else if (key == "Keep-Alive")
+}
+
+// If the variable can only have one value => value is set in corresponding std::string variable
+void Request::fillUniqueValHeaders(std::string const key, std::string const value)
+{
+    if (key == "Keep-Alive")
         keepAlive = value;
     else if (key == "Content-Length")
         contentLength = std::stoi(value);
@@ -215,8 +260,10 @@ void Request::fillHeader(std::string const key, std::string const value) {
         referer = value;
     else if (key == "User-Agent")
         userAgent = value;
-
 }
+
+
+
 
 void Request::parseHeaders() {
 
@@ -393,14 +440,14 @@ void Request::showFullHeadersReq(void) {
     std::cout << std::endl;
     std::cout << std::endl;
 
-    utils::displayHeaderMap(acceptCharset, (indent + "Accept-Charset"));
-    utils::displayHeaderMap(acceptLanguage, (indent + "Accept-Language"));
+    //utils::displayHeaderMap(acceptCharset, (indent + "Accept-Charset"));
+    //utils::displayHeaderMap(acceptLanguage, (indent + "Accept-Language"));
     utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
     utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
 
 
-    if (!uriQueries.empty())
-        std::cout << indent << "Queries : " << uriQueries << std::endl;
+    //if (!uriQueries.empty())
+    //    std::cout << indent << "Queries : " << uriQueries << std::endl;
     if (!authorization.empty())
         std::cout << indent << "Authorization : " << authorization << std::endl;
     if (!contentLocation.empty())
