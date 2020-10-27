@@ -124,23 +124,35 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     Location * root;
 
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
-        
-        if (vecLocs[i]->uri == "/")
-            root = vecLocs[i]; // ------------------------------------------------> A confirmer
 
+        NOCLASSLOGPRINT(DEBUG, ("Request::assignLocation() : URI = " + uri));
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
-            LOGPRINT(INFO, this, ("Request::assignLocation() : Location assigned"));
+            LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned"));
             return ;
         }
     }
 
-    reqLocation = root;
-}
+    size_t i = uri.size() - 1;
+    std::string tmpUri = uri;
 
-// Example : 
-// TMP Location : Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-// Location(std::string uri, std::string root, std::string index, std::string methods) {
+    while (tmpUri.size() > 0) {
+		while (tmpUri[i] != '/' && i != 0)
+			i--;
+		tmpUri = tmpUri.substr(0, i);
+		if (tmpUri == "")
+			tmpUri = "/";
+		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
+			if (vecLocs[x]->uri == tmpUri) {
+				file = uri.substr(i + 1, uri.size());
+				reqLocation = vecLocs[x];
+                LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned"));
+                return ;
+			}
+		}
+	}
+
+}
 
 void Request::parseFile(std::vector<Location*> locations) {
     

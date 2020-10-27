@@ -119,7 +119,7 @@ void Response::resBuild(Request * req) {
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(this);
     // 2) Headers
-    allow.clear();                                                   // Unless Error 405
+    allow.clear();                                                   // TODO : not good (and handle error 405)
     contentLanguage[0] = "fr";                                       // contentLanguage always to "fr"
     contentLocation.clear();                                         // We don't care
     contentType[0] = responseUtils::getContentType(_resFile);

@@ -18,7 +18,6 @@ void Response::getReq(Request * req) {
     // TMP
     cgiUp = 0;
 
-
     if (cgiUp) {
         execCGI(req);
         _cgiOutputFile = "./www/tmpFile";
