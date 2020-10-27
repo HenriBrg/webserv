@@ -43,6 +43,42 @@ void Request::reset(void) {
 
 }
 
+std::string mapToStr(std::map<int, std::string> map, char sep) {
+    
+    size_t i = 0;
+    std::stringstream ret;
+
+    ret.clear();    
+    while (i < map.size()) {
+        ret << map[int(i)];
+        if ((i + 1) < map.size())
+            ret << sep << " ";
+        ++i;
+    }
+    return (ret.str());
+}
+
+ std::map<std::string, std::string> Request::mapReqHeaders(void) {
+    
+    std::map<std::string, std::string> ret;
+
+    ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
+    ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
+    ret["Authorization"] = authorization;
+    ret["Content-Language"] = mapToStr(contentLanguage, ',');
+    ret["Content-Length"] = std::to_string(contentLength);
+    ret["Content-Location"] = contentLocation;
+    ret["Content-Type"] = contentType;
+    ret["Date"] = date;
+    ret["Host"] = host;
+    ret["Referer"] = referer;
+    ret["User-Agent"] = userAgent;
+    ret["User-Agent"] = keepAlive;
+
+    return (ret);
+}
+
+
 int Request::parseRequestLine() {
 
     std::string                 line;
@@ -171,7 +207,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
 
 void Request::parseHeaders() {
 
-    std::size_t pos;
+    std::size_t  pos;
     std::string  line;
     std::string  key;
     std::string  value;

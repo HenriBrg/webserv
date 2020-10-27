@@ -45,6 +45,8 @@ class Response {
         std::string formatedResponse;
         int         _bytesSent;
 
+        std::string _cgiOutputFile;
+
         int _sendStatus;
         enum resStatus {
             PREPARE,

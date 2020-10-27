@@ -1,0 +1,11 @@
+Pour get les limites
+
+sysctl -w kern.ipc.maxsockbuf=8000000
+sysctl -w net.inet.tcp.sendspace=4000000
+sysctl -w net.inet.tcp.recvspace=4000000
+
+Todo : gérer la taille max
+- des pipes
+- des fd (ulimit -n)
+
+Voir dans linux le fichier /etc/sysctl pour les infos réseaux sur l'OS

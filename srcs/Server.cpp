@@ -8,8 +8,8 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET", "root:pass", "./www/cgi_tester");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi_tester");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET", "root:pass", "./www/cgi-bin/cgi_tester");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi-bin/cgi_tester");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 
@@ -61,8 +61,10 @@ int Server::start() {
     // Dans les exemples on voit souvent inet_addr(127.0.0.1), c'est pour spécifier une adresse IP donnée à utiliser
     // Le socket peut être relié à un port libre quelconque en utilisant le numéro 0. 
 
+    // TODO : forbidden functions
+
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); // Adresse de l'hôte // 127.0.0.1:7777
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);              // --------------> Voir post Slack sel-melc 21/10/2020
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
@@ -101,7 +103,6 @@ int Server::start() {
 
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
-    LOGPRINT(INFO, this, "");
     return (EXIT_SUCCESS);
 }
 
@@ -117,19 +118,17 @@ void Server::acceptNewClient(void) {
     // Ici, accept() remplit clientAddr des infos du client qu'il aura passé à connect()
     // La requête en elle même est à lire chez le socket du client et non le socket du serveur
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
-        LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept()" + std::string(strerror(errno))));
+        LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept() failed : " + std::string(strerror(errno))));
         return ;
     }
-
     // TODO : if too many client, reject new ones
-
     Client *newClient = new Client(this, acceptFd, clientAddr);
     newClient->req.client = newClient;
     clients.push_back(newClient);
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
-int Server::readClientRequest(Client *c) {
+void Server::readClientRequest(Client *c) {
 
     int ret = -1;
 
@@ -140,114 +139,98 @@ int Server::readClientRequest(Client *c) {
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
         if (ret == -1)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
-
-        return (EXIT_FAILURE);
+        return ;
     } else {
         c->buf[ret] = '\0';
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
-            // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                c->req.reqBuf = std::string(c->buf); // ----> We should find a way to avoid dupllication for optimization
-                c->req.parse(locations);
+                // TODO : We should find a way to avoid buffer dupllication for optimization
+                c->req.reqBuf = std::string(c->buf); 
+                c->req.parse(locations); // TODO : set errors if invalid request format
             } else { 
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
-                return (EXIT_FAILURE);
+                return ;
             }
         }
         if (c->recvStatus == Client::BODY) {
             if ((c->req.transferEncoding[0] == "chunked"))
-                c->req.parseChunkedBody();
+                c->req.parseChunkedBody(); // TODO : set errors if invalid request format
             else if (c->req.contentLength > 0)
-                c->req.parseSingleBody();
-            // TODO : else error 4XX ?
+                c->req.parseSingleBody(); // TODO : set errors if invalid request format
+            else 
+                LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Anormal body"));
         }
         if (c->recvStatus == Client::COMPLETE) {
-            LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we know handle response"));
-            // FD_CLR(c->acceptFd, &gConfig.readSetBackup);
+            LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
             c->req.showReq();
         }
-        // if (c->recvStatus == Client::ERROR) {
-        //     c->isConnected = false;
-        //     LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Error"));
-        // }
+        if (c->recvStatus == Client::ERROR) {
+            // TODO : Passage à tester
+            c->recvStatus = Client::COMPLETE; // Because We will respond even if we get error
+            c->res.setErrorParameters(&c->req, Response::ERROR, BAD_REQUEST_400);
+            LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
+            FD_SET(c->acceptFd, &gConfig.writeSetBackup);
+        }
     }
-
-    return (EXIT_SUCCESS);
 }
 
-int Server::writeClientResponse(Client *c) {
+void setupResponse(Client *c) {
+    c->res.resBuild(&c->req);
+    c->res.resFormat();
+    c->res.showRes();
+    c->res._sendStatus = Response::SENDING;
+}
+
+void Server::writeClientResponse(Client *c) {
 
     int ret = 0;
 
     c->res.resClient = c;
     if (c->res._sendStatus == Response::PREPARE) {
-        
         c->res.resDispatch(&c->req);
-
-        if (c->res._sendStatus != Response::ERROR) {
-            c->res.resBuild(&c->req);
-            c->res.resFormat();
-            c->res.showRes();
-            c->res._sendStatus = Response::SENDING;
-        }
-        // TODO ELSE CASE
-
+        setupResponse(c);
     }
-
-    // if (c->res._sendStatus == Response::ERROR) {
-    //     // TODO - Here we should receive and handle errors from precedent loop through select() or if resBuild() resFormat() generate errors
-    // }
-
+    if (c->res._sendStatus == Response::ERROR) {
+        /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
+        LOGPRINT(INFO, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
+        setupResponse(c);
+    }
     if (c->res._sendStatus == Response::SENDING) {
         ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
         if (ret == -1) {
-            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
-            return EXIT_FAILURE;
-            // Boolean on client connection status
+            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed - Deleting client"));
+            FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
+            c->reset();
         }
         c->res._bytesSent += ret;
         if (c->res._bytesSent >= c->res.formatedResponse.size()) {
-            // In theory to fit perfectly, we should use == and not >=
-            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() fully completed ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
             c->res._sendStatus = Response::DONE;
         } else
-            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() NOT complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
     }
-
     if (c->res._sendStatus == Response::DONE) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         c->reset();
-        c->req.client = c;
-
-        // gConfig.removeFd(c->acceptFd);
-        // c->isConnected = false;
-        // -----------> If we don't close, the socket will be use until the end of program and socket's status will be CLOSE_WAIT (run lsof -iTCP to see it, without closing of course)
-        // close(c->acceptFd);
     }
-
-    return (EXIT_SUCCESS);
 }
 
 void Server::handleClientRequest(Client *c) {
 
-    if (FD_ISSET(c->acceptFd, &gConfig.readSet)) {
-        if (readClientRequest(c) != 0)
-            return ;
-    } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't readable"));
-    if (FD_ISSET(c->acceptFd, &gConfig.writeSet)) {
-        if (c->recvStatus != Client::COMPLETE)
-            return ;
-        if (writeClientResponse(c) != 0)
-            return ;
-    } else
-        LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't writable"));
+    if (FD_ISSET(c->acceptFd, &gConfig.readSet))
+        readClientRequest(c);
+    else LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't readable"));
+    if (FD_ISSET(c->acceptFd, &gConfig.writeSet) && c->recvStatus == Client::COMPLETE)
+        writeClientResponse(c);
+    else LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't writable"));
+
 }
 
-// LOGGER
+
+/*  -----------------------------------  LOGGER & EXCEPTIONS ---------------------------------------------------- */
 
 std::string const Server::logInfo(void) {
     std::string ret;

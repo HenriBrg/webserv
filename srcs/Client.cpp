@@ -5,7 +5,6 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
     acceptFd(acceptFd) {
 
     isConnected = true; // TODO : handle client-side de-connection
-    isServed = false;
 
     ip = inet_ntoa(clientAddr.sin_addr);
     port = htons(clientAddr.sin_port);
@@ -19,6 +18,10 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
     buf = (char*)malloc(sizeof(char) * (BUFMAX + 1));
     memset((void*)buf, 0, BUFMAX + 1);
 
+    cgipid = -1; 
+    cgiWriteFd = -1;
+    cgiReadFd = -1;
+
 }
 
 Client::~Client() {
@@ -28,8 +31,18 @@ Client::~Client() {
     free(buf);
     FD_CLR(acceptFd, &gConfig.readSetBackup);
     FD_CLR(acceptFd, &gConfig.writeSetBackup);
+    
+    gConfig.removeFd(cgiWriteFd);
+    gConfig.removeFd(cgiReadFd);
     gConfig.removeFd(acceptFd);
+
+    close(cgiWriteFd);
+    close(cgiReadFd);
     close(acceptFd);
+
+    cgiWriteFd = -1;
+    cgiReadFd = -1;
+    acceptFd = -1;
 
 }
 
@@ -37,11 +50,11 @@ void Client::reset() {
 
     // We reset everything, except port, acceptFd, server, ip
 
+    req.client = this;
     memset((void*)buf, 0, BUFMAX + 1);
     strbuf.clear();
 
     isConnected = true;
-    isServed = false;
 	recvStatus = HEADER;
 
     req.reset();

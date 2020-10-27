@@ -56,8 +56,8 @@ class Server {
         
         void acceptNewClient(void);
         void handleClientRequest(Client *c);
-        int readClientRequest(Client *c);
-        int writeClientResponse(Client *c);
+        void readClientRequest(Client *c);
+        void writeClientResponse(Client *c);
 
         std::string const logInfo(void);
 

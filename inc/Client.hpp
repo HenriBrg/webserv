@@ -16,7 +16,14 @@
 # include "Request.hpp"
 # include "Response.hpp"
 
-# define BUFMAX 512 // Temporary to simulate body - 32768 
+# define BUFMAX 512 // Temporary to simulate body - 32768
+
+# define STDIN 0
+# define STDOUT 1
+
+# define TUBE_OUT 0
+# define TUBE_IN 1
+
 
 class Server;
 
@@ -39,7 +46,6 @@ class Client {
 
         // The client might disconnect while we're handle its request
         bool        isConnected;
-        bool        isServed;
         int         recvStatus;
 
         int         port;
@@ -52,6 +58,11 @@ class Client {
 
         Request     req;
         Response    res;
+
+        pid_t       cgipid;
+        int         cgiWriteFd;
+        int         cgiReadFd;
+
 
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
         virtual ~Client();

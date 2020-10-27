@@ -9,26 +9,21 @@ int main(int ac, char **av) {
 
     gConfig.init();
     signal(SIGINT, handleCTRLC);
-
     while (gConfig.run) {
         gConfig.resetFds();
-        
         std::cout << std::endl << std::endl;
         NOCLASSLOGPRINT(INFO, ("New SELECT() CALL"));
         gConfig.showFDSETS();
-        std::cout << std::endl << std::endl;
-        
+        std::cout << std::endl;
+
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
+        NOCLASSLOGPRINT(INFO, ("SELECT() trigerred !"));
+
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
             s = *its;
-            if (FD_ISSET(s->sockFd, &gConfig.readSet)) {
-                try {
+            if (FD_ISSET(s->sockFd, &gConfig.readSet))
                     s->acceptNewClient();
-                } catch (std::exception & e) {
-                    std::cerr << e.what() << std::endl;
-                }
-            }
             std::vector<Client*>::iterator itc = s->clients.begin();
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;
@@ -49,5 +44,6 @@ int main(int ac, char **av) {
             }
         }
     }
+    gConfig.webservShutdown();
     return (EXIT_SUCCESS);
 }

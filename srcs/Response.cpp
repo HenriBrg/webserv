@@ -40,6 +40,13 @@ Response::~Response() {
     reset();
 }
 
+void Response::setErrorParameters(Request * req, int sendStatus, int code) {
+    _sendStatus = sendStatus;
+    _statusCode = code;
+    _errorFileName = "./www/errors/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+}
+
+
 /* https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Authorization */
 
 void Response::authControl(Request * req) {
@@ -51,9 +58,12 @@ void Response::authControl(Request * req) {
         tab = ft::split(req->authorization, ' ');
         if (tab.size() < 2)
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
-        if (tab[0] != "Basic" && tab[1] != "BASIC")
+        if (tab[0] != "Basic" && tab[0] != "BASIC")
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
-        if (ft::decodeBase64(tab[1]) != req->authorization) {
+
+        LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
+
+        if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
             setErrorParameters(req, Response::ERROR, UNAUTHORIZED_401);
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
@@ -64,9 +74,6 @@ void Response::authControl(Request * req) {
 }
 
 void Response::methodControl(Request * req) {
-
-    /* TODO : Avoid doing function mapping for each requests
-    store it in servers instead */
 
     typedef void (Response::*ptr)(Request * req);
 	std::map<std::string, ptr> tab;
@@ -83,14 +90,12 @@ void Response::methodControl(Request * req) {
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
-        // TODO : set response header allow !
+        // TODO : HEADER ALLOW
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else {
-
         LOGPRINT(INFO, this, ("Server::methodControl() : Method " + *tmp + " authorized"));
         _methodFctPtr = tab[req->method];
-
     }
     
     tab.clear();
@@ -98,26 +103,22 @@ void Response::methodControl(Request * req) {
 
 void Response::resDispatch(Request * req) {
 
-    // DON'T PASS INTO / DEBUG THE FUNCTION methodControl, it causes LLDB crash !
     methodControl(req);
     authControl(req);
-    // ... TODO : Additionnal controls
-    
+    // TODO : + de contrôle 
     if (_sendStatus == Response::ERROR)
         return ;
     (this->*_methodFctPtr)(req);
     if (_sendStatus == Response::ERROR)
-        return ;
+        return ; // TO HANDLE and set status sending
 
 }
 
 void Response::resBuild(Request * req) {
     
-
     // 1) Status Line
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(this);
-
     // 2) Headers
     allow.clear();                                                   // Unless Error 405
     contentLanguage[0] = "fr";                                       // contentLanguage always to "fr"
@@ -128,13 +129,11 @@ void Response::resBuild(Request * req) {
     date = ft::getDate();
     retryAfter.clear();
     server = "webserv";                                              // Config file or hard-coded ?
-    
     transfertEncoding.clear();                                      // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
     if (req->transferEncoding.size() &&
         req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
         transfertEncoding[0] = "chunked";
     wwwAuthenticate.clear();                                         // Unless an authorization was asked ?
-
     // 3) Others
     if (req->method != "HEAD") {
         std::ifstream fd(_resFile);
@@ -142,7 +141,6 @@ void Response::resBuild(Request * req) {
         buffer << fd.rdbuf();
         _resBody = buffer.str();
     }
-    
     contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
     contentLength = contentLength ? contentLength : -1;
 
@@ -151,18 +149,12 @@ void Response::resBuild(Request * req) {
 void Response::resFormat(void) {
 
     formatedResponse.clear();
-
     // 1) Status Line
     formatedResponse.append(httpVersion);
     formatedResponse.append(" " + std::to_string(_statusCode) + " ");
     formatedResponse.append(reason);
     formatedResponse.append("\r\n");
-
     // 2) Headers
-
-    // if (_statusCode == METHOD_NOT_ALLOWED_405)
-    //     ...
-
     responseUtils::headerFormat(formatedResponse, "Allow", allow);
     responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
     responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
@@ -176,36 +168,23 @@ void Response::resFormat(void) {
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
     // QUID de www-authenticate ?
     formatedResponse.append("\r\n");
-    if (contentLength > 0) // TODO or chunked 
+    if (contentLength > 0)
         formatedResponse.append(_resBody);
 
 }
 
-/* Body */
-
-void Response::addBody(Request * req) {
-
-    // TODO LATER
-
-}
 
 
-/* Errors Settings */
 
-void Response::setErrorParameters(Request * req, int sendStatus, int code) {
+/*  -----------------------------------  LOGGER ---------------------------------------------------- */
 
-    _sendStatus = sendStatus;
-    _statusCode = code;
-    _errorFileName = "./www/error/error.html"; /* TO UPDATE when we will have one html file per error */
 
-}
 
-/* Utils */
+
 
 std::string const Response::logInfo(void) {
     std::string ret;
-    
-    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n° " + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
+    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
     return (ret);
 }
 
@@ -214,17 +193,13 @@ void Response::showRes(void) {
 
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
-
     std::cout << MAGENTA << "    RESPONSE THAT WILL BE SENT ----------------" << END;
     std::cout << std::endl << std::endl;
     std::cout << "    ~ Global \n\n";
-
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
-
     showFullHeadersRes();    
-
     std::cout << std::endl;
     std::cout << MAGENTA << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
@@ -238,15 +213,12 @@ void Response::showFullHeadersRes(void) {
  
     std::cout << std::endl;
     std::cout << "    ~ Details";
-
     std::cout << std::endl;
     std::cout << std::endl;
-
     utils::displayHeaderMap(contentLocation, (indent + "Content-Location"));
     utils::displayHeaderMap(contentType, (indent + "Content-Type"));
     utils::displayHeaderMap(wwwAuthenticate, (indent + "WWW-Authenticate"));
     utils::displayHeaderMap(transfertEncoding, (indent + "Transfer-Encoding"));
-
     if (!lastModified.empty())
         std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())
@@ -257,15 +229,11 @@ void Response::showFullHeadersRes(void) {
         std::cout << indent << "Retry-After: " << retryAfter << std::endl;
     if (!server.empty())
         std::cout << indent << "Server : " << server << std::endl;
-
     std::cout << std::endl;
-
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())
         std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())
         std::cout << indent << "_resFile : " << _resFile << std::endl;
-
-    // std::cout << indent << "Body : " << _resBody << std::endl;
 
 }

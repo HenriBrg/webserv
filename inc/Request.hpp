@@ -66,6 +66,7 @@ class Request {
         void    assignLocation(std::vector<Location*> locations);
         void    parseHeaders();
         void    fillHeader(std::string const key, std::string const value);
+        std::map<std::string, std::string> mapReqHeaders(void);
         
         void    checkBody();
         void    parseChunkedBody();
@@ -189,6 +190,7 @@ class Request {
 
         // https://www.hostinger.fr/tutoriels/keep-alive/
         // Keep-Alive permet au navigateur du visiteur de télécharger tout le contenu (comme JavaScript, CSS, images, vidéos, etc.) via une connexion TCP persistante au lieu de faire des demandes différentes pour chaque fichier
+        // The Connection header needs to be set to "keep-alive" for this header to have any meaning.
 		std::string	keepAlive; 
 
         // Chunked : Data is sent in a series of chunks.

@@ -166,7 +166,21 @@ namespace utils {
 			} 
 		}
 		return (ret); 
-	} 
+	}
+
+	int		isExtension(std::string str, std::string ext) 
+	{
+		int i = str.size() - 1;
+		std::string temp;
+		while (i > 0 && str[i] != '.')
+			i--;
+		if (i == 0)
+			return (0);
+		temp = str.substr(i, str.size() - 1);
+		if (temp == ext)
+			return (1);
+		return (0);
+	}
 
 }
 

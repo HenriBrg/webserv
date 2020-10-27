@@ -10,7 +10,6 @@ Config::Config() {
 
 void handleCTRLC(int s) {
     write(1, "\b\b", 2);
-    NOCLASSLOGPRINT(DEBUG, "SIGINT Signal detected !");
     exit(EXIT_FAILURE);
 }
 
@@ -82,12 +81,9 @@ void Config::showFDSETS() {
         }
     }
     if (x)
-        tmp = tmp.substr(0, tmp.size() - 2);
-        
+        tmp = tmp.substr(0, tmp.size() - 3);
 
-    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.readSet, " + std::to_string(x) + " sockets are watched on their read status"));
-    if (x)
-        NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Here is the list : " + tmp));
+    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.readSet, " + std::to_string(x) + " sockets [" + tmp + "] are watched on their read status"));
    
     x = 0;
     tmp.clear();
@@ -99,16 +95,13 @@ void Config::showFDSETS() {
         }
     }
     if (x)
-        tmp = tmp.substr(0, tmp.size() - 2);
+        tmp = tmp.substr(0, tmp.size() - 3);
 
-    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets are watched on their write status"));
-    if (x)
-        NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Here is the list : " + tmp));
+    NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets [" + tmp + "] are watched on their write status"));
 
 }
 
 void Config::init() {
-    std::cout << std::endl;
     std::string n1("Server One");
     std::string n2("Server Two");
     Server *s1 = new Server(n1, 7777);
