@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include <map>
+
 # include <unistd.h>
 # include <sys/stat.h> 
 
@@ -65,7 +66,12 @@ class Request {
         void    parseUriQueries();
         void    assignLocation(std::vector<Location*> locations);
         void    parseHeaders();
+
+        /* Filling functions*/
         void    fillHeader(std::string const key, std::string const value);
+        void    fillMultiValHeaders(std::string const key, std::string const value);
+        void    fillMultiWeightValHeaders(std::string const key, std::string const value);
+        void    fillUniqueValHeaders(std::string const key, std::string const value);
         
         void    checkBody();
         void    parseChunkedBody();
@@ -117,14 +123,14 @@ class Request {
         // Accept-Charset: Charset-1, Charset-2, ... ===> { 1: "utf-8", 2: "iso-8859-1;q=0.5" }
         // For character set negotiation, the client can use this header to tell the server which character sets it can handle or it prefers
         // NB : Si on a pas la ressource dans le format souhaité, en théorie on retourne 406 mais en pratique on ignore pour qu'une réponse, bien qu'imparfaite, soit quand même retournée
-        std::map<int, std::string> acceptCharset;
+        std::multimap<float, std::string, std::greater<float> > acceptCharset;
 
         // Accept-Language: language-1, language-2, ...
         // Accept-Language: da, en-gb;q=0.8, en;q=0.7
         // The client can use the Accept-Language header to tell the server what languages it can handle or it prefers.
         // If the server has multiple versions of the requested document (e.g., in English, Chinese, French), it can check this header to decide which version to return. This process is called language negotiation
         // The optional qvalue represents an acceptable quality level for non preferred languages
-        std::map<int, std::string> 	acceptLanguage;
+        std::multimap<float, std::string, std::greater<float> > 	acceptLanguage;
 
         // Authorization : credentials
         // Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l

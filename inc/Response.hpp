@@ -31,11 +31,11 @@
 
 
 class Client;
+class Server;
 
 class Response {
 
 	friend class Client;
-
     
     public:
 
@@ -58,20 +58,24 @@ class Response {
         Response();
         virtual ~Response();
         void    reset();
-        void    resDispatch(Request * req);
-        void    resBuild(Request * req);
-        void    resFormat(void);
+
+        /* Building response functions */
+        void    control(Request * req, Server * serv);
+        void    callMethod(Request * req);
+        void    setHeaders(Request * req);
+        void    setBody(void);
+        void    setBodyHeaders(void);
+        void    format(void);
 
         /* CONTROL */
-
-        void    methodControl(Request * req);
+        void    methodControl(Request * req, Server * serv);
         void    authControl(Request * req);
 
+        /* LOGS AND ERRORS */
         std::string const logInfo(void);
         void    errorHandler(void);
         
         /* METHODS */
-
         void    getReq(Request * req);
         void    headReq(Request * req);
         void    putReq(Request * req);
@@ -81,7 +85,6 @@ class Response {
         void    (Response::*_methodFctPtr)(Request * req);
 
         /* BODY */
-
         void addBody(Request * req);
 
         /* UTILS METHODS */

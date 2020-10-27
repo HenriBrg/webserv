@@ -34,11 +34,20 @@ void Response::getReq(Request * req) {
 
 }
 
+
 void Response::headReq(Request * req) {
 
 }
 
-void Response::putReq(Request * req) {
+void Response::putReq(Request * req)
+{
+    int fileFd(0);
+
+    if ((fileFd = open(req->file.c_str(), O_TRUNC | O_CREAT, 0777)) != -1)
+    {
+        write(fileFd, req->_reqBody.c_str(), req->_reqBody.size());
+    }
+    // Else manage error
 
 }
 
@@ -58,52 +67,43 @@ void Response::deleteReq(Request * req) {
 
 /* https://developer.mozilla.org/fr/docs/Web/HTTP/Content_negotiation */
 
-void Response::negotiateAcceptLanguage(Request * req) {
-
-    int i = 0;
-    size_t x;
-    std::string tmp;
-    std::string backup = req->file;
-
-    if (req->acceptCharset.empty())
+void Response::negotiateAcceptLanguage(Request * req)
+{
+    if (req->acceptLanguage.empty())
         return ;
-    while (i < req->acceptLanguage.size()) {
-        if (req->acceptLanguage[i].empty())
-            continue ;
-        tmp = req->acceptLanguage[i];
-        x = tmp.find(';');
-        if (x != std::string::npos)
-            tmp = tmp.substr(0, x);
-        req->file = req->file + "." + tmp;
-        std::ifstream tmpFile(req->file);
-        if (tmpFile.good()) {
-            tmpFile.close();
-            return ;
-        } else
-            req->file = backup;
-        i++;
+
+    struct stat fileStat;
+    std::string path;
+
+    std::multimap<float, std::string, std::greater<float> >::iterator it(req->acceptLanguage.begin());
+    std::multimap<float, std::string, std::greater<float> >::iterator ite(req->acceptLanguage.end());
+    for (; it != ite; it++)
+    {
+        if ((*it).second != "*")
+            path = req->file + "." + (*it).second;
+        else
+            path = req->file;
+        if (stat(path.c_str(), &fileStat) == -1)
+            continue;
+        req->file = path;
+        return ;
     }
+    LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
+    //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }
 
-void Response::negotiateAcceptCharset(Request * req) {
-
-    int i = 0;
-    int isUTF8 = 0;
-
+void Response::negotiateAcceptCharset(Request * req)
+{
     if (req->acceptCharset.empty())
         return ;
-    while (i < req->acceptCharset.size()) {
-        if (req->acceptLanguage[i].empty())
-            if (req->acceptLanguage[i] == "utf-8")
-                isUTF8 = 1;
-        i++;
-    }
-    if (isUTF8)
-        return ;
-    else {
-        LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
-        setErrorParameters(req, Response::ERROR, BAD_REQUEST_400);
 
+    std::multimap<float, std::string, std::greater<float> >::iterator it(req->acceptCharset.begin());
+    std::multimap<float, std::string, std::greater<float> >::iterator ite(req->acceptCharset.end());
+    for (; it != ite; it++)
+    {
+        if ((*it).second == "utf-8" || (*it).second == "*")
+            return ;
     }
-
+    LOGPRINT(LOGERROR, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
+    //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }

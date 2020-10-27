@@ -63,98 +63,104 @@ void Response::authControl(Request * req) {
 
 }
 
-void Response::methodControl(Request * req) {
-
-    /* TODO : Avoid doing function mapping for each requests
-    store it in servers instead */
-
-    typedef void (Response::*ptr)(Request * req);
-	std::map<std::string, ptr> tab;
+void Response::methodControl(Request * req, Server * serv)
+{
     std::vector<std::string>    allowedMethods;
     std::vector<std::string>::iterator    tmp;
 
-    tab["GET"]     = & Response::getReq;
-	tab["PUT"]     = & Response::putReq;
-	tab["POST"]    = & Response::postReq;
-	tab["HEAD"]    = & Response::headReq;
-	tab["DELETE"]  = & Response::deleteReq;
-	tab["PATCH"]   = & Response::patchReq;
-
-
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
-
     if (tmp == allowedMethods.end()) {
-        // TODO : set response header allow !
+        allow = req->reqLocation->methods;
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
-        _methodFctPtr = tab[req->method];
-    
-    tab.clear();
+        _methodFctPtr = serv->methodsTab[req->method];
 }
 
-void Response::resDispatch(Request * req) {
-
+void Response::control(Request * req, Server * serv)
+{
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
 
-    methodControl(req);
+    methodControl(req, serv);
     authControl(req);
     // ... TODO : Additionnal controls
-    
-    if (_sendStatus == Response::ERROR)
-        return ;
-    (this->*_methodFctPtr)(req);
-    if (_sendStatus == Response::ERROR)
-        return ;
-
 }
 
-void Response::resBuild(Request * req) {
-    
+void Response::callMethod(Request * req)
+{
+    if (_sendStatus != Response::ERROR)
+        (this->*_methodFctPtr)(req);
+}
 
-    // 1) Status Line
-    
+void Response::setHeaders(Request * req)
+{
+    // 1) Status Line 
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(this);
-
-    // 2) Headers
     
-    allow.clear();             // Unless Error 405
-
-    contentLanguage[0] = "fr";          // contentLanguage always to "fr"
-
-
-    contentLocation.clear();            // We don't care
-    contentType[0] = responseUtils::getContentType(_resFile);
-    lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
-    location.clear();                   // Use only with 300 status code
+    // 2) Basic headers
     date = ft::getDate();
-    retryAfter.clear();
-    server = "webserv-42";              // Config file or hard-coded ?
-    
+    server = "webserv-42";
+
+    // 3) Error headers
+    if (_sendStatus != Response::ERROR)
+    {
+        allow.clear();             // Unless Error 405
+        wwwAuthenticate.clear();            // Unless an authorization was asked ?
+        retryAfter.clear();  // Quid du status 301
+    }
+
+    // 4) Other headers
+    contentLanguage[0] = "fr";          // contentLanguage always to "fr"
+    contentLocation.clear();            // We don't care
+    location.clear();                   // Use only with 300 status code
+
     // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
     transfertEncoding.clear();
     if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
         transfertEncoding[0] = "chunked";
-    wwwAuthenticate.clear();            // Unless an authorization was asked ?
 
-    // 3) Others
-    if (req->method != "HEAD") {
-
-        std::ifstream fd(_resFile);
-        std::stringstream buffer;
-        buffer << fd.rdbuf();
-        _resBody = buffer.str();
-
-    }
-    
-    contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
-    contentLength = contentLength ? contentLength : -1;
-
+    // 5) Body headers cleared in case of no body in response
+    contentType.clear();
+    lastModified.clear(); // Is here the right place to call ?
+    contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 
-void Response::resFormat(void) {
+void Response::setBody(void) {
+
+    if (!(_resFile.empty()))
+    {
+        char fileBuf[4096];
+        int fileFd(0);
+        int retRead(0);
+        
+        if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
+        {
+            while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
+            {
+                // Ajouter gestion d'erreur
+                fileBuf[retRead] = '\0';
+                _resBody.append(fileBuf);
+            }
+            close(fileFd);
+        }
+    }
+}
+
+void Response::setBodyHeaders(void)
+{
+    if (!(_resBody.empty()))
+    {
+        contentType[0] = responseUtils::getContentType(_resFile);
+        lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
+        contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+    }
+}
+
+
+void Response::format(void)
+{
 
     formatedResponse.clear();
 
@@ -184,7 +190,6 @@ void Response::resFormat(void) {
     formatedResponse.append("\r\n");
     if (contentLength > 0) // TODO or chunked 
         formatedResponse.append(_resBody);
-
 }
 
 /* Body */

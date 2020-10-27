@@ -12,7 +12,6 @@ Server::Server(std::string name, int port): name(name), port(port) {
     Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi_tester");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
-
 }
 
 Server::~Server() {}
@@ -102,6 +101,15 @@ int Server::start() {
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
     LOGPRINT(INFO, this, "");
+
+    // ---------- 6) SET_METHOD_TAB ----------
+	methodsTab["GET"]     = &Response::getReq;
+	methodsTab["PUT"]     = &Response::putReq;
+	methodsTab["POST"]    = &Response::postReq;
+	methodsTab["HEAD"]    = &Response::headReq;
+	methodsTab["DELETE"]  = &Response::deleteReq;
+	methodsTab["PATCH"]   = &Response::patchReq;
+
     return (EXIT_SUCCESS);
 }
 
@@ -144,6 +152,10 @@ int Server::readClientRequest(Client *c) {
         return (EXIT_FAILURE);
     } else {
         c->buf[ret] = '\0';
+        std::cout << "\n\n=========== REQUEST ============\n\n";
+        std::cout << c->buf << std::endl;
+        std::cout << "\n\n=========== END REQUEST ============\n\n";
+
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
             // If a payload / body is sent, we'll see it AFTER "\r\n\r\n" and Content-Length will be set, or encoding will be "chunked"
@@ -178,47 +190,39 @@ int Server::readClientRequest(Client *c) {
     return (EXIT_SUCCESS);
 }
 
-int Server::writeClientResponse(Client *c) {
+int Server::writeClientResponse(Client *c) 
+{
 
-    int ret = 0;
 
-    c->res.resClient = c;
-    if (c->res._sendStatus == Response::PREPARE) {
-        
-        c->res.resDispatch(&c->req);
-        NOCLASSLOGPRINT(DEBUG, ("1"));
-
-        if (c->res._sendStatus != Response::ERROR) {
-            c->res.resBuild(&c->req);
-            c->res.resFormat();
-        }
-        c->res._sendStatus = Response::SENDING;
-    }
+    c->res.resClient = c; // Constructeur ? 
+    setClientResponse(c);
 
     NOCLASSLOGPRINT(DEBUG, ("2"));
+
 
 
     // if (c->res._sendStatus == Response::ERROR) {
     //     // TODO - Here we should receive and handle errors from precedent loop through select()
     // }
 
-    if (c->res._sendStatus == Response::SENDING) {
-        ret = send(c->acceptFd, c->res.formatedResponse.c_str(), c->res.formatedResponse.size(), 0);
-        if (ret == -1) {
-            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
-            return EXIT_FAILURE;
-            // Boolean on client connection status
-        }
-        c->res._bytesSent += ret;
-        if (c->res._bytesSent >= c->res.formatedResponse.size()) {
-            // In theory to fit perfectly, we should use == and not >=
-            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
-            c->res._sendStatus = Response::DONE;
-        } else
-            LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
-    }
 
-    if (c->res._sendStatus == Response::DONE) {
+    
+    if (sendClientResponse(c) == EXIT_FAILURE)
+        return (EXIT_FAILURE);
+
+
+
+    if (c->res._bytesSent == c->res.formatedResponse.size())
+    {
+        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+        c->res._sendStatus = Response::DONE;
+    } 
+    else
+        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+
+
+    if (c->res._sendStatus == Response::DONE)
+    {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         c->reset();
         c->req.client = c;
@@ -228,7 +232,45 @@ int Server::writeClientResponse(Client *c) {
         // -----------> If we don't close, the socket will be use until the end of program and socket's status will be CLOSE_WAIT (run lsof -iTCP to see it, without closing of course)
         // close(c->acceptFd);
     }
+    return (EXIT_SUCCESS);
+}
 
+void Server::setClientResponse(Client *c)
+{
+    if (c->res._sendStatus == Response::PREPARE)
+    {    
+        c->res.control(&c->req, this); // Control (+set) method & authorization
+        c->res.callMethod(&c->req); // Use requested method
+        c->res.setHeaders(&c->req); // Set headers
+        c->res.setBody(); // Set body
+        c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
+        c->res.format(); // Format response
+        c->res._sendStatus = Response::SENDING;
+    }
+}
+
+int Server::sendClientResponse(Client *c)
+{
+    int retSend(0);
+    int bytesSent(0);
+    int bytesToSend(0);
+
+    if (c->res._sendStatus == Response::SENDING)
+    {
+        bytesToSend = c->res.formatedResponse.size();
+        while (bytesSent < c->res.formatedResponse.size())
+        {
+            retSend = send(c->acceptFd, c->res.formatedResponse.c_str(), bytesToSend, 0);
+            if (retSend == -1)
+            {
+                LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
+                return (EXIT_FAILURE);
+            }
+            bytesSent += retSend;
+            bytesToSend -= retSend;
+        }
+        c->res._bytesSent += bytesSent;
+    }
     return (EXIT_SUCCESS);
 }
 

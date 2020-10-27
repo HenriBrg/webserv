@@ -23,6 +23,10 @@
 
 # include "Client.hpp"
 # include "Location.hpp"
+# include "Response.hpp"
+# include "Request.hpp"
+
+class Response;
 
 class Server {
     
@@ -33,7 +37,9 @@ class Server {
     public:
 
         friend class Config;
-        
+        friend class Response;
+        typedef void(Response::*ptr)(Request*);
+
         /* Constructors */
 
         Server(std::string name, int port);
@@ -49,15 +55,24 @@ class Server {
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
         std::vector<Location*>      locations;
+        std::map<std::string, ptr> methodsTab;
+
 
         /* Members Methods */
 
         int start();
         
+
         void acceptNewClient(void);
+
+        /* Request functions */
         void handleClientRequest(Client *c);
         int readClientRequest(Client *c);
+
+        /* Response functions */
         int writeClientResponse(Client *c);
+        void setClientResponse(Client *c);
+        int sendClientResponse(Client *c);
 
         std::string const logInfo(void);
 

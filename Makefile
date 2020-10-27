@@ -18,13 +18,14 @@ RM = rm -rf
 
 # DIRECTORIES
 
-DHEADERS = ./includes/
+DHEADERS = ./inc/
 DSRCS	= ./srcs/
 DOBJS	= ./comp/
 
+HEADERS = ./inc/*
 # SOURCES
 
-SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp Methods.cpp
+SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp methods.cpp
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 # COMPILATION
@@ -36,7 +37,7 @@ run: all
 	./$(NAME)
 
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(HEADERS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)
 
 $(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
