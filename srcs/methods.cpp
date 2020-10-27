@@ -5,10 +5,6 @@ void Response::getReq(Request * req) {
     int cgiUp = 0;
 	struct stat	buffer;
 
-
-    // TODO : si body vide, return et set content-type tout simplement
-
-
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
     if (stat(req->file.c_str(), &buffer) == -1) {
@@ -16,20 +12,14 @@ void Response::getReq(Request * req) {
         return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
     }
 
-    // TODO : check si location->cgi existe ou location->php existe, sinon, pas de CGI
-    
-    if ((!req->reqLocation->cgiPath.empty() && utils::isExtension(req->file, ".cgi")))
-        // (!req->reqLocation->phpcgi.empty() && utils::isExtension(req->file, ".php"))
+    if ((!req->reqLocation->cgi.empty() && utils::isExtension(req->file, ".cgi")) || (!req->reqLocation->phpcgi.empty() && utils::isExtension(req->file, ".php")))
         cgiUp = 1;
 
-
-    // TMP ! ! !
+    // TMP
     cgiUp = 0;
 
 
-    if (cgiUp == 1) {
-        LOGPRINT(INFO, this, ("Response::getReq() : CGI is present and executable. Its path is : " + req->reqLocation->cgiPath));
-
+    if (cgiUp) {
         execCGI(req);
         _cgiOutputFile = "./www/tmpFile";
         _resFile = req->file;
@@ -37,7 +27,7 @@ void Response::getReq(Request * req) {
 
     } else {
 
-        LOGPRINT(INFO, this, ("Response::getReq() : No CGI present, we handle by ourselves the response"));
+        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle by ourselves the response"));
         // For testing in advance, not the right place
         _resFile = req->file;
         _statusCode = OK_200;

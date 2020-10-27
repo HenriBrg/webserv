@@ -90,7 +90,6 @@ void Response::methodControl(Request * req) {
     allowedMethods = ft::split(req->reqLocation->methods, ',');
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
-        // TODO : HEADER ALLOW
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else {
@@ -129,7 +128,7 @@ void Response::resBuild(Request * req) {
     date = ft::getDate();
     retryAfter.clear();
     server = "webserv";                                              // Config file or hard-coded ?
-    transfertEncoding.clear();                                      // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
+    transfertEncoding.clear();                                       // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
     if (req->transferEncoding.size() &&
         req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
         transfertEncoding[0] = "chunked";

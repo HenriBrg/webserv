@@ -47,7 +47,7 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries; // The URL-encoded information that is sent with GET method request.
 
 	envmap["CONTENT_TYPE"]        = req->contentType; // type MIME des données véhiculées dans la requête
-	envmap["SCRIPT_NAME"]         = req->reqLocation->cgiPath; // chemin du CGI à partir de la racine du serveur HTTP
+	envmap["SCRIPT_NAME"]         = req->reqLocation->cgi; // chemin du CGI à partir de la racine du serveur HTTP
 
 	envmap["SERVER_NAME"]         = "127.0.0.1"; // The server's hostname or IP Address.
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port); // Port du serveur
@@ -107,8 +107,8 @@ void Response::execCGI(Request * req) {
         3) Concernant l'extension de l'executable cgi, aucune idée pour l'instant */
 
 
-    const std::string cgibin = req->reqLocation->cgiPath;
-    args[0] = strdup(req->reqLocation->cgiPath.c_str());
+    const std::string cgibin = req->reqLocation->cgi;
+    args[0] = strdup(req->reqLocation->cgi.c_str());
     // TODOQ : si empty, on prendra ->phpcgi
     args[1] = strdup(req->file.c_str());
     args[2] = 0;

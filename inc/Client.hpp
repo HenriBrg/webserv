@@ -16,7 +16,7 @@
 # include "Request.hpp"
 # include "Response.hpp"
 
-# define BUFMAX 512 // Temporary to simulate body - 32768
+# define BUFMAX 4096 // Temporary to simulate body - 32768
 
 # define STDIN 0
 # define STDOUT 1

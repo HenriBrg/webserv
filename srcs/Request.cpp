@@ -143,22 +143,23 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 // Location(std::string uri, std::string root, std::string index, std::string methods) {
 
 void Request::parseFile(std::vector<Location*> locations) {
+    
     int         i;
     struct stat info;
 
     assignLocation(locations);
+
     if (reqLocation) {
         i = reqLocation->root.size() - 1;
         if (reqLocation->root[i] == '/')
             file = reqLocation->root;
         else
             file = reqLocation->root + "/";
-        if (stat(file.c_str(), &info) == 0) {
-            if (S_ISDIR(info.st_mode)) {
+        if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode))
                 file += reqLocation->index;
-            }
-        LOGPRINT(INFO, this, ("Request::parseFile() : File Assignedd : " + file));
-        }
+        else
+            LOGPRINT(LOGERROR, this, ("Request::parseFile() : stat() on location failed : "));
+        LOGPRINT(DEBUG, this, ("Request::parseFile() : File Assignedd : " + file));
     }
 
 }
@@ -333,6 +334,7 @@ void Request::checkBody() {
 // TODO : Parsing Chunked
 
 void Request::parse(std::vector<Location*> locations) {
+
     parseRequestLine();
     parseUriQueries();
     parseFile(locations);
