@@ -11,14 +11,10 @@ int main(int ac, char **av) {
     signal(SIGINT, handleCTRLC);
     while (gConfig.run) {
         gConfig.resetFds();
-        std::cout << std::endl << std::endl;
-        NOCLASSLOGPRINT(INFO, ("New SELECT() CALL"));
+        NOCLASSLOGPRINT(INFO, ("\n\nNew SELECT() CALL"));
         gConfig.showFDSETS();
-        std::cout << std::endl;
-
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         NOCLASSLOGPRINT(INFO, ("SELECT() trigerred !"));
-
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
             s = *its;
@@ -44,6 +40,5 @@ int main(int ac, char **av) {
             }
         }
     }
-    gConfig.webservShutdown();
     return (EXIT_SUCCESS);
 }

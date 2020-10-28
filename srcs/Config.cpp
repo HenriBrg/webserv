@@ -98,6 +98,7 @@ void Config::showFDSETS() {
         tmp = tmp.substr(0, tmp.size() - 3);
 
     NOCLASSLOGPRINT(INFO, ("Config::showFDSETS() : Inside gConfig.writeSet, " + std::to_string(x) + " sockets [" + tmp + "] are watched on their write status"));
+    std::cout << std::endl;
 
 }
 

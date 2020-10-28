@@ -298,10 +298,11 @@ void Request::parseHeaders() {
 // Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
 // Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
 
+// TODO : response chunked : https://www.codeproject.com/articles/648526/all-about-http-chunked-responses
+
 void Request::parseChunkedBody() {
 
-    // TODO : max body configuration REQUEST_ENTITY_TOO_LARGE_413
-    // TODO : trigger error (set response flags) as soon as we see that body is longer that max_body, instead of parsing it entirely directly
+    // TODO : max body configuration REQUEST_ENTITY_TOO_LARGE_413 when parser is done
 
     size_t      separator;
     std::string tmp;
