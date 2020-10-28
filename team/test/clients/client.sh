@@ -27,5 +27,6 @@
 # curl -ivd @payloads/smallBody http://localhost:7777
 # curl -ivd @payloads/mediumBody http://localhost:7777
 
-curl -iv --data "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n" \
-         http://localhost:7777 -H "Transfer-Encoding: chunked, gzip"
+curl -iv --data "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" http://localhost:7777 \
+    -H "Transfer-Encoding: chunked, gzip" \
+    -H "Content-Type: text/plain"

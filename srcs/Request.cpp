@@ -125,7 +125,6 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
 
-        NOCLASSLOGPRINT(DEBUG, ("Request::assignLocation() : URI = " + uri));
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
             LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned"));
@@ -171,7 +170,7 @@ void Request::parseFile(std::vector<Location*> locations) {
                 file += reqLocation->index;
         else
             LOGPRINT(LOGERROR, this, ("Request::parseFile() : stat() on location failed : "));
-        LOGPRINT(DEBUG, this, ("Request::parseFile() : File Assignedd : " + file));
+        LOGPRINT(INFO, this, ("Request::parseFile() : File Assignedd : " + file));
     }
 
 }
@@ -302,11 +301,10 @@ void Request::parseHeaders() {
 
 void Request::parseChunkedBody() {
 
-    // TODO : max body configuration REQUEST_ENTITY_TOO_LARGE_413 when parser is done
-
-    size_t      separator;
+    size_t      separator = 0;
     std::string tmp;
 
+    tmp.clear();
     _reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
@@ -326,8 +324,12 @@ void Request::parseChunkedBody() {
         }
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
-            if (separator == std::string::npos)
-                break ; // ---> Error XXX ?
+            if (separator == std::string::npos) {
+                LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
+                client->recvStatus = Client::ERROR;
+                client->res.setErrorParameters(this, Response::ERROR, BAD_REQUEST_400);
+                break ;
+            }
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;
@@ -337,7 +339,12 @@ void Request::parseChunkedBody() {
             /* Delete the last "\r\n" which indicate the end */
             if (separator != std::string::npos)
                 _reqBody.erase(separator, 2);
-            // else ---> Error XXX ?
+            else {
+                LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
+                client->recvStatus = Client::ERROR;
+                client->res.setErrorParameters(this, Response::ERROR, BAD_REQUEST_400);
+                break ;
+            }
             client->recvStatus = Client::COMPLETE;
             break ;
         }

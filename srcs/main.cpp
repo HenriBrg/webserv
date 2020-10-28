@@ -11,7 +11,7 @@ int main(int ac, char **av) {
     signal(SIGINT, handleCTRLC);
     while (gConfig.run) {
         gConfig.resetFds();
-        NOCLASSLOGPRINT(INFO, ("\n\nNew SELECT() CALL"));
+        NOCLASSLOGPRINT(INFO, ("----- ----- ----- ----- ----- NEW SELECT() CALL ----- ----- ----- ----- -----"));
         gConfig.showFDSETS();
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         NOCLASSLOGPRINT(INFO, ("SELECT() trigerred !"));

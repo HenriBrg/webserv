@@ -8,7 +8,7 @@ Server::Server(std::string name, int port): name(name), port(port) {
     bzero(&addr, sizeof(addr));
     
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET", "root:pass", "./www/cgi-bin/cgi_tester", "");
+    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,POST", "root:pass", "./www/cgi-bin/cgi_tester", "");
     Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi-bin/cgi_tester", "");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
@@ -170,6 +170,10 @@ void Server::readClientRequest(Client *c) {
                 c->req.parseSingleBody(); // TODO : set errors if invalid request format
             else 
                 LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Anormal body"));
+            // if (c->req.reqLocation.maxBody != -1 && c->req._reqBody.size() > c->req.reqLocation.maxBody) {
+                // client->recvStatus = Client::ERROR;
+                // c->res.setErrorParameters(&c->req, Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
+            // } 
         }
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
@@ -225,6 +229,7 @@ void Server::setClientResponse(Client *c)
     c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
     c->res.format(); // Format response
     c->res._sendStatus = Response::SENDING;
+    c->res.showRes();
 }
 
 int Server::sendClientResponse(Client *c)

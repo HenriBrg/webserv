@@ -21,7 +21,6 @@ void Response::reset() {
     transfertEncoding.clear();
     wwwAuthenticate.clear();
 
-
     resClient = nullptr;
     _errorFileName.clear();
     formatedResponse.clear();
@@ -47,28 +46,22 @@ void Response::setErrorParameters(Request * req, int sendStatus, int code) {
 }
 
 
-/* https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Authorization */
-
 void Response::authControl(Request * req) {
     
     std::vector<std::string> tab;
 
+    // TODO : modifier de façon à ce que s'il y a auth dans la loc, on passe quand même dans ce if, même si le req->authorization est vide
+
     if (!req->authorization.empty()) {
-
         tab = ft::split(req->authorization, ' ');
-        if (tab.size() < 2)
-            LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
-        if (tab[0] != "Basic" && tab[0] != "BASIC")
-            LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
-
+        if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
+        if (tab[0] != "Basic" && tab[0] != "BASIC") LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
         LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
-
         if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
             setErrorParameters(req, Response::ERROR, UNAUTHORIZED_401);
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
-        } else
-            LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
+        } else LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
     }
 
 }
@@ -111,7 +104,7 @@ void Response::setHeaders(Request * req)
     
     // 2) Basic headers
     date = ft::getDate();
-    server = "webserv-42";
+    server = "webserv";
 
     // 3) Error headers
     if (_sendStatus != Response::ERROR)
@@ -128,8 +121,9 @@ void Response::setHeaders(Request * req)
 
     // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
     transfertEncoding.clear();
-    if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
-        transfertEncoding[0] = "chunked";
+    // TODO : à confirmer mais le fait de recevoir un body chunked n'implique en rien de répondre avec un body chunked
+    // if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
+    //     transfertEncoding[0] = "chunked";
 
     // 5) Body headers cleared in case of no body in response
     contentType.clear();
@@ -144,12 +138,14 @@ void Response::setBody(void) {
         char fileBuf[4096];
         int fileFd(0);
         int retRead(0);
+
+        // stat() le file avant ?
         
         if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
-                // Ajouter gestion d'erreur
+                // TODO : Ajouter gestion d'erreur
                 fileBuf[retRead] = '\0';
                 _resBody.append(fileBuf);
             }

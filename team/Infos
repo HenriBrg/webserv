@@ -2,7 +2,7 @@ Clients :
 
     Code :
 
-    - curl :
+    - curl : KO https://stackoverflow.com/questions/28476144/curl-hangs-at-no-chunk-no-close-no-size-assume-close-to-signal-end
     - python
     - telnet : KO (parser request line en plusieurs fois)
     - netcat : KO (parser request line en plusieurs fois)
@@ -12,8 +12,8 @@ Clients :
 
     - Firefox : OK
     - Safari : OK
-    - Chrome : KO
-    - Postman :
+    - Chrome : OK
+    - Postman : OK
 
 
 TIME_WAIT : C'est normal => man netcat

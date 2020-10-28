@@ -33,7 +33,6 @@ OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 all: $(NAME)
 
 run: all
-	printf "\n$(_GREEN) 📡 Webserv Ready 📡$(_END)\n\n"
 	./$(NAME)
 
 

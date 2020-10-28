@@ -56,6 +56,8 @@ void Response::putReq(Request * req)
 
 void Response::postReq(Request * req) {
 
+    getReq(req);
+
 }
 
 void Response::patchReq(Request * req) {
