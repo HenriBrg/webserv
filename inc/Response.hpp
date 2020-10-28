@@ -47,6 +47,7 @@ class Response {
 
         std::string _cgiOutputFile;
 
+        int _methodStatus;
         int _sendStatus;
         enum resStatus {
             PREPARE,
@@ -58,10 +59,12 @@ class Response {
         /* GLOBAL */
 
         Response();
+        Response(Client *c);
         virtual ~Response();
         void    reset();
 
         /* Building response functions */
+        void    resourceControl(Request * req);
         void    control(Request * req, Server * serv);
         void    callMethod(Request * req);
         void    setHeaders(Request * req);

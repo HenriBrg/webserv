@@ -126,6 +126,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
 
         NOCLASSLOGPRINT(DEBUG, ("Request::assignLocation() : URI = " + uri));
+        NOCLASSLOGPRINT(DEBUG, ("Request::assignLocation() : vecLocs[i]->uri = " + vecLocs[i]->uri));
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
             LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned"));
@@ -136,14 +137,16 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     size_t i = uri.size() - 1;
     std::string tmpUri = uri;
 
-    while (tmpUri.size() > 0) {
-		while (tmpUri[i] != '/' && i != 0)
+    while (tmpUri.size() > 0) {                     // Parcours URI entier
+		while (tmpUri[i] != '/' && i != 0)          // Si / alors arret
 			i--;
-		tmpUri = tmpUri.substr(0, i);
-		if (tmpUri == "")
+		tmpUri = tmpUri.substr(0, i);               // tmpUri => partie droite URI
+		if (tmpUri == "")                           // Si racine
 			tmpUri = "/";
-		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
-			if (vecLocs[x]->uri == tmpUri) {
+		for (std::size_t x = 0; x < vecLocs.size(); ++x) // Recherche location
+        {  
+			if (vecLocs[x]->uri == tmpUri)
+            {
 				file = uri.substr(i + 1, uri.size());
 				reqLocation = vecLocs[x];
                 LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned"));
@@ -154,24 +157,31 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 }
 
-void Request::parseFile(std::vector<Location*> locations) {
-    
+void Request::parseFile(std::vector<Location*> locations)
+{
+    std::string tmpFile;
     int         i;
     struct stat info;
 
     assignLocation(locations);
 
-    if (reqLocation) {
+    if (reqLocation)
+    {
+        tmpFile = file;
         i = reqLocation->root.size() - 1;
         if (reqLocation->root[i] == '/')
             file = reqLocation->root;
         else
             file = reqLocation->root + "/";
+
+        if (!(tmpFile.empty())) // Add for PUT REQUEST
+            file += tmpFile;
+
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode))
                 file += reqLocation->index;
         else
             LOGPRINT(LOGERROR, this, ("Request::parseFile() : stat() on location failed : "));
-        LOGPRINT(DEBUG, this, ("Request::parseFile() : File Assignedd : " + file));
+        LOGPRINT(DEBUG, this, ("Request::parseFile() : File Assigned : " + file));
     }
 
 }

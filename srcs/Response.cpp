@@ -4,6 +4,12 @@ Response::Response(void) {
     reset();
 }
 
+Response::Response(Client *c) 
+{
+    reset();
+    resClient = c;
+}
+
 void Response::reset() {
 
     httpVersion.clear();
@@ -44,6 +50,7 @@ void Response::setErrorParameters(Request * req, int sendStatus, int code) {
     _sendStatus = sendStatus;
     _statusCode = code;
     _errorFileName = "./www/errors/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+    _resFile = "./www/errors/error.html";
 }
 
 
@@ -83,17 +90,30 @@ void Response::methodControl(Request * req, Server * serv)
     if (tmp == allowedMethods.end()) {
         allow = req->reqLocation->methods;
         setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
-        LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
+        LOGPRINT(REQERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
         _methodFctPtr = serv->methodsTab[req->method];
+}
+
+void Response::resourceControl(Request * req)
+{
+    if (stat(req->file.c_str(), NULL) == -1 && req->method != "PUT")
+    {
+        setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
+        LOGPRINT(REQERROR, this, ("Response::resourceControl() : Resource " + req->file + " not found"));
+    }
 }
 
 void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
 
+    resourceControl(req);
+    if (_sendStatus == Response::ERROR)
+        return ;
     methodControl(req, serv);
     authControl(req);
+
     // ... TODO : Additionnal controls
 }
 
@@ -137,8 +157,8 @@ void Response::setHeaders(Request * req)
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 
-void Response::setBody(void) {
-
+void Response::setBody(void)
+{
     if (!(_resFile.empty()))
     {
         char fileBuf[4096];
