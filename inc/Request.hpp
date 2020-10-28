@@ -10,38 +10,16 @@
 
 
 # include "Server.hpp"
-# include "Location.hpp"
 
 class Client;
 
-/* EXEMPLES DE REQUÊTES GET/POST */
+/* 
+    GET/POST  https://www.w3schools.com/tags/ref_httpmethods.asp
+    PUT VS POST  : https://blog.engineering.publicissapient.fr/2014/03/17/post-vs-put-la-confusion/
+    By this argument, PUT is for creating when you know the URL of the thing you will create. POST can be used to create when you know the URL of the "factory" or manager for the category of things you want to create.
+*/
 
-// https://www.w3schools.com/tags/ref_httpmethods.asp
-
-// PUT VS POST  : https://blog.engineering.publicissapient.fr/2014/03/17/post-vs-put-la-confusion/
-// By this argument, PUT is for creating when you know the URL of the thing you will create. POST can be used to create when you know the URL of the "factory" or manager for the category of things you want to create.
-
-// so:
-// POST /expense-report
-// or:
-// PUT  /expense-report/10929
-
-// GET /hello.htm HTTP/1.1
-// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
-// Host: www.tutorialspoint.com
-// Accept-Language: en-us
-// Accept-Encoding: gzip, deflate
-// Connection: Keep-Alive
-
-
-// POST /cgi-bin/process.cgi HTTP/1.1
-// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
-// Host: www.tutorialspoint.com
-// Content-Type: application/x-www-form-urlencoded
-// Content-Length: length
-// Accept-Language: en-us
-// Accept-Encoding: gzip, deflate
-// Connection: Keep-Alive
+class Location;
 
 class Request {
     

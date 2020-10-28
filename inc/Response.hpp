@@ -7,7 +7,6 @@
 # include <unistd.h>
 
 # include "Server.hpp"
-# include "Location.hpp"
 
 # define OK_200							200
 # define CREATED_201					201
@@ -32,6 +31,8 @@
 
 class Client;
 class Server;
+class Location;
+
 
 class Response {
 
