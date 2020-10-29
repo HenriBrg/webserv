@@ -3,6 +3,17 @@
 namespace ft {
 
 
+	std::string getcwdString() {
+
+		char cwd[256];
+
+		if (getcwd(cwd, sizeof(cwd)) != NULL)
+			return (std::string(cwd));
+		else return NULL;
+	}
+
+
+
 	std::string decodeBase64(std::string & token) {
 
 		int val = 0;

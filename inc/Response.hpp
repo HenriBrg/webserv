@@ -24,6 +24,21 @@
 # define NOT_IMPLEMENTED_501			501
 # define SERVICE_UNAVAILABLE_503		503
 
+
+// CGI METADATA
+//  Lire   : pipefd[0]
+//  Ecrire : pipefd[1]
+
+# define NO_CGI 0
+# define TESTER_CGI 1
+# define PHP_CGI 2
+
+# define SIDE_OUT 0
+# define SIDE_IN 1
+
+# define STDIN 0
+# define STDOUT 1
+
 // In HTTP, content negotiation is the mechanism that is used for serving different representations of a resource at the same URI,
 // so that the user agent can specify which is best suited for the user (for example, which language of a
 // document, which image format, or which content encoding).
@@ -91,6 +106,8 @@ class Response {
 
         void    execCGI(Request * req);
         char    **buildCGIEnv(Request * req);
+        int     getCGIType(Request * req);
+
 
         /* BODY */
         void addBody(Request * req);

@@ -41,7 +41,8 @@ class Client {
             BODY,
             COMPLETE,
             WAIT,
-            ERROR            
+            ERROR,
+            CGI            
         };
 
         // The client might disconnect while we're handle its request

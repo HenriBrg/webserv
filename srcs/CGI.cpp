@@ -43,12 +43,13 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["REQUEST_METHOD"]      = req->method;      // Type de requête
 	envmap["REMOTE_ADDR"]         = req->client->ip;  // IP du client
 	envmap["PATH_INFO"]           = req->uri;         // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
-	envmap["CONTENT_LENGTH"]      = std::to_string(req->_reqBody.size()); // The length of the query information. It's available only for POST requests
+    // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
+    envmap["PATH_TRANSLATED"]     = ft::getcwdString() + req->reqLocation->root.substr(1, req->reqLocation->root.size()) + req->uri;
+    
+    envmap["CONTENT_LENGTH"]      = std::to_string(req->_reqBody.size()); // The length of the query information. It's available only for POST requests
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries; // The URL-encoded information that is sent with GET method request.
-
 	envmap["CONTENT_TYPE"]        = req->contentType; // type MIME des données véhiculées dans la requête
-	envmap["SCRIPT_NAME"]         = req->reqLocation->cgi; // chemin du CGI à partir de la racine du serveur HTTP
-
+    envmap["SCRIPT_NAME"]         = getCGIType(req) == TESTER_CGI ? req->reqLocation->cgi : req->reqLocation->php; // chemin du CGI à partir de la racine du serveur HTTP
 	envmap["SERVER_NAME"]         = "127.0.0.1"; // The server's hostname or IP Address.
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port); // Port du serveur
 
@@ -59,6 +60,10 @@ char ** Response::buildCGIEnv(Request * req) {
             envmap["REMOTE_USER"] = req->authorization.substr(pos + 1); // TODO : décoder ou non ?
         }
 	}
+
+    // if (getCGIType(req) == PHP_CGI)
+    //     envmap["REDIRECT_STATUS"] = "200"; // CG Repo Centdix required for php I guess
+
 
     /* 2) REQUEST HEADERS PASSED TO CGI */
     /* Toutes les variables qui sont envoyées par le client sont aussi passées au script CGI, après que le serveur a rajouté le préfixe « HTTP_ » */
@@ -87,56 +92,52 @@ char ** Response::buildCGIEnv(Request * req) {
 
 }
 
-void Response::execCGI(Request * req) {
+// http://www.zeitoun.net/articles/communication-par-tuyau/start
 
-    //  Lire   : pipefd[0]
-    //  Ecrire : pipefd[1]
+void Response::execCGI(Request * req) {
 
     int     ret;
     int     tmpFd;
-    char    **args;
-    char    **env;
+    char    **args = NULL;
+    char    **env = NULL;
     int     tubes[2];
 	struct stat	buffer;
+    std::string executable;
     
+    executable.clear();
+    if (getCGIType(req) == TESTER_CGI)
+        executable = req->reqLocation->cgi;
+    else if (getCGIType(req) == PHP_CGI)
+        executable = req->reqLocation->php;
+    else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error"));
 
-    // TODO : quand on aura parser php-cgi, ajouter le else ici
-    /* Raisonnement à appliquer
-        1) On cherche si la location contient le paramètre php et si oui on récupère sa valeur, le cgi sera donc un vrai cgi en php (on le trouve où btw ?)
-        2) Si pas de variable php-cgi dans la location, alors on cherche le paramètre cgi et on récupère sa valeur
-        3) Concernant l'extension de l'executable cgi, aucune idée pour l'instant */
-
-
-    const std::string cgibin = req->reqLocation->cgi;
-    args[0] = strdup(req->reqLocation->cgi.c_str());
-    // TODOQ : si empty, on prendra ->phpcgi
+    env = buildCGIEnv(req);
+    args[0] = strdup(executable.c_str());
     args[1] = strdup(req->file.c_str());
     args[2] = 0;
 
-    if (stat(cgibin.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG)) {
-        // CGI non executable
-        return ;
-        // TODO : handle return
-    }
+    if (stat(executable.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG))
+        return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
 
-    env = buildCGIEnv(req);
-
-
+    LOGPRINT(INFO, this, ("Request::execCGI() : Ready to fork and execute cgi. Execve will receive args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
 	tmpFd = open("./www/tmpFile", O_WRONLY | O_CREAT, 0666);
     pipe(tubes);
+    if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+    close(tubes[SIDE_IN]);
     if ((req->client->cgipid = fork()) == 0) {
 
-        dup2(tmpFd, 1);
-        close(tubes[1]);
-
+        dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI aille droit dans le fichier "tmpFile"
+        dup2(tubes[SIDE_OUT], STDIN);   // On veut que le CGI prenne en input ce qu'on aura au préalable écrit
+        ret = execve(executable.c_str(), args, env);
+        if (ret == -1) {
+            LOGPRINT(LOGERROR, this, ("Request::execCGI() : syscall execve() failed - error is : " + std::string(strerror(errno))));
+            exit(EXIT_FAILURE);
+        }
 
     } else {
-
+        waitpid(req->client->cgipid, NULL, 0);
+        close(tubes[SIDE_OUT]);
+        close(tmpFd);   
     }
-
-
-
-
-
 
 }

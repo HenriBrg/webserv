@@ -356,8 +356,6 @@ void Request::parseChunkedBody() {
 
 void Request::parseSingleBody() {
 
-    // TODO : max body configuration and error in response
-
     size_t      size;
     char        *newBodyRead = client->buf;
 

@@ -1,37 +1,46 @@
 # include "../inc/Webserv.hpp"
 
+int Response::getCGIType(Request * req) {
+    if (!req->reqLocation->ext.empty() && !req->reqLocation->cgi.empty() && req->uri.find(req->reqLocation->ext) != std::string::npos)
+        return (TESTER_CGI);
+    else if (!req->reqLocation->php.empty() && utils::isExtension(req->file, ".php"))
+        return (PHP_CGI);
+    else
+        return (NO_CGI);
+}
+
 void Response::getReq(Request * req) {
 
-    int cgiUp = 0;
+    int cgiType = NO_CGI;
 	struct stat	buffer;
 
+    // 1) Client/Server Negotiation
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
+
+    // 2) Check if requested file exist (after having negotiate on it) 
     if (stat(req->file.c_str(), &buffer) == -1) {
-        LOGPRINT(LOGERROR, this, ("Response::getReq() : The function stat() has returned -1 on the requested file which is "  + req->file));
+        LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
         return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
     }
 
-    if ((!req->reqLocation->cgi.empty() && utils::isExtension(req->file, ".cgi")) || (!req->reqLocation->phpcgi.empty() && utils::isExtension(req->file, ".php")))
-        cgiUp = 1;
-
-    // TMP
-    cgiUp = 0;
-
-    if (cgiUp) {
+    // 3) Determine CGI type (no cgi, 42 cgi, php-cgi)
+    cgiType = getCGIType(req);
+    if (cgiType) {
+        LOGPRINT(INFO, req, ("Response::getReq() : CGI is required to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
         _cgiOutputFile = "./www/tmpFile";
+        // TMP
         _resFile = req->file;
         _statusCode = OK_200;
+        contentType[0] = "text/html"; // The cgi_tester always return that header so we hard-code it instead of parsing its header output (nb : it might differ with php-cgi !)
+        lastModified = ft::getLastModifDate(_resFile);
 
     } else {
-
-        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle by ourselves the response"));
-        // For testing in advance, not the right place
+        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselves "));
         _resFile = req->file;
         _statusCode = OK_200;
-
-        // TODO : ouvrir fichier
+        lastModified = ft::getLastModifDate(_resFile);
 
     }
 
@@ -56,6 +65,7 @@ void Response::putReq(Request * req)
 
 void Response::postReq(Request * req) {
 
+    // tmp for test
     getReq(req);
 
 }

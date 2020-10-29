@@ -127,7 +127,7 @@ void Response::setHeaders(Request * req)
 
     // 5) Body headers cleared in case of no body in response
     contentType.clear();
-    lastModified.clear(); // Is here the right place to call ?
+    // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 

@@ -21,11 +21,11 @@
 # define MAGENTA	"\033[1;35m"
 # define BLUE		"\033[1;36m"
 # define WHITE	    "\033[1;37m"
- 
-# define END		"\033[1;0m"
 
 # define BCKBLACK	"\033[1;41m"
 # define BCKWHITE	"\033[1;47m"
+
+# define END		"\033[1;0m"
 
 
 
@@ -33,12 +33,27 @@
 // ERROR : syscall fail
 // DEBUG : soucis temporaire juste pour différencier output
 
+
+// TODO : change the hierarchy, add better filter
+// exemple :
+
+
+/*
+
+INFO1 : info importante
+INFO2 : moyen
+INFO3 : vraiment peu utile
+
+*/
+
 # define INFO 1
 # define LOGERROR 2
 # define DEBUG 3
 # define DISCONNECT 4
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
+
+// delete noclass log
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
 
 class Logger {

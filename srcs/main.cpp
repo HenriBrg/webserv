@@ -2,6 +2,8 @@
 
 Config gConfig;
 
+// TODO : gérer l'index dans la partie réponse
+
 int main(int ac, char **av) {
 
     Server *s;
