@@ -24,26 +24,23 @@ void Response::getReq(Request * req) {
         return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
     }
 
-    // 3) Determine CGI type (no cgi, 42 cgi, php-cgi)
+    // 3) Determine CGI type (no cgi = 0, 42 cgi = 1, php-cgi = 2) and perform it
     cgiType = getCGIType(req);
     if (cgiType) {
         LOGPRINT(INFO, req, ("Response::getReq() : CGI is required to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
-        _cgiOutputFile = "./www/tmpFile";
-        // TMP
-        _resFile = req->file;
-        _statusCode = OK_200;
-        contentType[0] = "text/html"; // The cgi_tester always return that header so we hard-code it instead of parsing its header output (nb : it might differ with php-cgi !)
-        lastModified = ft::getLastModifDate(_resFile);
-
+        parseCGIHeadersOutput(req);
+        std::ifstream tmpFile("./www/tmpFile");
+		std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
+        _cgiOutputBody = buffer;
+        remove("./www/tmpFile");
+        LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed ! to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
     } else {
-        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselves "));
+        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselve"));
         _resFile = req->file;
         _statusCode = OK_200;
         lastModified = ft::getLastModifDate(_resFile);
-
     }
-
 }
 
 

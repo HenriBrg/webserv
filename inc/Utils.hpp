@@ -21,6 +21,7 @@ namespace ft {
 
 namespace utils {
 
+	void strTabFree(char ** strTab);
 	void deleteCarriageReturn(std::string &str);
 	void displayHeaderMap(std::map<int, std::string> data, std::string headerName);
 	int  strHexaToDecimal(std::string strHexa);
@@ -32,7 +33,7 @@ namespace utils {
 namespace responseUtils {
 
 	std::string	getContentType(std::string file);
-	std::string getReasonPhrase(Response * res);
+	std::string getReasonPhrase(int code);
 	void headerFormat(std::string & respStr, std::string key, int value);
 	void headerFormat(std::string & respStr, std::string key, std::string value);
 	void headerFormat(std::string & respStr, std::string key, std::map<int, std::string> value);

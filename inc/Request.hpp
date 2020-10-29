@@ -71,6 +71,7 @@ class Request {
         int             _optiChunkOffset;
         Location        *reqLocation;
         std::string     file;
+        std::string     resourceNameRequested;
 
         // Chunked Body variables
         int chunkLineBytesSize;

@@ -22,6 +22,7 @@ void Request::reset(void) {
     chunkLineBytesSize = -1;
     _optiChunkOffset = 0;
     file.clear();
+    resourceNameRequested.clear();
 
     method.clear();
     uri.clear();
@@ -127,7 +128,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
-            LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned"));
+            LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned, the index of the location should be the resource to return"));
             return ;
         }
     }
@@ -143,9 +144,10 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 			tmpUri = "/";
 		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
 			if (vecLocs[x]->uri == tmpUri) {
+                // For example, http://localhost/pouet --> file = pouet
 				file = uri.substr(i + 1, uri.size());
 				reqLocation = vecLocs[x];
-                LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned"));
+                LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned. file = " + file));
                 return ;
 			}
 		}
@@ -163,14 +165,20 @@ void Request::parseFile(std::vector<Location*> locations) {
     if (reqLocation) {
         i = reqLocation->root.size() - 1;
         if (reqLocation->root[i] == '/')
-            file = reqLocation->root;
+            file = reqLocation->root + file;
         else
-            file = reqLocation->root + "/";
-        if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode))
-                file += reqLocation->index;
-        else
-            LOGPRINT(LOGERROR, this, ("Request::parseFile() : stat() on location failed : "));
-        LOGPRINT(INFO, this, ("Request::parseFile() : File Assignedd : " + file));
+            file = reqLocation->root + "/" + file;
+        // Here, we check if the uri refers to a directory.
+        // If so, we check if autoindex is on, else, we refers to the index parameter of the location
+        if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
+            // TODO WHEN PARSER READY
+            // if (reqLocation->autoindex == 1 && method == "GET")
+            //     handleAutoIndex();
+            // else {
+                file = file + reqLocation->index;
+            // }
+        }
+        LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
     }
 
 }

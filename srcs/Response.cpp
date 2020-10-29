@@ -28,7 +28,7 @@ void Response::reset() {
     _sendStatus = Response::PREPARE;
     _resBody.clear();
     _resFile.clear();
-
+    _cgiOutputBody.clear();
     contentLength = -1;
     _errorFileName.clear();
     _methodFctPtr = nullptr;
@@ -100,18 +100,20 @@ void Response::setHeaders(Request * req)
 {
     // 1) Status Line 
     httpVersion = "HTTP/1.1";
-    reason = responseUtils::getReasonPhrase(this);
+    reason = responseUtils::getReasonPhrase(_statusCode);
     
     // 2) Basic headers
     date = ft::getDate();
     server = "webserv";
 
     // 3) Error headers
-    if (_sendStatus != Response::ERROR)
-    {
-        allow.clear();             // Unless Error 405
-        wwwAuthenticate.clear();            // Unless an authorization was asked ?
-        retryAfter.clear();  // Quid du status 301
+    // Ok ---> Donc ici en fait on aura tous les hd qui auront pu être rempli au cours du traitement si erreur il y a 
+    if (_sendStatus != Response::ERROR) {
+
+        allow.clear();              // Unless Error 405
+        wwwAuthenticate.clear(); // Unless an authorization was asked ?         --------------> POURQUOI UN CLEAR() SEG FAULT ?
+        retryAfter.clear();         // Quid du status 301
+
     }
 
     // 4) Other headers

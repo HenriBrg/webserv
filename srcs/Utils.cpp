@@ -130,6 +130,15 @@ namespace ft {
 
 namespace utils {
 
+	void strTabFree(char ** strTab) {
+		
+		int i = -1;
+		while (strTab[++i] != 0)
+			free(strTab[i]);
+		free(strTab);
+
+	}
+
 	void deleteCarriageReturn(std::string &str) {
 		size_t pos = str.find_last_of('\r');
 		if (pos != std::string::npos)
@@ -227,9 +236,14 @@ namespace responseUtils {
 		return ("text/plain");
 	}
 
-	std::string getReasonPhrase(Response * res) {
+	std::string getReasonPhrase(int code) {
 
 	    std::map<int, std::string> reasonMap;
+
+		if (code < 200 || code > 500) {
+	        NOCLASSLOGPRINT(LOGERROR, "utils::getReasonPhrase() : Anormal status code ---> no reason phrase match");
+			code = 500;
+		}
     
 		reasonMap[200] = "OK";
 		reasonMap[201] = "Created";
@@ -247,7 +261,7 @@ namespace responseUtils {
 		reasonMap[501] = "Not Implemented";
 		reasonMap[503] = "Service Unavailable";
 
-		return reasonMap[res->_statusCode];
+		return reasonMap[code];
 
 	}
 

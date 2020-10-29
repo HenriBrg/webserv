@@ -96,11 +96,12 @@ char ** Response::buildCGIEnv(Request * req) {
 
 void Response::execCGI(Request * req) {
 
-    int     ret;
-    int     tmpFd;
+    int     ret = -1;
+    int     tmpFd = -1;
     char    **args = NULL;
     char    **env = NULL;
     int     tubes[2];
+    int     status;
 	struct stat	buffer;
     std::string executable;
     
@@ -119,25 +120,66 @@ void Response::execCGI(Request * req) {
     if (stat(executable.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG))
         return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
 
-    LOGPRINT(INFO, this, ("Request::execCGI() : Ready to fork and execute cgi. Execve will receive args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
-	tmpFd = open("./www/tmpFile", O_WRONLY | O_CREAT, 0666);
-    pipe(tubes);
-    if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
-    close(tubes[SIDE_IN]);
-    if ((req->client->cgipid = fork()) == 0) {
+    LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
+    
+    if ((tmpFd = open("./www/tmpFile", O_WRONLY | O_CREAT, 0666)) == -1) {
+        LOGPRINT(LOGERROR, this, ("Request::execCGI() : open(./www/tmpFile) failed - Internal Error 500"));
+        return setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
+    }
 
+    pipe(tubes);
+    // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
+    if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+    if ((req->client->cgipid = fork()) == 0) {
+        close(tubes[SIDE_IN]); 
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI aille droit dans le fichier "tmpFile"
-        dup2(tubes[SIDE_OUT], STDIN);   // On veut que le CGI prenne en input ce qu'on aura au préalable écrit
+        dup2(tubes[SIDE_OUT], STDIN);   // 
         ret = execve(executable.c_str(), args, env);
-        if (ret == -1) {
-            LOGPRINT(LOGERROR, this, ("Request::execCGI() : syscall execve() failed - error is : " + std::string(strerror(errno))));
-            exit(EXIT_FAILURE);
-        }
+        exit(ret);
 
     } else {
-        waitpid(req->client->cgipid, NULL, 0);
+        waitpid(req->client->cgipid, &status, 0);
+        if (WIFEXITED(status)) {
+            ret = WEXITSTATUS(status);
+            LOGPRINT(INFO, this, ("Request::execCGI() : execve() with CGI has succeed and returned : " + std::to_string(ret)));
+        } else {
+            LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has return -1 (failed) - Internal Error 500"));
+            setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
+        }
         close(tubes[SIDE_OUT]);
         close(tmpFd);   
     }
+    utils::strTabFree(args);
+    utils::strTabFree(env);
+    args = env = NULL;
+}
 
+
+void Response::parseCGIHeadersOutput(Request * req) {
+
+    std::string line;
+    std::ifstream outputFile("./www/tmpFile");
+    std::vector<std::string> hd;
+
+    hd.clear();
+    if (!outputFile.is_open())
+        return LOGPRINT(LOGERROR, this, ("Response::parseCGIOutput() : CGI Output file is closed"));
+    if (getCGIType(req) == PHP_CGI) {
+        // TODO : tester le php-cgi puis revenir ici
+        _statusCode = OK_200;
+        contentType[0] = "text/html";
+    } else if (getCGIType(req) == TESTER_CGI) {
+        getline(outputFile, line);
+        if (line.find("Status") != std::string::npos) {
+            hd = ft::split(line, ' ');
+            _statusCode = std::stoi(hd[1]);
+            hd.clear();
+        }
+        getline(outputFile, line);
+        if (line.find("Content-Type:") != std::string::npos) {
+            hd = ft::split(line, ':');
+            contentType[0] = ft::trim(hd[1]);
+            hd.clear();
+        }
+    }
 }

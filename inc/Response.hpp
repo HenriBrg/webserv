@@ -24,11 +24,6 @@
 # define NOT_IMPLEMENTED_501			501
 # define SERVICE_UNAVAILABLE_503		503
 
-
-// CGI METADATA
-//  Lire   : pipefd[0]
-//  Ecrire : pipefd[1]
-
 # define NO_CGI 0
 # define TESTER_CGI 1
 # define PHP_CGI 2
@@ -62,6 +57,7 @@ class Response {
         int         _bytesSent;
 
         std::string _cgiOutputFile;
+        std::string _cgiOutputBody;
 
         int _sendStatus;
         enum resStatus {
@@ -107,6 +103,7 @@ class Response {
         void    execCGI(Request * req);
         char    **buildCGIEnv(Request * req);
         int     getCGIType(Request * req);
+        void    parseCGIHeadersOutput(Request * req);
 
 
         /* BODY */
