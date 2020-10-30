@@ -160,6 +160,7 @@ void Response::execCGI(Request * req) {
         close(tmpFd);
 
     }
+    
     _didCGIPassed = true;
     utils::strTabFree(args);
     utils::strTabFree(env);
