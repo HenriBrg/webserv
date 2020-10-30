@@ -1,27 +1,49 @@
-# include "../inc/Webserv.hpp"
+#include "../inc/Webserv.hpp"
 
 Config gConfig;
 
-// TODO : gérer l'index dans la partie réponse
 
-int main(int ac, char **av) {
+int main(int ac, char **av)
+{
+	if (ac != 2)
+	{
+		std::cout << "Error arguments\n";
+		return (0);
+	}
+
+	Conf    webconf(av[1]);
+	try
+	{
+		webconf.parseConf();
+	}
+	catch (std::exception &e)
+	{
+        std::cerr << e.what() << std::endl;
+	}
 
     Server *s;
 	Client *c;
 
-    gConfig.init();
+	gConfig.servers = webconf.getServers();
     signal(SIGINT, handleCTRLC);
+
     while (gConfig.run) {
         gConfig.resetFds();
         NOCLASSLOGPRINT(INFO, ("----- ----- ----- ----- ----- NEW SELECT() CALL ----- ----- ----- ----- -----"));
         gConfig.showFDSETS();
+        std::cout << std::endl << std::endl;
+        
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
-        NOCLASSLOGPRINT(INFO, ("SELECT() trigerred !"));
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
             s = *its;
-            if (FD_ISSET(s->sockFd, &gConfig.readSet))
+            if (FD_ISSET(s->sockFd, &gConfig.readSet)) {
+                try {
                     s->acceptNewClient();
+                } catch (std::exception & e) {
+                    std::cerr << e.what() << std::endl;
+                }
+            }
             std::vector<Client*>::iterator itc = s->clients.begin();
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;

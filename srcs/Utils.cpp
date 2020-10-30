@@ -37,10 +37,10 @@ namespace ft {
 			}
 		}
 		return out;
-
 	}
 
-	void	getLine(std::string & buf, std::string & line) {
+	void	getLine(std::string & buf, std::string & line)
+	{
 		size_t pos;
 
 		pos = buf.find("\n");
@@ -57,16 +57,36 @@ namespace ft {
 		}
 	}
 
-
-	std::vector<std::string> split(const std::string & str, char delim) {
-		size_t                      start;
-		size_t                      end = 0;
-		std::vector<std::string>    strings;
+	std::vector<std::string>	split(const std::string & str, char delim)
+	{
+		size_t						start;
+		size_t						end = 0;
+		std::vector<std::string>	strings;
 
 		// std::string::find_first_not_of searches the string for the first character that
 		// does not match any of the characters specified in its arguments.
 		while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
 			end = str.find(delim, start);
+			strings.push_back(str.substr(start, end - start));
+		}
+		return (strings);
+	}
+
+	std::vector<std::string>	splitWhtSp(std::string str)
+	{
+		size_t						start;
+		size_t						end = 0;
+		std::vector<std::string>	strings;
+
+		for (size_t i = 0; i < str.length(); i++)
+		{
+			if (str[i] == '\f' || str[i] == '\t' || str[i] == '\n' \
+			|| str[i] == '\r' || str[i] == '\v')
+				str.replace(i, 1, " ");
+		}
+		while ((start = str.find_first_not_of(' ', end)) != std::string::npos)
+		{
+			end = str.find(' ', start);
 			strings.push_back(str.substr(start, end - start));
 		}
 		return (strings);
@@ -126,10 +146,44 @@ namespace ft {
 		return (date);
 	}
 
+	int		isWhiteSpace(char c)
+	{
+		if (c == '\f' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == ' ')
+			return (1);
+		return (0);
+	}
+
+	int		isSpace(char c)
+	{
+		if (c == '\f' || c == '\t' || c == '\r' || c == '\v' || c == ' ')
+			return (1);
+		return (0);
+	}
+
+	bool	isNumber(std::string const &str)
+	{
+		std::string::const_iterator it = str.begin();
+		while (it != str.end() && std::isdigit(*it))
+			++it;
+		return (!str.empty() && it == str.end());
+	}
+
+	int		countElem(std::string str, std::string target)
+	{
+		int		occ = 0;
+		size_t	pos = 0;
+
+		while ((pos = str.find(target, pos)) != std::string::npos)
+		{
+			pos += target.length();
+			occ++;
+		}
+		return (occ);
+	}
 }
 
-namespace utils {
-
+namespace utils
+{
 	void strTabFree(char ** strTab) {
 		
 		int i = -1;
@@ -204,8 +258,8 @@ namespace utils {
 
 }
 
-namespace responseUtils {
-
+namespace responseUtils
+{
 	std::string		getContentType(std::string file) {
 
 		std::string		tmp;
@@ -299,6 +353,4 @@ namespace responseUtils {
 		}
 		respStr.append("\r\n");
 	}
-
-
 }

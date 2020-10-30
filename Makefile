@@ -25,7 +25,7 @@ DOBJS	= ./comp/
 HEADERS = ./inc/*
 # SOURCES
 
-SRCS = main.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp Methods.cpp CGI.cpp
+SRCS = main.cpp Conf.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp methods.cpp CGI.cpp
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 # COMPILATION
@@ -34,7 +34,7 @@ all: $(NAME)
 
 run: all
 	printf "\033c"
-	@./$(NAME)
+	@./$(NAME) conf/test.conf
 
 $(NAME): $(OBJS) $(HEADERS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)

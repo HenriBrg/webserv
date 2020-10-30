@@ -41,7 +41,7 @@ class Server {
 
         /* Constructors */
 
-        Server(std::string name, int port);
+        Server(std::string name, int port, std::string error);
         virtual ~Server();
 
         /* Members variables */
@@ -51,6 +51,7 @@ class Server {
         int                         srvMaxFd; 
 
         std::string                 name;
+        std::string                 error;
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
         std::vector<Location*>      locations;
@@ -90,33 +91,33 @@ class Server {
         };
 };
 
-class Location {
+// class Location {
 
-        public:
+//         public:
         
-        std::string                 uri;
-        std::string                 root;
-        std::string                 index;
-        std::string                 methods;
-        std::string                 auth;
-        std::string                 cgi;
-        std::string                 php;
-        std::string                 ext;
+//         std::string                 uri;
+//         std::string                 root;
+//         std::string                 index;
+//         std::string                 methods;
+//         std::string                 auth;
+//         std::string                 cgi;
+//         std::string                 php;
+//         std::string                 ext;
 
 
-        Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth, std::string _cgi, std::string _php, std::string _ext) {
-            uri = _uri;
-            root = _root;
-            index = _index;
-            methods = _methods;
-            auth = _auth;
-            cgi = _cgi;
-            php = _php;
-            ext = _ext;
-        };
+//         Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth, std::string _cgi, std::string _php, std::string _ext) {
+//             uri = _uri;
+//             root = _root;
+//             index = _index;
+//             methods = _methods;
+//             auth = _auth;
+//             cgi = _cgi;
+//             php = _php;
+//             ext = _ext;
+//         };
 
-        private:
-            Location();
-};
+//         private:
+//             Location();
+// };
 
 #endif

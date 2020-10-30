@@ -1,23 +1,36 @@
 #include "../inc/Webserv.hpp"
 
-Server::Server(std::string name, int port): name(name), port(port) {
+Server::Server(std::string name, int port, std::string error): name(name), port(port), error(error) {
     
     port = -1;
     sockFd = -1;
 
     bzero(&addr, sizeof(addr));
-    
     // Locations will be parsed later
-    Location *newLoc1 = new Location("/", "./www", "index.html", "GET,POST", "", "./www/cgi-bin/cgi_test.pl", "", ".bla");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "", "", "/usr/local/bin/php-cgi", ".bla");
-    locations.push_back(newLoc1);
-    locations.push_back(newLoc2);
+    // Location *newLoc1 = new Location("/", "./www", "index.html", "GET,POST", "", "./www/cgi-bin/cgi_test.pl", "", ".bla");
+    // Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "", "", "/usr/local/bin/php-cgi", ".bla");
+    // locations.push_back(newLoc1);
+    // locations.push_back(newLoc2);
 }
 
 Server::~Server() {}
 
 int Server::start() {
 
+    // for (int j= 0; j < locations.size(); j++)
+    // {
+    //     std::cout << "\nlocation" << j << std::endl;
+	// 	std::cout << locations[j]->uri << std::endl;
+	// 	std::cout << locations[j]->root << std::endl;
+	// 	std::cout << locations[j]->index << std::endl;
+	// 	std::cout << locations[j]->methods << std::endl;
+	// 	std::cout << locations[j]->max_body << std::endl;
+	// 	std::cout << locations[j]->auth << std::endl;
+	// 	std::cout << locations[j]->cgi << std::endl;
+	// 	std::cout << locations[j]->phpcgi << std::endl;
+	// 	std::cout << locations[j]->ext << std::endl;
+    // }
+    
     // ---------- 1) SOCKET ----------
 
     // AF_NET : Protocole TCP/IP with IPV4
