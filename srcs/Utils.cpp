@@ -208,7 +208,7 @@ namespace responseUtils {
 
 	std::string		getContentType(std::string file) {
 
-		std::string		temp;
+		std::string		tmp;
 		
 		int	j = 0;
 		int	i = file.size() - 1;
@@ -224,12 +224,13 @@ namespace responseUtils {
 		"application/x-rar-compressed", "application/rtf", "application/x-sh", "image/svg+xml", "application/x-shockwave-flash", "application/x-tar", "image/tiff", "image/tiff", "application/typescript", "font/ttf", "application/vnd.visio", "audio/x-wav", "audio/webm", "video/webm", "image/webp", "font/woff", "font/woff2", "application/xhtml+xml", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		"application/xml", "application/vnd.mozilla.xul+xml", "application/zip", "video/3gpp", "video/3gpp2", "application/x-7z-compressed"};
 		
+		tmp.clear();
 		while (file[i] != 0 && file[i] != '.')
 			i--;
-		temp = file.substr(i + 1, file.size());
+		tmp = file.substr(i + 1, file.size());
 		while (j < 67)
 		{
-			if (ext[j] == temp)
+			if (ext[j] == tmp)
 				return (ret[j]);
 			j++;
 		}

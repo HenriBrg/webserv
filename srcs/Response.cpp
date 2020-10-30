@@ -40,7 +40,7 @@ Response::~Response() {
     reset();
 }
 
-void Response::setErrorParameters(Request * req, int sendStatus, int code) {
+void Response::setErrorParameters(int sendStatus, int code) {
     _sendStatus = sendStatus;
     _statusCode = code;
     _errorFileName = "./www/errors/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
@@ -59,7 +59,7 @@ void Response::authControl(Request * req) {
         if (tab[0] != "Basic" && tab[0] != "BASIC") LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
         LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
         if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
-            setErrorParameters(req, Response::ERROR, UNAUTHORIZED_401);
+            setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
             LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
             return ;
         } else LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
@@ -76,7 +76,7 @@ void Response::methodControl(Request * req, Server * serv)
     tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
     if (tmp == allowedMethods.end()) {
         allow = req->reqLocation->methods;
-        setErrorParameters(req, Response::ERROR, METHOD_NOT_ALLOWED_405);
+        setErrorParameters(Response::ERROR, METHOD_NOT_ALLOWED_405);
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
         _methodFctPtr = serv->methodsTab[req->method];
@@ -122,7 +122,8 @@ void Response::setHeaders(Request * req)
     }
 
     // 4) Other headers
-    contentLanguage[0] = "fr";          // contentLanguage always to "fr"
+    // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
+    contentLanguage.clear();
     contentLocation.clear();            // We don't care
     location.clear();                   // Use only with 300 status code
 
@@ -133,7 +134,8 @@ void Response::setHeaders(Request * req)
     //     transfertEncoding[0] = "chunked";
 
     // 5) Body headers cleared in case of no body in response
-    contentType.clear();
+    if (contentType.empty()) // We set it in CGI
+        contentType.clear();
     // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
@@ -141,10 +143,8 @@ void Response::setHeaders(Request * req)
 void Response::setBody(void) {
 
     if (_didCGIPassed == true) {
-        _resFile = CGI_OUTPUT_TMPFILE;
-        LOGPRINT(INFO, this, ("Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in " + std::string(CGI_OUTPUT_TMPFILE) + " (note that _resFile was : " + _resFile + ")"));
-    } else
-        LOGPRINT(INFO, this, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
+        NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
+    } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
     if (!(_resFile.empty()))
     {
@@ -165,8 +165,8 @@ void Response::setBody(void) {
             close(fileFd);
         }
     }
-    if (_didCGIPassed)
-        remove(CGI_OUTPUT_TMPFILE);
+    _didCGIPassed = false; // ---> Reset somewhere else ?
+    
 
 }
 
@@ -174,7 +174,9 @@ void Response::setBodyHeaders(void)
 {
     if (!(_resBody.empty()))
     {
-        contentType[0] = responseUtils::getContentType(_resFile);
+
+        if (contentType[0].empty() && !_resFile.empty())
+            contentType[0] = responseUtils::getContentType(_resFile);
         lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
         contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
     }

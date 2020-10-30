@@ -1,14 +1,5 @@
 # include "../inc/Webserv.hpp"
 
-int Response::getCGIType(Request * req) {
-    if (!req->reqLocation->ext.empty() && !req->reqLocation->cgi.empty() && req->uri.find(req->reqLocation->ext) != std::string::npos)
-        return (TESTER_CGI);
-    else if (!req->reqLocation->php.empty() && utils::isExtension(req->file, ".php"))
-        return (PHP_CGI);
-    else
-        return (NO_CGI);
-}
-
 void Response::getReq(Request * req) {
 
 	struct stat	buffer;
@@ -21,7 +12,10 @@ void Response::getReq(Request * req) {
     // 2) Check if requested file exist (after having negotiate on it) 
     if (stat(req->file.c_str(), &buffer) == -1) {
         LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
-        return setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
+        
+        // req or this ?
+        return setErrorParameters(Response::ERROR, NOT_FOUND_404);
+
     }
 
     // 3) Determine CGI type (no cgi = 0, 42 cgi = 1, php-cgi = 2) and perform it
@@ -29,16 +23,7 @@ void Response::getReq(Request * req) {
 
     if (req->cgiType) {
         LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
-
         execCGI(req);
-        NOCLASSLOGPRINT(DEBUG, "DEBUG GET REQ - 5");
-        parseCGIHeadersOutput(req);
-        NOCLASSLOGPRINT(DEBUG, "DEBUG GET REQ - After parseCGIHeadersOutput - 6");
-
-        std::ifstream tmpFile(CGI_OUTPUT_TMPFILE);
-		std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
-        _cgiOutputBody = buffer;
-        // remove(CGI_OUTPUT_TMPFILE); ---> Moved to setBody()
         LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed !"));
     } else {
         LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselve"));
@@ -106,7 +91,7 @@ void Response::negotiateAcceptLanguage(Request * req)
         return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
-    //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
+    //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }
 
 void Response::negotiateAcceptCharset(Request * req)
@@ -122,5 +107,5 @@ void Response::negotiateAcceptCharset(Request * req)
             return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
-    //setErrorParameters(req, Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
+    //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }

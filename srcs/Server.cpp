@@ -9,7 +9,7 @@ Server::Server(std::string name, int port): name(name), port(port) {
     
     // Locations will be parsed later
     Location *newLoc1 = new Location("/", "./www", "index.html", "GET,POST", "", "./www/cgi-bin/cgi_test.pl", "", ".bla");
-    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "root:pass", "./www/cgi-bin/cgi_tester", "", ".bla");
+    Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "", "", "/usr/local/bin/php-cgi", ".bla");
     locations.push_back(newLoc1);
     locations.push_back(newLoc2);
 }
@@ -183,7 +183,7 @@ void Server::readClientRequest(Client *c) {
         if (c->recvStatus == Client::ERROR) {
             // TODO : Passage à tester
             c->recvStatus = Client::COMPLETE; // Because We will respond even if we get error
-            c->res.setErrorParameters(&c->req, Response::ERROR, BAD_REQUEST_400);
+            c->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup);
         }

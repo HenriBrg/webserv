@@ -336,7 +336,7 @@ void Request::parseChunkedBody() {
             if (separator == std::string::npos) {
                 LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
                 client->recvStatus = Client::ERROR;
-                client->res.setErrorParameters(this, Response::ERROR, BAD_REQUEST_400);
+                client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
                 break ;
             }
             _optiChunkOffset = separator;
@@ -351,7 +351,7 @@ void Request::parseChunkedBody() {
             else {
                 LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
                 client->recvStatus = Client::ERROR;
-                client->res.setErrorParameters(this, Response::ERROR, BAD_REQUEST_400);
+                client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
                 break ;
             }
             client->recvStatus = Client::COMPLETE;

@@ -106,7 +106,8 @@ class Response {
         void    execCGI(Request * req);
         char    **buildCGIEnv(Request * req);
         int     getCGIType(Request * req);
-        void    parseCGIHeadersOutput(Request * req);
+        void    handleCGIOutput(int cgiType);
+        void    parseCGIHeadersOutput(int cgiType, std::string & buffer);
 
 
         /* BODY */
@@ -122,7 +123,7 @@ class Response {
 
         /* ERRORS */
 
-        void setErrorParameters(Request * req, int sendStatus, int code);
+        void setErrorParameters(int sendStatus, int code);
 
         
         /* MEMBERS */

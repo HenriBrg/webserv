@@ -131,7 +131,7 @@ void Response::execCGI(Request * req) {
         return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
     if ((tmpFd = open(CGI_OUTPUT_TMPFILE, O_WRONLY | O_CREAT, 0666)) == -1) {
         LOGPRINT(LOGERROR, this, ("Request::execCGI() : open(./www/tmpFile) failed - Internal Error 500"));
-        return setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
+        return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
     LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
 
@@ -141,7 +141,7 @@ void Response::execCGI(Request * req) {
     NOCLASSLOGPRINT(DEBUG, "DEBUG BEFORE FORK - 1");
     if ((pid = fork()) == 0) {
         close(tubes[SIDE_IN]);
-        // dup2(tubes[SIDE_OUT], STDIN);
+        dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement, de façon à ce que le CGI récupère l'informations dans son STDIN
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
         exit(ret);
@@ -154,7 +154,7 @@ void Response::execCGI(Request * req) {
             LOGPRINT(INFO, this, ("Request::execCGI() : execve() with CGI has succeed and returned : " + std::to_string(ret)));
         } else {
             LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has return -1 (failed) - Internal Error 500"));
-            setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
+            setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
         close(tubes[SIDE_OUT]);
         close(tubes[SIDE_IN]);
@@ -164,45 +164,72 @@ void Response::execCGI(Request * req) {
     _didCGIPassed = true;
     utils::strTabFree(args);
     utils::strTabFree(env);
+    handleCGIOutput(req->cgiType);
     args = env = NULL;
+}
+
+void Response::handleCGIOutput(int cgiType) {
+
+    std::ifstream tmpFile(CGI_OUTPUT_TMPFILE);
+    std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
+
+    _cgiOutputBody = buffer;
+    if (cgiType == TESTER_CGI && _cgiOutputBody.find("\r\n\r\n") == std::string::npos) {
+        LOGPRINT(LOGERROR, this, ("Response::handleCGIOutput() : CGI (type : " + std::to_string(cgiType) + ") output doesn't contain <CR><LR><CR><LR> pattern. Invalid CGI. Internal Error"));
+        return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
+    }
+    parseCGIHeadersOutput(cgiType, buffer);
+    remove(CGI_OUTPUT_TMPFILE);
 
 }
 
+// TODO : handle php-cgi : X-Powered-By: PHP/7.4.11
 
-void Response::parseCGIHeadersOutput(Request * req) {
+void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
 
-    std::string line;
-    std::ifstream outputFile(CGI_OUTPUT_TMPFILE);
-    std::vector<std::string> hd;
 
-    hd.clear();
-    if (!outputFile.is_open())
-        return LOGPRINT(LOGERROR, this, ("Response::parseCGIOutput() : CGI Output file is closed"));
-    if (req->cgiType == PHP_CGI) {
+    size_t pos;
+    size_t endLine;
 
+    std::string key;
+    std::string value;
+    std::string headersSection;
+
+    if (cgiType == PHP_CGI) {
         // TODO : tester le php-cgi hors de webserv puis revenir ici
         _statusCode = OK_200;
         contentType[0] = "text/html";
-
-    } else if (req->cgiType == TESTER_CGI) {
-
-        // TODO : on est censé récupérer Status et Content-Type sur l'output, mais Status en premier, autrement Erreur 500 --> comportement à confirmer
-
-        getline(outputFile, line);
-        if (line.find("Status") != std::string::npos) {
-            hd = ft::split(line, ' ');
-            _statusCode = std::stoi(hd[1]);
-            hd.clear();
-        }
-        getline(outputFile, line);
-        if (line.find("Content-Type:") != std::string::npos) {
-            hd = ft::split(line, ':');
-            contentType[0] = ft::trim(hd[1]);
-            hd.clear();
-        }
-
-		if (_statusCode < 200 || _statusCode > 500)
-            _statusCode = 500; // Internal Error, the cgi output should always give us a status code, isn't it ? --> TODO : checker ça
-
     }
+
+    headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
+    if ((pos = headersSection.find("Status")) != std::string::npos) {
+        pos += 8; // After ' '
+        endLine = headersSection.find("\r", pos);
+        if (endLine == std::string::npos) endLine = headersSection.find("\n", pos);
+        _statusCode = std::stoi(headersSection.substr(pos, endLine));
+    }
+    pos = headersSection.find("Content-Type");
+    if (pos == std::string::npos) pos = headersSection.find("Content-type");
+    if (pos != std::string::npos) {
+        pos += 14; // After ': ' 
+        endLine = headersSection.find("\r", pos);
+        if (endLine == std::string::npos) endLine = headersSection.find("\n", pos);
+        contentType[0] = headersSection.substr(pos, endLine);
+    }
+
+    pos = endLine = 0;
+    pos = buffer.find("\r\n\r\n") + 4;
+    _cgiOutputBody = buffer.substr(pos);
+    _resBody = _cgiOutputBody;
+    _resFile.clear();
+
+}
+
+int Response::getCGIType(Request * req) {
+    if (!req->reqLocation->ext.empty() && !req->reqLocation->cgi.empty() && req->uri.find(req->reqLocation->ext) != std::string::npos)
+        return (TESTER_CGI);
+    else if (!req->reqLocation->php.empty() && utils::isExtension(req->file, ".php"))
+        return (PHP_CGI);
+    else
+        return (NO_CGI);
 }

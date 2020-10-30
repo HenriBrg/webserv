@@ -1,0 +1,9 @@
+<b>Security Alert!</b> The PHP CGI cannot be accessed directly.
+
+<p>This PHP CGI binary was compiled with force-cgi-redirect enabled.  This
+means that a page will only be served up if the REDIRECT_STATUS CGI variable is
+set, e.g. via an Apache Action directive.</p>
+<p>For more information as to <i>why</i> this behaviour exists, see the <a href="http://php.net/security.cgi-bin">manual page for CGI security</a>.</p>
+<p>For more information about changing this behaviour or re-enabling this webserver,
+consult the installation file that came with this distribution, or visit 
+<a href="http://php.net/install.windows">the manual page</a>.</p>
