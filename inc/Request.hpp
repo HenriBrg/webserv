@@ -108,6 +108,7 @@ class Request {
 
         std::string method;
         std::string uri;
+        std::string resource;
         std::string httpVersion;
         // Everything after '?' inside URI
         std::string uriQueries;

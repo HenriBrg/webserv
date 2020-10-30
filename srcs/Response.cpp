@@ -97,17 +97,26 @@ void Response::methodControl(Request * req, Server * serv)
 
 void Response::resourceControl(Request * req)
 {
-    if (stat(req->file.c_str(), NULL) == -1 && req->method != "PUT")
+    struct stat fileStat;
+    int retStat;
+
+    if (req->method == "DELETE")
     {
-        setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
-        LOGPRINT(REQERROR, this, ("Response::resourceControl() : Resource " + req->file + " not found"));
+        if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
+            setErrorParameters(req, Response::ERROR, CONFLICT_409); 
     }
+    else if (req->method != "PUT")
+    {
+        if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
+            setErrorParameters(req, Response::ERROR, NOT_FOUND_404);
+    }
+    if (retStat == -1)
+        LOGPRINT(REQERROR, this, ("Response::resourceControl() : Resource " + req->file + " not found"));
 }
 
 void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
-
     resourceControl(req);
     if (_sendStatus == Response::ERROR)
         return ;
@@ -125,10 +134,10 @@ void Response::callMethod(Request * req)
 
 void Response::setHeaders(Request * req)
 {
-    // 1) Status Line 
+    // 1) Status Line
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(this);
-    
+
     // 2) Basic headers
     date = ft::getDate();
     server = "webserv-42";

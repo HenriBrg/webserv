@@ -17,7 +17,7 @@ void Response::getReq(Request * req) {
 
     // TMP
     cgiUp = 0;
-
+    
     if (cgiUp) {
         execCGI(req);
         _cgiOutputFile = "./www/tmpFile";
@@ -45,6 +45,7 @@ void Response::headReq(Request * req) {
 void Response::putReq(Request * req)
 {
     int fileFd(0);
+
     if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) // Rights to be changed
     {
         if (write(fileFd, req->_reqBody.c_str(), req->_reqBody.size()) != -1)
@@ -66,8 +67,40 @@ void Response::patchReq(Request * req) {
 
 }
 
-void Response::deleteReq(Request * req) {
+void Response::deleteReq(Request * req)
+{
+    struct stat fileStat;
 
+    if (stat(req->resource.c_str(), &fileStat) == 0 && S_ISDIR(fileStat.st_mode))
+        deleteDir(req->resource);
+    else
+        unlink(req->file.c_str());
+}
+
+void Response::deleteDir(std::string directory)
+{
+    // Add error management on syscall
+    DIR *dir;
+    struct dirent *dirEntry;
+    std::string entryName;
+
+    if (!(dir = opendir(directory.c_str())))
+    {
+        LOGPRINT(LOGERROR, this, ("Request::deleteDir() : Open directory : " + directory + "failed"));
+        return ;
+    }
+    while ((dirEntry = readdir(dir)))
+    {
+        entryName.clear();
+        entryName.append(dirEntry->d_name);
+        if (entryName == "." || entryName == "..")
+            continue ;
+        else if (dirEntry->d_type == DT_DIR)
+            deleteDir((directory + entryName));
+        else
+            unlink((directory + "/" + entryName).c_str());
+    }
+    rmdir(directory.c_str());
 }
 
 

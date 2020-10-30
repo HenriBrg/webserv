@@ -14,6 +14,8 @@
 # include <errno.h>  
 # include <signal.h>
 # include <algorithm>
+# include <sys/types.h>
+# include <dirent.h>
 
 # include "Config.hpp"
 # include "Client.hpp"

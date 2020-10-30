@@ -25,6 +25,7 @@ void Request::reset(void) {
 
     method.clear();
     uri.clear();
+    resource.clear();
     httpVersion.clear();
     uriQueries.clear();
     acceptCharset.clear();
@@ -174,6 +175,7 @@ void Request::parseFile(std::vector<Location*> locations)
         else
             file = reqLocation->root + "/";
 
+        resource = file + &(uri.c_str()[1]); // Add for DELETE (directory)
         if (!(tmpFile.empty())) // Add for PUT REQUEST
             file += tmpFile;
 
@@ -193,8 +195,8 @@ void Request::parseFile(std::vector<Location*> locations)
 /* Functions for filling headers value(s) into corresponding variables */
 
 // Main function
-void Request::fillHeader(std::string const key, std::string const value) {
-
+void Request::fillHeader(std::string const key, std::string const value)
+{
     if (key == "Content-Language" || key == "Transfer-Encoding")
         fillMultiValHeaders(key, value);
     else if (key == "Accept-Charset" || key == "Accept-Language")
@@ -397,7 +399,6 @@ void Request::checkBody() {
         memset(client->buf, 0, BUFMAX + 1);
     } else
         client->recvStatus = Client::COMPLETE;
-
 }
 
 // TODO : Parsing Chunked
