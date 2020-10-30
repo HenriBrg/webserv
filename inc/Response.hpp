@@ -17,6 +17,7 @@
 # define UNAUTHORIZED_401				401
 # define NOT_FOUND_404 					404
 # define METHOD_NOT_ALLOWED_405			405
+# define CONFLICT_409			        409
 # define REQUEST_ENTITY_TOO_LARGE_413	413
 # define REQUEST_URI_TOO_LONG           414
 # define SSL_CERTIFICATE_ERROR          495
@@ -73,10 +74,12 @@ class Response {
         /* GLOBAL */
 
         Response();
+        Response(Client *c);
         virtual ~Response();
         void    reset();
 
         /* Building response functions */
+        void    resourceControl(Request * req);
         void    control(Request * req, Server * serv);
         void    callMethod(Request * req);
         void    setHeaders(Request * req);
@@ -100,6 +103,9 @@ class Response {
         void    patchReq(Request * req);
         void    deleteReq(Request * req);
         void    (Response::*_methodFctPtr)(Request * req);
+
+        /* HELPER METHODS FUNCTIONS */
+        void deleteDir(std::string directory);
 
         /* CGI */
 

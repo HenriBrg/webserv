@@ -2,7 +2,9 @@
 
 Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr):
     server(server), 
-    acceptFd(acceptFd) {
+    acceptFd(acceptFd),
+    res(this)
+    {
 
     isConnected = true; // TODO : handle client-side de-connection
 

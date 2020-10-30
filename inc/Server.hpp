@@ -91,33 +91,4 @@ class Server {
         };
 };
 
-// class Location {
-
-//         public:
-        
-//         std::string                 uri;
-//         std::string                 root;
-//         std::string                 index;
-//         std::string                 methods;
-//         std::string                 auth;
-//         std::string                 cgi;
-//         std::string                 php;
-//         std::string                 ext;
-
-
-//         Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth, std::string _cgi, std::string _php, std::string _ext) {
-//             uri = _uri;
-//             root = _root;
-//             index = _index;
-//             methods = _methods;
-//             auth = _auth;
-//             cgi = _cgi;
-//             php = _php;
-//             ext = _ext;
-//         };
-
-//         private:
-//             Location();
-// };
-
 #endif

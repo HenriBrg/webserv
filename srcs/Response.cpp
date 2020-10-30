@@ -4,6 +4,12 @@ Response::Response(void) {
     reset();
 }
 
+Response::Response(Client *c) 
+{
+    reset();
+    resClient = c;
+}
+
 void Response::reset() {
 
     httpVersion.clear();
@@ -44,6 +50,7 @@ void Response::setErrorParameters(int sendStatus, int code) {
     _sendStatus = sendStatus;
     _statusCode = code;
     _errorFileName = "./www/errors/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+    _resFile = "./www/errors/error.html";
 }
 
 
@@ -82,12 +89,34 @@ void Response::methodControl(Request * req, Server * serv)
         _methodFctPtr = serv->methodsTab[req->method];
 }
 
+void Response::resourceControl(Request * req)
+{
+    struct stat fileStat;
+    int retStat;
+
+    if (req->method == "DELETE")
+    {
+        if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
+            setErrorParameters(Response::ERROR, CONFLICT_409); 
+    }
+    else if (req->method != "PUT")
+    {
+        if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
+            setErrorParameters(Response::ERROR, NOT_FOUND_404);
+    }
+    if (retStat == -1)
+        LOGPRINT(REQERROR, this, ("Response::resourceControl() : Resource " + req->file + " not found"));
+}
+
 void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
-
+    resourceControl(req);
+    if (_sendStatus == Response::ERROR)
+        return ;
     methodControl(req, serv);
     authControl(req);
+
     // ... TODO : Additionnal controls
         // 1) check http version 
         // 2) if empty headers meaningfull
@@ -101,7 +130,7 @@ void Response::callMethod(Request * req)
 
 void Response::setHeaders(Request * req)
 {
-    // 1) Status Line 
+    // 1) Status Line
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(_statusCode);
     if (_statusCode == -1)

@@ -27,6 +27,7 @@ void Request::reset(void) {
 
     method.clear();
     uri.clear();
+    resource.clear();
     httpVersion.clear();
     uriQueries.clear();
     acceptCharset.clear();
@@ -137,11 +138,11 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     size_t i = uri.size() - 1;
     std::string tmpUri = uri;
 
-    while (tmpUri.size() > 0) {
-		while (tmpUri[i] != '/' && i != 0)
+    while (tmpUri.size() > 0) {                     // Parcours URI entier
+		while (tmpUri[i] != '/' && i != 0)          // Si / alors arret
 			i--;
-		tmpUri = tmpUri.substr(0, i);
-		if (tmpUri == "")
+		tmpUri = tmpUri.substr(0, i);               // tmpUri => partie droite URI
+		if (tmpUri == "")                           // Si racine
 			tmpUri = "/";
 		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
 			if (vecLocs[x]->uri == tmpUri) {
@@ -156,14 +157,17 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 }
 
-void Request::parseFile(std::vector<Location*> locations) {
-    
+void Request::parseFile(std::vector<Location*> locations)
+{
+    std::string tmpFile;
     int         i;
     struct stat info;
 
     assignLocation(locations);
 
-    if (reqLocation) {
+    if (reqLocation)
+    {
+        tmpFile = file;
         i = reqLocation->root.size() - 1;
         if (reqLocation->root[i] == '/')
             file = reqLocation->root + file;
@@ -171,6 +175,9 @@ void Request::parseFile(std::vector<Location*> locations) {
             file = reqLocation->root + "/" + file;
         // Here, we check if the uri refers to a directory.
         // If so, we check if autoindex is on, else, we refers to the index parameter of the location
+       
+       resource = file;
+       
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
             // TODO WHEN PARSER READY
             // if (reqLocation->autoindex == 1 && method == "GET")
@@ -180,19 +187,18 @@ void Request::parseFile(std::vector<Location*> locations) {
             // }
         }
         LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
+        
     }
 
 }
 
 // TODO : case insensitive string comparaison to handle multiple client type
 
-
-
 /* Functions for filling headers value(s) into corresponding variables */
 
 // Main function
-void Request::fillHeader(std::string const key, std::string const value) {
-
+void Request::fillHeader(std::string const key, std::string const value)
+{
     if (key == "Content-Language" || key == "Transfer-Encoding")
         fillMultiValHeaders(key, value);
     else if (key == "Accept-Charset" || key == "Accept-Language")
@@ -402,7 +408,6 @@ void Request::checkBody() {
         memset(client->buf, 0, BUFMAX + 1);
     } else
         client->recvStatus = Client::COMPLETE;
-
 }
 
 // TODO : Parsing Chunked

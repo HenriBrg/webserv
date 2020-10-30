@@ -63,9 +63,8 @@ char ** Response::buildCGIEnv(Request * req) {
         }
 	}
 
-    // if (getCGIType(req) == PHP_CGI)
-    //     envmap["REDIRECT_STATUS"] = "200"; // CG Repo Centdix required for php I guess
-
+    if (getCGIType(req) == PHP_CGI)
+        envmap["REDIRECT_STATUS"] = "200"; // CG Repo Centdix required for php I guess
 
     /* 2) REQUEST HEADERS PASSED TO CGI */
     /* Toutes les variables qui sont envoyées par le client sont aussi passées au script CGI, après que le serveur a rajouté le préfixe « HTTP_ » */

@@ -1,16 +1,9 @@
 #include "../inc/Webserv.hpp"
 
 Server::Server(std::string name, int port, std::string error): name(name), port(port), error(error) {
-    
     port = -1;
     sockFd = -1;
-
     bzero(&addr, sizeof(addr));
-    // Locations will be parsed later
-    // Location *newLoc1 = new Location("/", "./www", "index.html", "GET,POST", "", "./www/cgi-bin/cgi_test.pl", "", ".bla");
-    // Location *newLoc2 = new Location("/tmp", "./www", "index.html", "GET,POST,HEAD", "", "", "/usr/local/bin/php-cgi", ".bla");
-    // locations.push_back(newLoc1);
-    // locations.push_back(newLoc2);
 }
 
 Server::~Server() {}
@@ -204,7 +197,6 @@ void Server::readClientRequest(Client *c) {
 }
 
 void Server::writeClientResponse(Client *c) {
-    c->res.resClient = c; // Constructeur ? 
 
     if (c->res._sendStatus == Response::PREPARE)
         setClientResponse(c);
