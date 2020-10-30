@@ -98,6 +98,8 @@ char ** Response::buildCGIEnv(Request * req) {
 }
 
 // http://www.zeitoun.net/articles/communication-par-tuyau/start
+// NOCLASSLOGPRINT(DEBUG, "DEBUG 2 - executable = " + executable + " and file = " + req->file);
+// NOCLASSLOGPRINT(DEBUG, ("DEBUG 3 ---> 0 = " + std::string(args[0]) + " 1 = " + std::string(args[1])));
 
 void Response::execCGI(Request * req) {
 
@@ -112,55 +114,41 @@ void Response::execCGI(Request * req) {
     pid_t pid;
     
     executable.clear();
-    if (getCGIType(req) == TESTER_CGI)
+    if (req->cgiType == TESTER_CGI)
         executable = req->reqLocation->cgi;
-    else if (getCGIType(req) == PHP_CGI)
+    else if (req->cgiType == PHP_CGI)
         executable = req->reqLocation->php;
-    else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error"));
-
+    else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error - If we reach execCGI(), the cgi should be TESTER_CGI or PHP_CGI"));
 
     env = buildCGIEnv(req);
 
-    // NOCLASSLOGPRINT(DEBUG, "DEBUG 2 - executable = " + executable + " and file = " + req->file);
     args = (char **)(malloc(sizeof(char*) * 3));
     args[0] = strdup(executable.c_str());
     args[1] = strdup(req->file.c_str());
     args[2] = 0;
-    // NOCLASSLOGPRINT(DEBUG, ("DEBUG 3 ---> 0 = " + std::string(args[0]) + " 1 = " + std::string(args[1])));
 
     if (stat(executable.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG))
         return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
-
     if ((tmpFd = open(CGI_OUTPUT_TMPFILE, O_WRONLY | O_CREAT, 0666)) == -1) {
         LOGPRINT(LOGERROR, this, ("Request::execCGI() : open(./www/tmpFile) failed - Internal Error 500"));
         return setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
     }
-
     LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
-
-
 
     pipe(tubes);
     // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
     if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
-
-    NOCLASSLOGPRINT(DEBUG, "DEBUG - 1");
-    // DEBUG WITH SHELL COMMAND "ps x"
+    NOCLASSLOGPRINT(DEBUG, "DEBUG BEFORE FORK - 1");
     if ((pid = fork()) == 0) {
         close(tubes[SIDE_IN]);
         dup2(tubes[SIDE_OUT], STDIN);
-        dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI aille droit dans le fichier "tmpFile"
-
-        std::cerr << "AYAYAYA" << std::endl;
-
+        dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
-
         exit(ret);
 
     } else {
         waitpid(pid, &status, 0);
-        NOCLASSLOGPRINT(DEBUG, "DEBUG PARENT AFTER WAITPID - 2");
-
+        NOCLASSLOGPRINT(DEBUG, "DEBUG AFTER WAITPID - 2");
         if (WIFEXITED(status)) {
             ret = WEXITSTATUS(status);
             LOGPRINT(INFO, this, ("Request::execCGI() : execve() with CGI has succeed and returned : " + std::to_string(ret)));
@@ -168,16 +156,15 @@ void Response::execCGI(Request * req) {
             LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has return -1 (failed) - Internal Error 500"));
             setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
         }
-
         close(tubes[SIDE_OUT]);
-        close(tmpFd);   
-        NOCLASSLOGPRINT(DEBUG, "DEBUG AFTER CLOSE - 3");
+        close(tubes[SIDE_IN]);
+        close(tmpFd);
 
     }
+    _didCGIPassed = true;
     utils::strTabFree(args);
     utils::strTabFree(env);
     args = env = NULL;
-    NOCLASSLOGPRINT(DEBUG, "DEBUG END - 4");
 
 }
 
@@ -185,19 +172,22 @@ void Response::execCGI(Request * req) {
 void Response::parseCGIHeadersOutput(Request * req) {
 
     std::string line;
-    std::ifstream outputFile("./www/tmpFile");
+    std::ifstream outputFile(CGI_OUTPUT_TMPFILE);
     std::vector<std::string> hd;
 
     hd.clear();
     if (!outputFile.is_open())
         return LOGPRINT(LOGERROR, this, ("Response::parseCGIOutput() : CGI Output file is closed"));
-    if (getCGIType(req) == PHP_CGI) {
+    if (req->cgiType == PHP_CGI) {
 
         // TODO : tester le php-cgi hors de webserv puis revenir ici
         _statusCode = OK_200;
         contentType[0] = "text/html";
 
-    } else if (getCGIType(req) == TESTER_CGI) {
+    } else if (req->cgiType == TESTER_CGI) {
+
+        // TODO : on est censé récupérer Status et Content-Type sur l'output, mais Status en premier, autrement Erreur 500 --> comportement à confirmer
+
         getline(outputFile, line);
         if (line.find("Status") != std::string::npos) {
             hd = ft::split(line, ' ');

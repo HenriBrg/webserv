@@ -36,8 +36,6 @@ run: all
 	printf "\033c"
 	@./$(NAME)
 
-
-
 $(NAME): $(OBJS) $(HEADERS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)
 

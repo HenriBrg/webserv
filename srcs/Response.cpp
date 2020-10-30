@@ -32,6 +32,7 @@ void Response::reset() {
     contentLength = -1;
     _errorFileName.clear();
     _methodFctPtr = nullptr;
+    _didCGIPassed = false;
 
 }
 
@@ -103,6 +104,8 @@ void Response::setHeaders(Request * req)
     // 1) Status Line 
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(_statusCode);
+    if (_statusCode == -1)
+        _statusCode = INTERNAL_ERROR_500;
     
     // 2) Basic headers
     date = ft::getDate();
@@ -137,6 +140,12 @@ void Response::setHeaders(Request * req)
 
 void Response::setBody(void) {
 
+    if (_didCGIPassed == true) {
+        _resFile = CGI_OUTPUT_TMPFILE;
+        LOGPRINT(INFO, this, ("Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in " + std::string(CGI_OUTPUT_TMPFILE) + " (note that _resFile was : " + _resFile + ")"));
+    } else
+        LOGPRINT(INFO, this, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
+
     if (!(_resFile.empty()))
     {
         char fileBuf[4096];
@@ -156,6 +165,9 @@ void Response::setBody(void) {
             close(fileFd);
         }
     }
+    if (_didCGIPassed)
+        remove(CGI_OUTPUT_TMPFILE);
+
 }
 
 void Response::setBodyHeaders(void)

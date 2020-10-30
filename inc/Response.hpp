@@ -25,7 +25,7 @@
 # define SERVICE_UNAVAILABLE_503		503
 
 
-# define CGI_OUTPUT_TMPFILE "./www.tmpFile"
+# define CGI_OUTPUT_TMPFILE "./www/tmpFile"
 # define NO_CGI 0
 # define TESTER_CGI 1
 # define PHP_CGI 2
@@ -58,8 +58,9 @@ class Response {
         std::string formatedResponse;
         int         _bytesSent;
 
-        std::string _cgiOutputFile;
+        bool         _didCGIPassed;
         std::string _cgiOutputBody;
+
 
         int _sendStatus;
         enum resStatus {

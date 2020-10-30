@@ -72,6 +72,7 @@ class Request {
         Location        *reqLocation;
         std::string     file;
         std::string     resourceNameRequested;
+        int             cgiType;
 
         // Chunked Body variables
         int chunkLineBytesSize;

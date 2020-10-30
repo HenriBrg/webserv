@@ -23,6 +23,7 @@ void Request::reset(void) {
     _optiChunkOffset = 0;
     file.clear();
     resourceNameRequested.clear();
+    cgiType = NO_CGI;
 
     method.clear();
     uri.clear();

@@ -11,7 +11,6 @@ int Response::getCGIType(Request * req) {
 
 void Response::getReq(Request * req) {
 
-    int cgiType = NO_CGI;
 	struct stat	buffer;
 
     // 1) Client/Server Negotiation
@@ -26,10 +25,10 @@ void Response::getReq(Request * req) {
     }
 
     // 3) Determine CGI type (no cgi = 0, 42 cgi = 1, php-cgi = 2) and perform it
-    cgiType = getCGIType(req);
+    req->cgiType = getCGIType(req);
 
-    if (cgiType) {
-        LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(cgiType)));
+    if (req->cgiType) {
+        LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
 
         execCGI(req);
         NOCLASSLOGPRINT(DEBUG, "DEBUG GET REQ - 5");
@@ -39,8 +38,8 @@ void Response::getReq(Request * req) {
         std::ifstream tmpFile(CGI_OUTPUT_TMPFILE);
 		std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
         _cgiOutputBody = buffer;
-        remove(CGI_OUTPUT_TMPFILE);
-        LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed ! to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
+        // remove(CGI_OUTPUT_TMPFILE); ---> Moved to setBody()
+        LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed !"));
     } else {
         LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselve"));
         _resFile = req->file;
