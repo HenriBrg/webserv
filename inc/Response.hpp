@@ -48,7 +48,6 @@ class Response {
 
         std::string _cgiOutputFile;
 
-        int _methodStatus;
         int _sendStatus;
         enum resStatus {
             PREPARE,

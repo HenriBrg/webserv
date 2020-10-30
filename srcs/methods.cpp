@@ -17,7 +17,7 @@ void Response::getReq(Request * req) {
 
     // TMP
     cgiUp = 0;
-    
+
     if (cgiUp) {
         execCGI(req);
         _cgiOutputFile = "./www/tmpFile";
@@ -44,19 +44,30 @@ void Response::headReq(Request * req) {
 
 void Response::putReq(Request * req)
 {
+    struct stat fileStat;
     int fileFd(0);
+    bool isCreated(true);
 
+    if (stat(req->ressource.c_str(), &fileStat) == 0)
+    {
+        if (S_ISDIR(fileStat.st_mode))
+            return (setErrorParameters(req, Response::ERROR, CONFLICT_409));
+        isCreated = false;
+    }
     if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) // Rights to be changed
     {
         if (write(fileFd, req->_reqBody.c_str(), req->_reqBody.size()) != -1)
         {
             LOGPRINT(INFO, req, ("Response::putReq() : write() body in " + req->file + " DONE"));
-            _methodStatus = Response::DONE;
+            if (isCreated)
+                _statusCode = CREATED_201;
+            else
+                _statusCode = NO_CONTENT_204;
             return ;
         }
     }
+    setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500));
     LOGPRINT(LOGERROR, req, ("Response::putReq() : failed fileFd = " + std::to_string(fileFd)));
-    _methodStatus = Response::ERROR;
 }
 
 void Response::postReq(Request * req) {
@@ -75,6 +86,7 @@ void Response::deleteReq(Request * req)
         deleteDir(req->resource);
     else
         unlink(req->file.c_str());
+    
 }
 
 void Response::deleteDir(std::string directory)
