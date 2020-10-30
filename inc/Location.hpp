@@ -1,40 +1,49 @@
 #ifndef LOCATION_HPP
-#define LOCATION_HPP
+# define LOCATION_HPP
 
 # include "Config.hpp"
 
-class Location {
+class Location
+{
+		public:
+		std::string		uri;
+		std::string		root;
+		std::string		index;
+		std::string		methods;
+		std::string		auth;
+		std::string		cgi;
+		std::string		phpcgi;
+		std::string		ext;
+		int				max_body;
 
-        public:
-        
-        std::string                 uri;
-        std::string                 root;
-        std::string                 index;
-        std::string                 methods;
-        std::string                 auth;
-        std::string                 cgi;
-        std::string                 phpcgi;
+		// Pour la phase de développement pré-parsing, on utilisera ces locations :
 
+		// Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
+		// Location *newLoc2 = new Location("/", "./www", "page.html", "GET POST");
 
-        // Pour la phase de développement pré-parsing, on utilisera ces locations :
+		Location(std::string _uri, \
+				std::string _root, \
+				std::string _index, \
+				std::string _methods, \
+				int			_max_body, \
+				std::string _auth, \
+				std::string _cgi, \
+				std::string _phpcgi, \
+				std::string _ext)
+		{
+			uri = _uri;
+			root = _root;
+			index = _index;
+			methods = _methods;
+			max_body = _max_body;
+			auth = _auth;
+			cgi = _cgi;
+			phpcgi = _phpcgi;
+			ext = _ext;
+		};
 
-        // /usr/bin/php
-
-        // Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-        // Location *newLoc2 = new Location("/", "./www", "page.html", "GET POST");
-
-        Location(std::string _uri, std::string _root, std::string _index, std::string _methods, std::string _auth, std::string _cgi, std::string _phpcgi) {
-            uri = _uri;
-            root = _root;
-            index = _index;
-            methods = _methods;
-            auth = _auth;
-            cgi = _cgi;
-            phpcgi = _phpcgi;
-        };
-
-        private:
-            Location();
+		private:
+			Location();
 };
 
 #endif

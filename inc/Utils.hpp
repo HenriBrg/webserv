@@ -1,21 +1,23 @@
-# ifndef UTILS_HPP
+#ifndef UTILS_HPP
 # define UTILS_HPP
 
-#include <string>
-#include <iostream>
+# include "Webserv.hpp"
 
-namespace ft {
-
-    std::string		getTimestamp(void);
-	std::string 	getDate(void);
-	std::string 	getLastModifDate(std::string file);
-    int             putstrError(std::string str);
-    void	        getLine(std::string & buf, std::string & line);
-    std::vector<std::string> split(const std::string & str, char delim);
-	std::string     trim(const std::string& str);
-	std::string 	decodeBase64(std::string & token);
-
-
+namespace ft
+{
+    std::string					getTimestamp(void);
+	std::string					getDate(void);
+	std::string					getLastModifDate(std::string file);
+    int							putstrError(std::string str);
+    void						getLine(std::string & buf, std::string & line);
+    std::vector<std::string>	split(const std::string & str, char delim);
+	std::vector<std::string>	splitWhtSp(std::string str);
+	std::string					trim(const std::string& str);
+	std::string					decodeBase64(std::string & token);
+	int							isWhiteSpace(char c);
+	int							isSpace(char c);
+	bool						isNumber(std::string const &str);
+	int							countElem(std::string str, std::string target);
 }
 
 namespace utils {
@@ -38,4 +40,4 @@ namespace responseUtils {
 
 }
 
-# endif
+#endif

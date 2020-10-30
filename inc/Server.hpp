@@ -42,7 +42,7 @@ class Server {
 
         /* Constructors */
 
-        Server(std::string name, int port);
+        Server(std::string name, int port, std::string error);
         virtual ~Server();
 
         /* Members variables */
@@ -52,6 +52,7 @@ class Server {
         int                         srvMaxFd; 
 
         std::string                 name;
+        std::string                 error;
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
         std::vector<Location*>      locations;

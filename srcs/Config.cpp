@@ -103,16 +103,16 @@ void Config::showFDSETS() {
 }
 
 void Config::init() {
-    std::string n1("Server One");
-    std::string n2("Server Two");
-    Server *s1 = new Server(n1, 7777);
-    Server *s2 = new Server(n2, 8888);
-    try {
-        s1->start();
-        s2->start();
-    } catch (std::exception & e) {
-        std::cerr << e.what() << std::endl;
-    }
-    servers.push_back(s1);
-    servers.push_back(s2);
+    // std::string n1("Server One");
+    // std::string n2("Server Two");
+    // Server *s1 = new Server(n1, 7777);
+    // Server *s2 = new Server(n2, 8888);
+    // try {
+    //     s1->start();
+    //     s2->start();
+    // } catch (std::exception & e) {
+    //     std::cerr << e.what() << std::endl;
+    // }
+    // servers.push_back(s1);
+    // servers.push_back(s2);
 }

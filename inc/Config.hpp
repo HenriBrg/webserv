@@ -17,7 +17,6 @@ void    handleCTRLC(int s);
 class Config {
     
     public:
-        
         int             run;
 
         fd_set          readSet;
