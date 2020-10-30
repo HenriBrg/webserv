@@ -18,6 +18,7 @@ void Response::getReq(Request * req) {
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
 
+    // TODO : mettre ça + en amont non ? -----------------------------> à voir avec la team
     // 2) Check if requested file exist (after having negotiate on it) 
     if (stat(req->file.c_str(), &buffer) == -1) {
         LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
@@ -26,14 +27,19 @@ void Response::getReq(Request * req) {
 
     // 3) Determine CGI type (no cgi = 0, 42 cgi = 1, php-cgi = 2) and perform it
     cgiType = getCGIType(req);
+
     if (cgiType) {
-        LOGPRINT(INFO, req, ("Response::getReq() : CGI is required to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
+        LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(cgiType)));
+
         execCGI(req);
+        NOCLASSLOGPRINT(DEBUG, "DEBUG GET REQ - 5");
         parseCGIHeadersOutput(req);
-        std::ifstream tmpFile("./www/tmpFile");
+        NOCLASSLOGPRINT(DEBUG, "DEBUG GET REQ - After parseCGIHeadersOutput - 6");
+
+        std::ifstream tmpFile(CGI_OUTPUT_TMPFILE);
 		std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
         _cgiOutputBody = buffer;
-        remove("./www/tmpFile");
+        remove(CGI_OUTPUT_TMPFILE);
         LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed ! to handle that request - Its type is " + std::to_string(cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
     } else {
         LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselve"));

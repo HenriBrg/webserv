@@ -33,7 +33,9 @@ OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 all: $(NAME)
 
 run: all
-	./$(NAME)
+	printf "\033c"
+	@./$(NAME)
+
 
 
 $(NAME): $(OBJS) $(HEADERS)

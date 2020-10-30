@@ -88,6 +88,8 @@ void Response::control(Request * req, Server * serv)
     methodControl(req, serv);
     authControl(req);
     // ... TODO : Additionnal controls
+        // 1) check http version 
+        // 2) if empty headers meaningfull
 }
 
 void Response::callMethod(Request * req)

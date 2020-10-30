@@ -11,7 +11,7 @@ void showCGIEnv(std::map<std::string, std::string> & envmap) {
 		if (!it->second.empty())
 			std::cout << "      " << it->first << " = " << it->second << std::endl;
         else
-			std::cout << "      " << it->first << " = EMPTY" << std::endl;
+			std::cout << "      " << it->first << " = (empty value) " << std::endl;
 		++it;
 	}
 
@@ -44,12 +44,15 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["REMOTE_ADDR"]         = req->client->ip;  // IP du client
 	envmap["PATH_INFO"]           = req->uri;         // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
     // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
+    // getcwd + root (sans le .) + uri
     envmap["PATH_TRANSLATED"]     = ft::getcwdString() + req->reqLocation->root.substr(1, req->reqLocation->root.size()) + req->uri;
     
+
     envmap["CONTENT_LENGTH"]      = std::to_string(req->_reqBody.size()); // The length of the query information. It's available only for POST requests
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries; // The URL-encoded information that is sent with GET method request.
-	envmap["CONTENT_TYPE"]        = req->contentType; // type MIME des données véhiculées dans la requête
-    envmap["SCRIPT_NAME"]         = getCGIType(req) == TESTER_CGI ? req->reqLocation->cgi : req->reqLocation->php; // chemin du CGI à partir de la racine du serveur HTTP
+	if (!req->contentType.empty())
+        envmap["CONTENT_TYPE"]    = req->contentType; // type MIME des données véhiculées dans la requête
+    envmap["SCRIPT_NAME"]         = getCGIType(req) == TESTER_CGI ? req->reqLocation->cgi : req->reqLocation->php; // Le chemin virtuel vers le script étant exécuté. Exemple : « /cgi-bin/script.cgi »
 	envmap["SERVER_NAME"]         = "127.0.0.1"; // The server's hostname or IP Address.
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port); // Port du serveur
 
@@ -57,7 +60,7 @@ char ** Response::buildCGIEnv(Request * req) {
 		pos = req->authorization.find(" ");
         if (pos != std::string::npos) {
             envmap["AUTH_TYPE"] = req->authorization.substr(0, pos); // Méthode : souvent "BASIC"
-            envmap["REMOTE_USER"] = req->authorization.substr(pos + 1); // TODO : décoder ou non ?
+            envmap["REMOTE_USER"] = req->authorization.substr(pos + 1); // TODO : décoder ou non ?idTODO : décoder ou non ?
         }
 	}
 
@@ -71,7 +74,7 @@ char ** Response::buildCGIEnv(Request * req) {
     hdmap = req->mapReqHeaders();
 	std::map<std::string, std::string>::iterator it = hdmap.begin();
 	while (it != hdmap.end()) {
-		if (!it->second.empty())
+		if (!it->second.empty() && it->second != "-1")
 			envmap["HTTP_" + it->first] = it->second;
 		++it;
 	}
@@ -79,15 +82,17 @@ char ** Response::buildCGIEnv(Request * req) {
     showCGIEnv(envmap);
 
     /* 3) Allocation, car il faut retourner un char ** pour matcher l'injection de **env dans execve() */
+    
 
     int i = -1;
     env = (char**)malloc(sizeof(char*) * (envmap.size() + 1));
     it = envmap.begin();
     while (it != envmap.end()) {
         env[++i] = strdup((it->first + "=" + it->second).c_str());
-		++it;
+		it++;
 	}
     env[i] = 0;
+
     return env;
 
 }
@@ -104,6 +109,7 @@ void Response::execCGI(Request * req) {
     int     status;
 	struct stat	buffer;
     std::string executable;
+    pid_t pid;
     
     executable.clear();
     if (getCGIType(req) == TESTER_CGI)
@@ -112,33 +118,49 @@ void Response::execCGI(Request * req) {
         executable = req->reqLocation->php;
     else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error"));
 
+
     env = buildCGIEnv(req);
+
+    // NOCLASSLOGPRINT(DEBUG, "DEBUG 2 - executable = " + executable + " and file = " + req->file);
+    args = (char **)(malloc(sizeof(char*) * 3));
     args[0] = strdup(executable.c_str());
     args[1] = strdup(req->file.c_str());
     args[2] = 0;
+    // NOCLASSLOGPRINT(DEBUG, ("DEBUG 3 ---> 0 = " + std::string(args[0]) + " 1 = " + std::string(args[1])));
 
     if (stat(executable.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG))
         return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
 
-    LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
-    
-    if ((tmpFd = open("./www/tmpFile", O_WRONLY | O_CREAT, 0666)) == -1) {
+    if ((tmpFd = open(CGI_OUTPUT_TMPFILE, O_WRONLY | O_CREAT, 0666)) == -1) {
         LOGPRINT(LOGERROR, this, ("Request::execCGI() : open(./www/tmpFile) failed - Internal Error 500"));
         return setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
     }
 
+    LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
+
+
+
     pipe(tubes);
     // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
     if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
-    if ((req->client->cgipid = fork()) == 0) {
-        close(tubes[SIDE_IN]); 
+
+    NOCLASSLOGPRINT(DEBUG, "DEBUG - 1");
+    // DEBUG WITH SHELL COMMAND "ps x"
+    if ((pid = fork()) == 0) {
+        close(tubes[SIDE_IN]);
+        dup2(tubes[SIDE_OUT], STDIN);
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI aille droit dans le fichier "tmpFile"
-        dup2(tubes[SIDE_OUT], STDIN);   // 
+
+        std::cerr << "AYAYAYA" << std::endl;
+
         ret = execve(executable.c_str(), args, env);
+
         exit(ret);
 
     } else {
-        waitpid(req->client->cgipid, &status, 0);
+        waitpid(pid, &status, 0);
+        NOCLASSLOGPRINT(DEBUG, "DEBUG PARENT AFTER WAITPID - 2");
+
         if (WIFEXITED(status)) {
             ret = WEXITSTATUS(status);
             LOGPRINT(INFO, this, ("Request::execCGI() : execve() with CGI has succeed and returned : " + std::to_string(ret)));
@@ -146,12 +168,17 @@ void Response::execCGI(Request * req) {
             LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has return -1 (failed) - Internal Error 500"));
             setErrorParameters(req, Response::ERROR, INTERNAL_ERROR_500);
         }
+
         close(tubes[SIDE_OUT]);
         close(tmpFd);   
+        NOCLASSLOGPRINT(DEBUG, "DEBUG AFTER CLOSE - 3");
+
     }
     utils::strTabFree(args);
     utils::strTabFree(env);
     args = env = NULL;
+    NOCLASSLOGPRINT(DEBUG, "DEBUG END - 4");
+
 }
 
 
@@ -165,9 +192,11 @@ void Response::parseCGIHeadersOutput(Request * req) {
     if (!outputFile.is_open())
         return LOGPRINT(LOGERROR, this, ("Response::parseCGIOutput() : CGI Output file is closed"));
     if (getCGIType(req) == PHP_CGI) {
-        // TODO : tester le php-cgi puis revenir ici
+
+        // TODO : tester le php-cgi hors de webserv puis revenir ici
         _statusCode = OK_200;
         contentType[0] = "text/html";
+
     } else if (getCGIType(req) == TESTER_CGI) {
         getline(outputFile, line);
         if (line.find("Status") != std::string::npos) {
@@ -181,5 +210,9 @@ void Response::parseCGIHeadersOutput(Request * req) {
             contentType[0] = ft::trim(hd[1]);
             hd.clear();
         }
+
+		if (_statusCode < 200 || _statusCode > 500)
+            _statusCode = 500; // Internal Error, the cgi output should always give us a status code, isn't it ? --> TODO : checker ça
+
     }
 }

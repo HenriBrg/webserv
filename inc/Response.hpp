@@ -24,6 +24,8 @@
 # define NOT_IMPLEMENTED_501			501
 # define SERVICE_UNAVAILABLE_503		503
 
+
+# define CGI_OUTPUT_TMPFILE "./www.tmpFile"
 # define NO_CGI 0
 # define TESTER_CGI 1
 # define PHP_CGI 2

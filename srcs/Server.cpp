@@ -145,7 +145,7 @@ void Server::readClientRequest(Client *c) {
     if (ret == -1 || ret == 0) {
         c->isConnected = false;
         if (ret == 0)
-            LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
+            LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
         if (ret == -1)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
