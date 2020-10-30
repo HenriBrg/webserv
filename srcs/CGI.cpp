@@ -141,7 +141,7 @@ void Response::execCGI(Request * req) {
     NOCLASSLOGPRINT(DEBUG, "DEBUG BEFORE FORK - 1");
     if ((pid = fork()) == 0) {
         close(tubes[SIDE_IN]);
-        dup2(tubes[SIDE_OUT], STDIN);
+        // dup2(tubes[SIDE_OUT], STDIN);
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
         exit(ret);
