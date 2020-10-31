@@ -8,10 +8,10 @@ CONFIG :
         -> segfault si le path root est érroné
         ->
     - une ligne de log par serveur après parsing config ?
+    - erreur si aucune methode présente ?
 
 CGI :
 
-    - 42 CGI
     - POST
 
 REQ/RES :

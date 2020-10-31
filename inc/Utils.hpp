@@ -28,6 +28,7 @@ namespace utils {
 	void						strTabFree(char ** strTab);
 	void deleteCarriageReturn(std::string &str);
 	void displayHeaderMap(std::map<int, std::string> data, std::string headerName);
+	void displayHeaderMultiMap(std::multimap<float, std::string, std::greater<float> > data, std::string headerName);
 	int  strHexaToDecimal(std::string strHexa);
 	int	 isExtension(std::string str, std::string ext);
 

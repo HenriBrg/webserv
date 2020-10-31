@@ -34,7 +34,7 @@ int main(int ac, char **av)
         return (-1);
     while (gConfig.run) {
         gConfig.resetFds();
-        NOCLASSLOGPRINT(INFO, ("----- ----- ----- ----- ----- NEW SELECT() CALL ----- ----- ----- ----- -----"));
+        NOCLASSLOGPRINT(SELECT, ("----- ----- ----- ----- ----- NEW SELECT() CALL ----- ----- ----- ----- ----- "));
         gConfig.showFDSETS();
         std::cout << std::endl << std::endl;
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);

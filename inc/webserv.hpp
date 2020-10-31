@@ -5,6 +5,8 @@
 # include <fstream>
 # include <sstream>
 # include <cctype>
+#include <cstddef>
+
 /*************/
 
 # include <stdlib.h>
@@ -35,8 +37,6 @@
 # include <algorithm>
 # include <iterator>
 
-# include <sys/types.h>
-# include <dirent.h>
 
 # include "Config.hpp"
 # include "Conf.hpp"

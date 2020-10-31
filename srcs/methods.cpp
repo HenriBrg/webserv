@@ -6,6 +6,7 @@ void Response::getReq(Request * req) {
 
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
+    NOCLASSLOGPRINT(INFO, "Language and Charset negotiation done");
 
     // TODO : mettre ça + en amont non ? -----------------------------> à voir avec la team
     if (stat(req->file.c_str(), &buffer) == -1) {
@@ -26,10 +27,14 @@ void Response::getReq(Request * req) {
     }
 }
 
-
 void Response::headReq(Request * req) {
-
+    getReq(req);
 }
+
+void Response::postReq(Request * req) {
+    getReq(req);
+}
+
 
 void Response::putReq(Request * req)
 {
@@ -57,13 +62,6 @@ void Response::putReq(Request * req)
     }
     setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     LOGPRINT(LOGERROR, req, ("Response::putReq() : failed fileFd = " + std::to_string(fileFd)));
-}
-
-void Response::postReq(Request * req) {
-
-    // tmp for test
-    getReq(req);
-
 }
 
 void Response::patchReq(Request * req) {
@@ -133,7 +131,7 @@ void Response::negotiateAcceptLanguage(Request * req)
         return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
-    //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
+
 }
 
 void Response::negotiateAcceptCharset(Request * req)

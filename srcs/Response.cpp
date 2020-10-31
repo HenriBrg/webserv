@@ -187,17 +187,21 @@ void Response::setBody(void) {
         
         if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
+
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
+                NOCLASSLOGPRINT(DEBUG, "READING");
+
                 // TODO : Ajouter gestion d'erreur
                 fileBuf[retRead] = '\0';
-                _resBody.append(fileBuf);
+                _resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
             }
+            NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
+            NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
+
             close(fileFd);
         }
     }
-    _didCGIPassed = false; // ---> Reset somewhere else ?
-
 }
 
 void Response::setBodyHeaders(void)
@@ -242,6 +246,8 @@ void Response::format(void)
 
 std::string const Response::logInfo(void) {
     std::string ret;
+    if (resClient == NULL)
+        return "LOG WOULD SEGFAULT - We dont print it";
     ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " \
                                                        + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
     return (ret);
