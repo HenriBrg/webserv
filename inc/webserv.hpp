@@ -35,8 +35,6 @@
 # include <algorithm>
 # include <iterator>
 
-# include <sys/types.h>
-# include <dirent.h>
 
 # include "Config.hpp"
 # include "Conf.hpp"
