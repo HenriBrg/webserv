@@ -43,15 +43,19 @@ void Response::putReq(Request * req)
             return (setErrorParameters(Response::ERROR, CONFLICT_409));
         isCreated = false;
     }
-    if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) // Rights to be changed
+    if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0600)) != -1)
     {
         if (write(fileFd, req->_reqBody.c_str(), req->_reqBody.size()) != -1)
         {
             LOGPRINT(INFO, req, ("Response::putReq() : write() body in " + req->file + " DONE"));
             if (isCreated)
+            {
                 _statusCode = CREATED_201;
+                _resFile = req->file; // On 201 reponse client waits for newly created ressource
+            }
             else
                 _statusCode = NO_CONTENT_204;
+            close(fileFd);
             return ;
         }
     }

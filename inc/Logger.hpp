@@ -38,9 +38,6 @@
 # define BCKBLACK	"\033[38;5;41m"
 # define BCKWHITE	"\033[38;5;47m"
 
-// # define END		"\033[1;0m"
-
-
 
 // INFO  : routine
 // ERROR : syscall fail
