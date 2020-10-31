@@ -8,7 +8,6 @@ void Response::getReq(Request * req) {
     negotiateAcceptCharset(req);
     NOCLASSLOGPRINT(INFO, "Language and Charset negotiation done");
 
-    // TODO : mettre ça + en amont non ? -----------------------------> à voir avec la team
     if (stat(req->file.c_str(), &buffer) == -1) {
         LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
@@ -32,7 +31,9 @@ void Response::headReq(Request * req) {
 }
 
 void Response::postReq(Request * req) {
+    
     getReq(req);
+
 }
 
 

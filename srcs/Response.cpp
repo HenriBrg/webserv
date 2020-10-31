@@ -67,8 +67,6 @@ void Response::authControl(Request * req) {
     
     std::vector<std::string> tab;
 
-    // TODO : modifier de façon à ce que s'il y a auth dans la loc, on passe quand même dans ce if, même si le req->authorization est vide
-
     if (!req->reqLocation->auth.empty() && !req->authorization.empty()) {
         tab = ft::split(req->authorization, ' ');
         if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
@@ -103,16 +101,13 @@ void Response::resourceControl(Request * req)
     struct stat fileStat;
     int retStat;
 
-    if (req->method == "DELETE")
-    {
+    if (req->method == "DELETE") {
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     }
-    else if (req->method != "PUT")
-    {
+    else if (req->method != "PUT") { // POST aussi non ?
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
-        
     }
     if (retStat == -1)
         NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));

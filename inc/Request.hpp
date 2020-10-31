@@ -25,7 +25,6 @@ class Request {
     
     public:
 
-
         /* METHODS */
 
         Request();
@@ -34,7 +33,6 @@ class Request {
         void parse(std::vector<Location*> locations);
         void showReq(void);
         void showFullHeadersReq(void);
-        void showBody();
 
         void    reset(void);
         void	readline(std::string & b, std::string & line);

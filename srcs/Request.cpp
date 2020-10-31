@@ -462,8 +462,8 @@ void Request::showFullHeadersReq(void) {
     utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
 
 
-    //if (!uriQueries.empty())
-    //    std::cout << indent << "Queries : " << uriQueries << std::endl;
+    if (!uriQueries.empty())
+       std::cout << indent << "Queries : " << uriQueries << std::endl;
     if (!authorization.empty())
         std::cout << indent << "Authorization : " << authorization << std::endl;
     if (!contentLocation.empty())
@@ -488,10 +488,4 @@ void Request::showFullHeadersReq(void) {
 
     std::cout << indent << "Body : " << _reqBody << std::endl;
 
-}
-
-void Request::showBody() {
-    std::string indent("    > ");
-    std::cout << std::endl;
-    // std::cout << indent << "(Server) Body Length : " << std::to_string(bodyLength) << std::endl;
 }
