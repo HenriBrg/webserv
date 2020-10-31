@@ -137,13 +137,13 @@ void Response::execCGI(Request * req) {
     // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
    
     if (req->method == "GET")
-        close(tubes[SIDE_IN]);
+        close(tubes[SIDE_IN]); // Si GET, on aura jamais besoin d'écrire dans le fils, donc autant close maintenant
    
     // if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
     NOCLASSLOGPRINT(DEBUG, "DEBUG BEFORE FORK - 1");
     if ((pid = fork()) == 0) {
         // close(tubes[SIDE_IN]);
-        dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement, de façon à ce que le CGI récupère l'informations dans son STDIN
+        dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement, de façon à ce que le CGI récupère l'informations dans son STDIN (écrit dans le père)
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
         if (ret == -1)
@@ -164,7 +164,6 @@ void Response::execCGI(Request * req) {
             setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
         close(tubes[SIDE_OUT]);
-        // close(tubes[SIDE_IN]);
         close(tmpFd);
 
     }
