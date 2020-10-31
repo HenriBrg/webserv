@@ -19,8 +19,8 @@
 # define METHOD_NOT_ALLOWED_405			405
 # define CONFLICT_409			        409
 # define REQUEST_ENTITY_TOO_LARGE_413	413
-# define REQUEST_URI_TOO_LONG           414
-# define SSL_CERTIFICATE_ERROR          495
+# define REQUEST_URI_TOO_LONG_414       414
+# define SSL_CERTIFICATE_ERROR_495      495
 # define INTERNAL_ERROR_500				500
 # define NOT_IMPLEMENTED_501			501
 # define SERVICE_UNAVAILABLE_503		503
@@ -83,7 +83,7 @@ class Response {
         void    control(Request * req, Server * serv);
         void    callMethod(Request * req);
         void    setHeaders(Request * req);
-        void    setBody(void);
+        void    setBody(const Server *server);
         void    setBodyHeaders(void);
         void    format(void);
 
@@ -130,7 +130,7 @@ class Response {
         /* ERRORS */
 
         void setErrorParameters(int sendStatus, int code);
-
+        void replaceErrorCode(const Server *server);
         
         /* MEMBERS */
 

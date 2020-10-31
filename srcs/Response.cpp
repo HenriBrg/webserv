@@ -53,6 +53,15 @@ void Response::setErrorParameters(int sendStatus, int code) {
     _resFile = "./www/errors/error.html";
 }
 
+void Response::replaceErrorCode(const Server *server)
+{
+    size_t pos(0);
+
+    pos = _resBody.find("_ERROR_");
+    if (pos != std::string::npos)
+        _resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
+}
+
 
 void Response::authControl(Request * req) {
     
@@ -176,7 +185,7 @@ void Response::setHeaders(Request * req)
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 
-void Response::setBody(void) {
+void Response::setBody(const Server *server) {
 
     if (_didCGIPassed == true) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
@@ -201,6 +210,8 @@ void Response::setBody(void) {
             close(fileFd);
         }
     }
+    if (_sendStatus == Response::ERROR)
+        replaceErrorCode(server);
     _didCGIPassed = false; // ---> Reset somewhere else ?
 
 }
