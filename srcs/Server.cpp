@@ -109,13 +109,27 @@ int Server::start() {
     FD_SET(sockFd, &gConfig.readSetBackup);
     gConfig.addFd(sockFd);
 
-    // ---------- 6) SET_METHOD_TAB ----------
+    // ---------- 7) SET_METHOD_TAB ----------
 	methodsTab["GET"]     = &Response::getReq;
 	methodsTab["PUT"]     = &Response::putReq;
 	methodsTab["POST"]    = &Response::postReq;
 	methodsTab["HEAD"]    = &Response::headReq;
 	methodsTab["DELETE"]  = &Response::deleteReq;
 	methodsTab["PATCH"]   = &Response::patchReq;
+
+
+    // ---------- 8) SET_ERROR_STATUS MAP ----------
+    _errorStatus[BAD_REQUEST_400] = "400 BAD RESQUEST";
+    _errorStatus[UNAUTHORIZED_401] = "401 UNAUTHORIZED";
+    _errorStatus[NOT_FOUND_404] = "404 NOT FOUND";
+    _errorStatus[METHOD_NOT_ALLOWED_405] = "405 METHOD NOT ALLOWED";
+    _errorStatus[CONFLICT_409] = "409 CONFLICT";
+    _errorStatus[REQUEST_ENTITY_TOO_LARGE_413] = "413 REQUEST ENTITY TOO LARGE";
+    _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 BAD RESQUEST";
+    _errorStatus[SSL_CERTIFICATE_ERROR_495] = "495 SSL CERTIFICATE ERROR";    
+    _errorStatus[INTERNAL_ERROR_500] = "500 INTERNAL ERROR";
+    _errorStatus[NOT_IMPLEMENTED_501] = "501 NOT IMPLEMENTED";
+    _errorStatus[SERVICE_UNAVAILABLE_503] = "503 SERVICE UNAVAILABLE";
 
     return (EXIT_SUCCESS);
 }
@@ -230,7 +244,7 @@ void Server::setClientResponse(Client *c)
     c->res.control(&c->req, this); // Control (+set) method & authorization
     c->res.callMethod(&c->req); // Use requested method
     c->res.setHeaders(&c->req); // Set headers
-    c->res.setBody(); // Set body
+    c->res.setBody(this); // Set body
     c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
     c->res.format(); // Format response
     c->res._sendStatus = Response::SENDING;
