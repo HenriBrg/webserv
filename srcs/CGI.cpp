@@ -9,9 +9,9 @@ void showCGIEnv(std::map<std::string, std::string> & envmap) {
     std::map<std::string, std::string>::iterator it = envmap.begin();
 	while (it != envmap.end()) {
 		if (!it->second.empty())
-			std::cout << "      " << it->first << " = " << it->second << std::endl;
+			std::cout << "      " << it->first << "=" << it->second << std::endl;
         else
-			std::cout << "      " << it->first << " = (empty value) " << std::endl;
+			std::cout << "      " << it->first << "=(empty value)" << std::endl;
 		++it;
 	}
 
@@ -45,7 +45,7 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["PATH_INFO"]           = req->uri;         // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
     // Partie de l'URI entre le nom du CGI (exclus) et le reste de l'URI (voir Wikipédia) ) - à vérifier
     // getcwd + root (sans le .) + uri
-    envmap["PATH_TRANSLATED"]     = ft::getcwdString() + req->reqLocation->root.substr(1, req->reqLocation->root.size()) + req->uri;
+    envmap["PATH_TRANSLATED"]     = ft::getcwdString() + req->reqLocation->root.substr(1, req->reqLocation->root.size()) + req->uri.substr(req->uri.find("/" + req->isolateFileName));
 
     envmap["CONTENT_LENGTH"]      = std::to_string(req->_reqBody.size()); // The length of the query information. It's available only for POST requests
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries; // The URL-encoded information that is sent with GET method request.
@@ -63,8 +63,8 @@ char ** Response::buildCGIEnv(Request * req) {
         }
 	}
 
-    if (getCGIType(req) == PHP_CGI)
-        envmap["REDIRECT_STATUS"] = "200"; // CG Repo Centdix required for php I guess
+    if (req->cgiType == PHP_CGI)
+        envmap["REDIRECT_STATUS"] = "200"; // For PHP-CGI ... Idk why
 
     /* 2) REQUEST HEADERS PASSED TO CGI */
     /* Toutes les variables qui sont envoyées par le client sont aussi passées au script CGI, après que le serveur a rajouté le préfixe « HTTP_ » */
@@ -135,10 +135,14 @@ void Response::execCGI(Request * req) {
 
     pipe(tubes);
     // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
-    if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+   
+    if (req->method == "GET")
+        close(tubes[SIDE_IN]);
+   
+    // if (req->method == "POST") write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
     NOCLASSLOGPRINT(DEBUG, "DEBUG BEFORE FORK - 1");
     if ((pid = fork()) == 0) {
-        close(tubes[SIDE_IN]);
+        // close(tubes[SIDE_IN]);
         dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement, de façon à ce que le CGI récupère l'informations dans son STDIN
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
@@ -146,6 +150,10 @@ void Response::execCGI(Request * req) {
             NOCLASSLOGPRINT(LOGERROR, ("Request::execCGI() : execve() returned -1. Error = " + std::string(strerror(errno))));
         exit(ret);
     } else {
+        if (req->method == "POST") {
+            write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+            close(tubes[SIDE_IN]);
+        }
         waitpid(pid, &status, 0);
         NOCLASSLOGPRINT(DEBUG, "DEBUG AFTER WAITPID - 2");
         if (WIFEXITED(status)) {
@@ -156,7 +164,7 @@ void Response::execCGI(Request * req) {
             setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
         close(tubes[SIDE_OUT]);
-        close(tubes[SIDE_IN]);
+        // close(tubes[SIDE_IN]);
         close(tmpFd);
 
     }

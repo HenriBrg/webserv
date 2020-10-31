@@ -22,7 +22,7 @@ void Request::reset(void) {
     chunkLineBytesSize = -1;
     _optiChunkOffset = 0;
     file.clear();
-    resourceNameRequested.clear();
+    isolateFileName.clear();
     cgiType = NO_CGI;
 
     method.clear();
@@ -167,7 +167,7 @@ void Request::parseFile(std::vector<Location*> locations)
 
     if (reqLocation)
     {
-        tmpFile = file;
+        isolateFileName = file;
         i = reqLocation->root.size() - 1;
         if (reqLocation->root[i] == '/')
             file = reqLocation->root + file;
@@ -175,9 +175,7 @@ void Request::parseFile(std::vector<Location*> locations)
             file = reqLocation->root + "/" + file;
         // Here, we check if the uri refers to a directory.
         // If so, we check if autoindex is on, else, we refers to the index parameter of the location
-       
        resource = file;
-       
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
             // TODO WHEN PARSER READY
             // if (reqLocation->autoindex == 1 && method == "GET")

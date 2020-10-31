@@ -72,7 +72,7 @@ class Request {
         int             _optiChunkOffset;
         Location        *reqLocation;
         std::string     file;
-        std::string     resourceNameRequested;
+        std::string     isolateFileName;
         int             cgiType;
 
         // Chunked Body variables

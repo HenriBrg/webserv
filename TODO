@@ -24,6 +24,7 @@ REQ/RES :
     - gérer max file descriptor
     - Parsing des headers en plusieurs recv() à gérer (telnet, netcat)
     - response en chunked
+    - control longueur max queries get
 
 GLOBAL :
 
