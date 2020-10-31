@@ -60,7 +60,7 @@ void Response::authControl(Request * req) {
 
     // TODO : modifier de façon à ce que s'il y a auth dans la loc, on passe quand même dans ce if, même si le req->authorization est vide
 
-    if (!req->authorization.empty()) {
+    if (!req->reqLocation->auth.empty() && !req->authorization.empty()) {
         tab = ft::split(req->authorization, ' ');
         if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
         if (tab[0] != "Basic" && tab[0] != "BASIC") LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
@@ -103,23 +103,25 @@ void Response::resourceControl(Request * req)
     {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
+        
     }
     if (retStat == -1)
-        LOGPRINT(REQERROR, this, ("Response::resourceControl() : Resource " + req->file + " not found"));
+        NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
 }
 
 void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
     resourceControl(req);
+
     if (_sendStatus == Response::ERROR)
         return ;
     methodControl(req, serv);
     authControl(req);
-
     // ... TODO : Additionnal controls
         // 1) check http version 
         // 2) if empty headers meaningfull
+        // 3) max size of uri queries
 }
 
 void Response::callMethod(Request * req)
@@ -249,7 +251,7 @@ std::string const Response::logInfo(void) {
 void Response::showRes(void) {
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
-    std::cout << MAGENTA << "    RESPONSE THAT WILL BE SENT ----------------" << END;
+    std::cout << ORANGE << "    RESPONSE THAT WILL BE SENT ----------------" << END;
     std::cout << std::endl << std::endl;
     std::cout << "    ~ Global \n\n";
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
@@ -257,7 +259,7 @@ void Response::showRes(void) {
     std::cout << indent << "Reason : " << reason << std::endl;
     showFullHeadersRes();    
     std::cout << std::endl;
-    std::cout << MAGENTA << "    ------------------------------- END" << END;
+    std::cout << ORANGE << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
 }
 

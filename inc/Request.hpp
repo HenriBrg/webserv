@@ -19,8 +19,7 @@ class Client;
     By this argument, PUT is for creating when you know the URL of the thing you will create. POST can be used to create when you know the URL of the "factory" or manager for the category of things you want to create.
 */
 
-// class Location;
-# include "Location.hpp"
+class Location;
 
 class Request {
     

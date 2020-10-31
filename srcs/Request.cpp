@@ -191,10 +191,8 @@ void Request::parseFile(std::vector<Location*> locations)
 }
 
 // TODO : case insensitive string comparaison to handle multiple client type
-
 /* Functions for filling headers value(s) into corresponding variables */
 
-// Main function
 void Request::fillHeader(std::string const key, std::string const value)
 {
     if (key == "Content-Language" || key == "Transfer-Encoding")

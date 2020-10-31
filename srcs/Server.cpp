@@ -145,6 +145,7 @@ void Server::acceptNewClient(void) {
 void Server::readClientRequest(Client *c) {
 
     int ret = -1;
+    int error;
 
     c->req.client = c;
     ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
@@ -176,10 +177,11 @@ void Server::readClientRequest(Client *c) {
                 c->req.parseSingleBody(); // TODO : set errors if invalid request format
             else 
                 LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Anormal body"));
-            // if (c->req.reqLocation.maxBody != -1 && c->req._reqBody.size() > c->req.reqLocation.maxBody) {
-                // client->recvStatus = Client::ERROR;
-                // c->res.setErrorParameters(&c->req, Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
-            // } 
+            if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > c->req.reqLocation->max_body) {
+                LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(c->req.reqLocation->max_body)));
+                c->recvStatus = Client::ERROR;
+                c->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
+            } 
         }
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
@@ -189,7 +191,7 @@ void Server::readClientRequest(Client *c) {
         if (c->recvStatus == Client::ERROR) {
             // TODO : Passage à tester
             c->recvStatus = Client::COMPLETE; // Because We will respond even if we get error
-            c->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+            c->res.setErrorParameters(Response::ERROR, (c->res._statusCode == -1 ? BAD_REQUEST_400 : c->res._statusCode));
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup);
         }
@@ -229,6 +231,7 @@ void Server::setClientResponse(Client *c)
 {
     c->res.control(&c->req, this); // Control (+set) method & authorization
     c->res.callMethod(&c->req); // Use requested method
+
     c->res.setHeaders(&c->req); // Set headers
     c->res.setBody(); // Set body
     c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
