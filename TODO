@@ -8,6 +8,7 @@ CONFIG :
         -> segfault si le path root est érroné -> à check dans config plutôt que dans le serveur non ?
         ->
     - une ligne de log par serveur après parsing config ?
+    - erreur si aucune methode présente ?
 
 CGI :
 

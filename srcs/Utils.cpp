@@ -199,6 +199,29 @@ namespace utils
 			str.erase(pos);
 	}
 
+	void displayHeaderMultiMap(std::multimap<float, std::string, std::greater<float> > data, std::string headerName) {
+
+		if (data.empty())
+				return ;
+
+		std::multimap<float, std::string, std::greater<float> >::iterator it;
+		std::multimap<float, std::string, std::greater<float> >::iterator tmp;
+
+		std::cout << headerName << " : ";
+		for (it = data.begin(); it != data.end(); it++) {
+			std::cout << it->second << " ";
+
+			std::cout << it->first << " ";
+
+			tmp = data.end();
+			--tmp;
+			if (it != tmp)
+				std::cout << "; ";
+		}
+		std::cout << std::endl;
+
+	}
+
 	void displayHeaderMap(std::map<int, std::string> data, std::string headerName) {
 		if (data.empty())
 			return ;

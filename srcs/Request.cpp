@@ -456,8 +456,8 @@ void Request::showFullHeadersReq(void) {
     std::cout << std::endl;
     std::cout << std::endl;
 
-    //utils::displayHeaderMap(acceptCharset, (indent + "Accept-Charset"));
-    //utils::displayHeaderMap(acceptLanguage, (indent + "Accept-Language"));
+    utils::displayHeaderMultiMap(acceptCharset, (indent + "Accept-Charset"));
+    utils::displayHeaderMultiMap(acceptLanguage, (indent + "Accept-Language"));
     utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
     utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
 

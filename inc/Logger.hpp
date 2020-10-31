@@ -24,7 +24,6 @@
 # define WHITE	    "\033[1;37m"
 # define END		"\033[0m"
 
-
 // # define BLACK		"\033[38;5;0m"
 // # define RED		"\033[38;5;160m"
 // # define GREEN		"\033[38;5;40m"
@@ -32,35 +31,22 @@
 // # define MAGENTA	"\033[38;5;99m"
 // # define BLUE		"\033[38;5;31m"
 // # define WHITE	    "\033[38;5;15m"
+// # define END		"\033[1;0m"
 # define ORANGE	    "\033[38;5;208m"
 
 
-# define BCKBLACK	"\033[38;5;41m"
-# define BCKWHITE	"\033[38;5;47m"
+# define BCKYELLOW	    "\033[1;43m"
+# define BCKBLACK	    "\033[38;5;41m"
 
-
-// INFO  : routine
-// ERROR : syscall fail
-// DEBUG : soucis temporaire juste pour différencier output
-
-
-// TODO : change the hierarchy, add better filter
-// exemple :
-
-
-/*
-
-INFO1 : info importante
-INFO2 : moyen
-INFO3 : vraiment peu utile
-
-*/
+# define BOLD       	"\033[1;1m"
+# define BOLD_OFF		"\033[1;21m"
 
 # define INFO 1
 # define LOGERROR 2
 # define REQERROR 3
 # define DEBUG 4
 # define DISCONNECT 5
+# define SELECT 6
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 
@@ -80,6 +66,7 @@ class Logger {
             str = x->logInfo();
             if (!message.empty())
                 str += " | " + message;
+
             switch (type) {
                 case INFO:
                     std::cout << YELLOW << " [INFO]  " << END << str << std::endl;
@@ -105,6 +92,7 @@ class Logger {
 
             std::string timestamp;
             std::cout << ft::getTimestamp();
+
             switch (type) {
                 case INFO:
                     std::cout << YELLOW << " [INFO]  " << END << message << std::endl;
@@ -115,6 +103,8 @@ class Logger {
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << message << std::endl;
                     break ;
+                case SELECT:
+                     std::cout << " " << BCKYELLOW << BOLD << BLACK << message  << END << BOLD_OFF << END  << std::endl;
                 default:
                     break ;
             }

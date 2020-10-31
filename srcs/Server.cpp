@@ -10,20 +10,6 @@ Server::~Server() {}
 
 int Server::start() {
 
-    // for (int j= 0; j < locations.size(); j++)
-    // {
-    //     std::cout << "\nlocation" << j << std::endl;
-	// 	std::cout << locations[j]->uri << std::endl;
-	// 	std::cout << locations[j]->root << std::endl;
-	// 	std::cout << locations[j]->index << std::endl;
-	// 	std::cout << locations[j]->methods << std::endl;
-	// 	std::cout << locations[j]->max_body << std::endl;
-	// 	std::cout << locations[j]->auth << std::endl;
-	// 	std::cout << locations[j]->cgi << std::endl;
-	// 	std::cout << locations[j]->phpcgi << std::endl;
-	// 	std::cout << locations[j]->ext << std::endl;
-    // }
-    
     // ---------- 1) SOCKET ----------
 
     // AF_NET : Protocole TCP/IP with IPV4
@@ -186,9 +172,9 @@ void Server::readClientRequest(Client *c) {
         }
         if (c->recvStatus == Client::BODY) {
             if ((c->req.transferEncoding[0] == "chunked"))
-                c->req.parseChunkedBody(); // TODO : set errors if invalid request format
+                c->req.parseChunkedBody();
             else if (c->req.contentLength > 0)
-                c->req.parseSingleBody(); // TODO : set errors if invalid request format
+                c->req.parseSingleBody();
             else 
                 LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Anormal body"));
             if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > c->req.reqLocation->max_body) {
@@ -243,12 +229,19 @@ void Server::writeClientResponse(Client *c) {
 
 void Server::setClientResponse(Client *c)
 {
-    c->res.control(&c->req, this); // Control (+set) method & authorization
-    c->res.callMethod(&c->req); // Use requested method
 
+    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Request Control"));
+    c->res.control(&c->req, this); // Control (+set) method & authorization
+    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Calling + " + c->req.method + " Function"));
+    c->res.callMethod(&c->req); // Use requested method
+    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set and Format Header"));
     c->res.setHeaders(&c->req); // Set headers
-    c->res.setBody(this); // Set body
-    c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
+
+    if (c->req.method != "HEAD") {
+        NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set Body and Body Headers"));
+        c->res.setBody(c->server); // Set body
+        c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
+    }
     c->res.format(); // Format response
     c->res._sendStatus = Response::SENDING;
     c->res.showRes();
