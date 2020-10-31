@@ -27,7 +27,7 @@ void Response::reset() {
     transfertEncoding.clear();
     wwwAuthenticate.clear();
 
-    resClient = nullptr;
+    // resClient = nullptr; // Segfault on seccond request
     _errorFileName.clear();
     formatedResponse.clear();
     _bytesSent = 0;
@@ -155,7 +155,12 @@ void Response::setHeaders(Request * req)
     // 4) Other headers
     // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
     contentLanguage.clear();
-    contentLocation.clear();            // We don't care
+
+    if (req->method == "PUT")
+        contentLocation[0] = req->file;
+    else
+        contentLocation.clear();            // We don't care
+
     location.clear();                   // Use only with 300 status code
 
     // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
