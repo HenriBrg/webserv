@@ -142,8 +142,9 @@ void Response::execCGI(Request * req) {
         dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement, de façon à ce que le CGI récupère l'informations dans son STDIN
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
+        if (ret == -1)
+            NOCLASSLOGPRINT(LOGERROR, ("Request::execCGI() : execve() returned -1. Error = " + std::string(strerror(errno))));
         exit(ret);
-
     } else {
         waitpid(pid, &status, 0);
         NOCLASSLOGPRINT(DEBUG, "DEBUG AFTER WAITPID - 2");
@@ -151,7 +152,7 @@ void Response::execCGI(Request * req) {
             ret = WEXITSTATUS(status);
             LOGPRINT(INFO, this, ("Request::execCGI() : execve() with CGI has succeed and returned : " + std::to_string(ret)));
         } else {
-            LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has return -1 (failed) - Internal Error 500"));
+            LOGPRINT(LOGERROR, this, ("Request::execCGI() : execve() with CGI has failed an return -1 - Internal Error 500"));
             setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
         close(tubes[SIDE_OUT]);
@@ -163,7 +164,11 @@ void Response::execCGI(Request * req) {
     _didCGIPassed = true;
     utils::strTabFree(args);
     utils::strTabFree(env);
+    
     handleCGIOutput(req->cgiType);
+
+    // LOGPRINT(INFO, this, ("Request::execCGI() : END of execCGI(). _resBody.size() = " + std::to_string(_resBody.size())));
+
     args = env = NULL;
 }
 
@@ -177,8 +182,11 @@ void Response::handleCGIOutput(int cgiType) {
         LOGPRINT(LOGERROR, this, ("Response::handleCGIOutput() : CGI (type : " + std::to_string(cgiType) + ") output doesn't contain <CR><LR><CR><LR> pattern. Invalid CGI. Internal Error"));
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
+
     parseCGIHeadersOutput(cgiType, buffer);
     remove(CGI_OUTPUT_TMPFILE);
+    buffer.clear();
+    _cgiOutputBody.clear();
 
 }
 
@@ -199,7 +207,6 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
         _statusCode = OK_200;
         contentType[0] = "text/html";
     }
-
     headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
     if ((pos = headersSection.find("Status")) != std::string::npos) {
         pos += 8; // After ' '
@@ -215,11 +222,11 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
         if (endLine == std::string::npos) endLine = headersSection.find("\n", pos);
         contentType[0] = headersSection.substr(pos, endLine);
     }
-
     pos = endLine = 0;
     pos = buffer.find("\r\n\r\n") + 4;
-    _cgiOutputBody = buffer.substr(pos);
-    _resBody = _cgiOutputBody;
+    if (pos == std::string::npos)
+        NOCLASSLOGPRINT(LOGERROR, "Anormal ...");
+    _resBody = buffer.substr(pos);
     _resFile.clear();
 
 }

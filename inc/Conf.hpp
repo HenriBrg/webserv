@@ -18,6 +18,8 @@
 # include "Server.hpp"
 
 # define BUFFMAX 512
+# define DEFAULT_CONF_PATH "conf/default.conf"
+
 
 class Conf
 {

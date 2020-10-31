@@ -113,7 +113,7 @@ class Logger {
                     std::cout << YELLOW << " [INFO]  " << END << message << std::endl;
                     break ;
                 case LOGERROR:
-                    std::cout << RED << " [ERROR] " << END << message << std::endl;
+                    std::cerr << RED << " [ERROR] " << END << message << std::endl;
                     break ;
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << message << std::endl;

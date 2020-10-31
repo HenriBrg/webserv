@@ -34,7 +34,6 @@ class Config {
         void    addFd(int fd);
         void    removeFd(int fd);
         void    resetFds();
-        void    init();
         static void    webservShutdown();
         void    showFDSETS();
 

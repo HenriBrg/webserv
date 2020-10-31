@@ -33,8 +33,8 @@ OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 all: $(NAME)
 
 run: all
-	printf "\033c"
-	@./$(NAME) conf/test.conf
+	@printf "\033c"
+	@./$(NAME) conf/default.conf
 
 $(NAME): $(OBJS) $(HEADERS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)

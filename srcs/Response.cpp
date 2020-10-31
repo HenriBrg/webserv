@@ -195,15 +195,12 @@ void Response::setBody(void) {
         }
     }
     _didCGIPassed = false; // ---> Reset somewhere else ?
-    
 
 }
 
 void Response::setBodyHeaders(void)
 {
-    if (!(_resBody.empty()))
-    {
-
+    if (!(_resBody.empty())) {
         if (contentType[0].empty() && !_resFile.empty())
             contentType[0] = responseUtils::getContentType(_resFile);
         lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
@@ -243,7 +240,8 @@ void Response::format(void)
 
 std::string const Response::logInfo(void) {
     std::string ret;
-    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus);
+    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " \
+                                                       + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
     return (ret);
 }
 

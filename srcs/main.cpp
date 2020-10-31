@@ -2,65 +2,60 @@
 
 Config gConfig;
 
+int init(int ac, char **av) {
+
+    std::string configuration;
+
+	if (ac > 2) {
+		std::cout << "Usage: ./webserv <configuration file>" << std::endl;
+		return (-1);
+	} else {
+        if (ac == 1) configuration = DEFAULT_CONF_PATH;
+        else configuration = av[1];
+    }
+    Conf webconf(&configuration[0]);
+	try {
+		webconf.parseConf();
+	} catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+	}
+    gConfig.servers = webconf.getServers();
+    signal(SIGINT, handleCTRLC);
+    return (0);
+}
+
 
 int main(int ac, char **av)
 {
-	if (ac != 2)
-	{
-		std::cout << "Error arguments\n";
-		return (0);
-	}
-
-	Conf    webconf(av[1]);
-	try
-	{
-		webconf.parseConf();
-	}
-	catch (std::exception &e)
-	{
-        std::cerr << e.what() << std::endl;
-	}
-
     Server *s;
 	Client *c;
 
-	gConfig.servers = webconf.getServers();
-    signal(SIGINT, handleCTRLC);
-
+    if (init(ac, av))
+        return (-1);
     while (gConfig.run) {
         gConfig.resetFds();
         NOCLASSLOGPRINT(INFO, ("----- ----- ----- ----- ----- NEW SELECT() CALL ----- ----- ----- ----- -----"));
         gConfig.showFDSETS();
         std::cout << std::endl << std::endl;
-        
         select(gConfig.getMaxFds(), &gConfig.readSet, &gConfig.writeSet, NULL, NULL);
         std::vector<Server*>::iterator its = gConfig.servers.begin();
         for (; its != gConfig.servers.end(); its++) {
             s = *its;
-            if (FD_ISSET(s->sockFd, &gConfig.readSet)) {
-                try {
+            if (FD_ISSET(s->sockFd, &gConfig.readSet))
                     s->acceptNewClient();
-                } catch (std::exception & e) {
-                    std::cerr << e.what() << std::endl;
-                }
-            }
             std::vector<Client*>::iterator itc = s->clients.begin();
             for (; itc != s->clients.end(); itc++) {
                 c = *itc;
-
                 s->handleClientRequest(c);
-
                 if (c->isConnected == false) {
                     delete c;
                     itc = s->clients.erase(itc);
-                    if (s->clients.empty())
-                        break ;
+                    if (s->clients.empty()) break ;
                     else {
                         itc = s->clients.begin();
                         continue ;
                     }
                 }
-
             }
         }
     }

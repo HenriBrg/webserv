@@ -4,23 +4,16 @@ void Response::getReq(Request * req) {
 
 	struct stat	buffer;
 
-    // 1) Client/Server Negotiation
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
 
     // TODO : mettre ça + en amont non ? -----------------------------> à voir avec la team
-    // 2) Check if requested file exist (after having negotiate on it) 
     if (stat(req->file.c_str(), &buffer) == -1) {
         LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
-        
-        // req or this ?
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
-
     }
 
-    // 3) Determine CGI type (no cgi = 0, 42 cgi = 1, php-cgi = 2) and perform it
     req->cgiType = getCGIType(req);
-
     if (req->cgiType) {
         LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
