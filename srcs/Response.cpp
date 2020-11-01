@@ -174,7 +174,7 @@ void Response::setHeaders(Request * req)
     if (_sendStatus != Response::ERROR) {
 
         allow.clear();              // Unless Error 405
-        wwwAuthenticate.clear(); // Unless an authorization was asked ?         --------------> POURQUOI UN CLEAR() SEG FAULT ?
+        wwwAuthenticate.clear();    // Unless an authorization was asked ?         --------------> POURQUOI UN CLEAR() SEG FAULT ?
         retryAfter.clear();         // Quid du status 301
 
     }

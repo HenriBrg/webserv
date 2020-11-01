@@ -164,6 +164,7 @@ void Server::readClientRequest(Client *c) {
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
+                // recv 2 eme fois
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 // TODO : We should find a way to avoid buffer dupllication for optimization
                 c->req.reqBuf = std::string(c->buf); 

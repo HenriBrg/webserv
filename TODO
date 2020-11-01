@@ -12,16 +12,14 @@ CONFIG :
 
 CGI :
 
-    - POST
+    - POST avec cgi
 
 REQ/RES :
 
     - Gérer autoindex
-    - Gérer le fichier erreur + remplacement variable
-    - Gérer le matching fichier par content-language : index.html.fr
     - retry-after, check les headers non utilsés et voir si normal ou pas
-    - gérer max file descriptor
-    - Parsing des headers en plusieurs recv() à gérer (telnet, netcat) --> optionnel, un peu useless au fond
+    - gérer max file descriptor --> 503 retry after
+    - Parsing des headers en plusieurs recv() à gérer (telnet, netcat)
     - response en chunked
     - max longueur uriQueries (255 je crois)
 
