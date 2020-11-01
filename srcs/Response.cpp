@@ -17,6 +17,7 @@ void Response::reset() {
     reason.clear();
     allow.clear();
     contentLanguage.clear();
+    _isLanguageNegociated = false;
     contentLocation.clear();
     contentType.clear();
     lastModified.clear();
@@ -98,6 +99,15 @@ void Response::methodControl(Request * req, Server * serv)
         _methodFctPtr = serv->methodsTab[req->method];
 }
 
+void Response::versionControl(Request *req)
+{
+    if (req->httpVersion.size() < 8
+    || req->httpVersion.substr(0, 5) != "HTTP/")
+        setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+    else if (req->httpVersion.at(5) != '1')
+        setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
+}
+
 void Response::resourceControl(Request * req)
 {
     struct stat fileStat;
@@ -108,11 +118,15 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     }
-    else if (req->method != "PUT")
+    else if (req->method == "PUT")
+    {
+        if (req->resource.back() == '/')
+            setErrorParameters(Response::ERROR, CONFLICT_409); 
+    }
+    else
     {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
-        
     }
     if (retStat == -1)
         NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
@@ -121,16 +135,21 @@ void Response::resourceControl(Request * req)
 void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
-    resourceControl(req);
+    
+    if (_sendStatus != Response::ERROR)
+        versionControl(req);
+    if (_sendStatus != Response::ERROR)
+        resourceControl(req);
+    if (_sendStatus != Response::ERROR)
+        methodControl(req, serv);
+    if (_sendStatus != Response::ERROR)
+        authControl(req);
 
-    if (_sendStatus == Response::ERROR)
-        return ;
-    methodControl(req, serv);
-    authControl(req);
+
+
     // ... TODO : Additionnal controls
-        // 1) check http version 
-        // 2) if empty headers meaningfull
-        // 3) max size of uri queries
+        // 1) if empty headers meaningfull
+        // 2) max size of uri queries
 }
 
 void Response::callMethod(Request * req)
@@ -163,7 +182,13 @@ void Response::setHeaders(Request * req)
 
     // 4) Other headers
     // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
+    // if (_isLanguageNegociated)
+    //     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
+    
     contentLanguage.clear();
+
+
+
 
     if (req->method == "PUT")
         contentLocation[0] = req->file;
@@ -185,13 +210,13 @@ void Response::setHeaders(Request * req)
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 
-void Response::setBody(const Server *server) {
+void Response::setBody(const Request *req, const Server *server) {
 
     if (_didCGIPassed == true) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    if (!(_resFile.empty()))
+    if (req->method != "HEAD" && !(_resFile.empty()))
     {
         char fileBuf[4096];
         int fileFd(0);
