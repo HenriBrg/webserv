@@ -123,9 +123,8 @@ void Response::execCGI(Request * req) {
         LOGPRINT(LOGERROR, this, ("Request::execCGI() : open(./www/tmpFile) failed - Internal Error 500"));
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
-    LOGPRINT(INFO, this, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
+    NOCLASSLOGPRINT(INFO, ("Request::execCGI() : We will fork and perform the cgi, with execve() receiving args[0] = " + std::string(args[0]) + " and args[1] = " + std::string(args[1])));
     pipe(tubes);
-    // We write BODY in pipe[1] so that the cgi process can read that body in its pipe[0], and we close it juste after
     if (req->method == "GET")
         close(tubes[SIDE_IN]); // Si GET, on aura jamais besoin d'écrire dans le fils, donc on close maintenant
     if ((pid = fork()) == 0) {
@@ -167,7 +166,6 @@ void Response::handleCGIOutput(int cgiType) {
         LOGPRINT(LOGERROR, this, ("Response::handleCGIOutput() : CGI (type : " + std::to_string(cgiType) + ") output doesn't contain <CR><LR><CR><LR> pattern. Invalid CGI. Internal Error"));
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
-
     parseCGIHeadersOutput(cgiType, buffer);
     remove(CGI_OUTPUT_TMPFILE);
     buffer.clear();
@@ -184,11 +182,9 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
     std::string value;
     std::string headersSection;
 
-    if (cgiType == PHP_CGI) {
-        // TODO : tester le php-cgi hors de webserv puis revenir ici
-        _statusCode = OK_200;
-        contentType[0] = "text/html";
-    }
+    if (cgiType == PHP_CGI)
+        _statusCode = OK_200; // ---> How retrieve php-cgi success code ? Not present in the output
+        // contentType[0] = "text/html";
     headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
     if ((pos = headersSection.find("Status")) != std::string::npos) {
         pos += 8; // After ' '
@@ -207,7 +203,7 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
     pos = endLine = 0;
     pos = buffer.find("\r\n\r\n") + 4;
     if (pos == std::string::npos)
-        NOCLASSLOGPRINT(LOGERROR, "Anormal ...");
+        return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
     _resBody = buffer.substr(pos);
     _resFile.clear();
 

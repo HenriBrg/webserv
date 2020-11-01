@@ -2,13 +2,14 @@ Actualisée au 31/10/2020 :
 
 CONFIG :
 
-    - Gérer les cas d'erreurs dans la configuration
+    - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
     - Ajouter l'autoindex on/off dans chaque location
     - test differentes config
         -> segfault si le path root est érroné -> à check dans config plutôt que dans le serveur non ?
         ->
     - une ligne de log par serveur après parsing config ?
     - erreur si aucune methode présente ?
+    - check cohérence avec les guidelines de correction
 
 CGI :
 

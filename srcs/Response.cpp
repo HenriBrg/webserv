@@ -199,14 +199,14 @@ void Response::setBody(const Server *server) {
 
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
-                NOCLASSLOGPRINT(DEBUG, "READING");
+                // NOCLASSLOGPRINT(DEBUG, "READING");
 
                 // TODO : Ajouter gestion d'erreur
                 fileBuf[retRead] = '\0';
                 _resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
             }
-            NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
-            NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
+            // NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
+            // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
 
             close(fileFd);
         }

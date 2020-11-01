@@ -1,41 +1,90 @@
 # include "../inc/Webserv.hpp"
 
+/*
+**  GET Request handler 
+**  1. Negotiate Accept-Language and Accept-Charset
+**  2. We check if the requested file exist
+**  3. We call the CGI defined it the location if the requested file extension match the "ext" location paremeter
+**      3.1. We parse its output
+**
+*/
+
 void Response::getReq(Request * req) {
 
 	struct stat	buffer;
 
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
-    NOCLASSLOGPRINT(INFO, "Language and Charset negotiation done");
+    NOCLASSLOGPRINT(INFO, "GET - Language and Charset negotiation done");
 
+    bzero(&buffer, sizeof(buffer));
     if (stat(req->file.c_str(), &buffer) == -1) {
-        LOGPRINT(INFO, this, ("Response::getReq() : The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
+        LOGPRINT(INFO, this, ("Response::getReq() : GET - The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
 
-    req->cgiType = getCGIType(req);
+    req->cgiType = getCGIType(req); // ---------------> S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
     if (req->cgiType) {
-        LOGPRINT(INFO, req, ("Response::getReq() : One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
+        LOGPRINT(INFO, req, ("Response::getReq() : GET - One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
-        LOGPRINT(INFO, this, ("Response::getReq() : CGI has been performed !"));
+        LOGPRINT(INFO, this, ("Response::getReq() : GET - CGI has been performed !"));
     } else {
-        LOGPRINT(INFO, this, ("Response::getReq() : No CGI required for this GET request, we handle the response by ourselve"));
+        LOGPRINT(INFO, this, ("Response::getReq() : GET - No CGI required for this GET request, we handle the response by ourselve"));
         _resFile = req->file;
         _statusCode = OK_200;
         lastModified = ft::getLastModifDate(_resFile);
     }
 }
 
+/*
+**  HEAD Request handler
+**  It's a simple GET, except that we will cut the body when formating the response
+**  CF. GET
+*/
+
 void Response::headReq(Request * req) {
     getReq(req);
 }
 
+
+/*
+**  POST Request handler
+**  1. We call the CGI defined it the location if the requested file extension match the "ext" location paremeter
+**  
+**
+**  2. Else, we handle by ourselve the POST request. We check if the requested file exist
+**  3. If yes, the request will edit the file, else it create the file, both with the body given by the client
+**  4. We then return a short message to the client
+*/
+
 void Response::postReq(Request * req) {
-    
-    getReq(req);
+
+    int fd = -1;
+	struct stat	buffer;
+    int action = 0;
+
+    if (getCGIType(req) == NO_CGI) {
+        if (stat(req->file.c_str(), &buffer) == -1) {
+            action = CREATE;
+            LOGPRINT(INFO, this, ("Response::postReq() : POST - stat(" + req->file + ") has returned -1 meaning that the resource doesn't exist, thus, we create it."));
+        } else {
+            action = UPDATE;
+            LOGPRINT(INFO, this, ("Response::postReq() : POST - stat(" + req->file + ") succeed, meaning that the resource already exist, thus, we update it."));
+        }
+        if ((fd = open(req->file.c_str(), (action == CREATE ? O_CREAT : O_APPEND) | O_WRONLY, 0666)) == -1) {
+            LOGPRINT(INFO, this, ("Response::postReq() : POST - Could not open the file (" + req->file + "), open() has returned -1 on it. "));
+            return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
+        }
+        write(fd, _resBody.c_str(), _resBody.size());
+        close(fd);
+        _statusCode = action == CREATE ? CREATED_201 : OK_200;
+        _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
+        LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
+    } else if (getCGIType(req) >= 1) {
+        // TODO
+    }
 
 }
-
 
 void Response::putReq(Request * req)
 {

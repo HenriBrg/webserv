@@ -232,7 +232,7 @@ void Server::setClientResponse(Client *c)
 
     NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Request Control"));
     c->res.control(&c->req, this); // Control (+set) method & authorization
-    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Calling + " + c->req.method + " Function"));
+    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Calling " + c->req.method + " Handler"));
     c->res.callMethod(&c->req); // Use requested method
     NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set and Format Header"));
     c->res.setHeaders(&c->req); // Set headers
