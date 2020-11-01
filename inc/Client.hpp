@@ -61,10 +61,7 @@ class Client {
         Response    res;
 
         pid_t       cgipid;
-        int         cgiWriteFd;
-        int         cgiReadFd;
-
-
+        
         Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
         virtual ~Client();
         void reset();

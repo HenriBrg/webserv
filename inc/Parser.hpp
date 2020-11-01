@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CONF_HPP
-# define CONF_HPP
+#ifndef PARSER_HPP
+# define PARSER_HPP
 
 # include "Webserv.hpp"
 # include <exception>

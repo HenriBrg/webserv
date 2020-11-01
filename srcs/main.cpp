@@ -24,9 +24,8 @@ int init(int ac, char **av) {
     return (0);
 }
 
-
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
+    
     Server *s;
 	Client *c;
 

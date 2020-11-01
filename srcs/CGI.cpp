@@ -15,11 +15,6 @@ void showCGIEnv(std::map<std::string, std::string> & envmap) {
 
 }
 
-// https://perso.liris.cnrs.fr/lionel.medini/enseignement/M1IF03/Tutoriels/Tutoriel_CGI_SSI.pdf
-// https://fr.wikipedia.org/wiki/Variables_d%27environnement_CGI
-// https://computer.howstuffworks.com/cgi3.htm
-// The line "Content-type: text/html\n\n" is special piece of text that must be the first thing sent to the browser by any CGI script
-
 char ** Response::buildCGIEnv(Request * req) {
 
     char **env;
@@ -29,7 +24,6 @@ char ** Response::buildCGIEnv(Request * req) {
     std::map<std::string, std::string> hdmap;
 
     /* 1) CGI INFORMATIONS */
-
     envmap["GATEWAY_INTERFACE"]   = "CGI/1.1";        // CGI Version
 	envmap["SERVER_PROTOCOL"]     = "HTTP/1.1";       // Protocole
 	envmap["SERVER_SOFTWARE"]     = "webserv";        // Serveur
@@ -56,7 +50,8 @@ char ** Response::buildCGIEnv(Request * req) {
             envmap["REMOTE_USER"] = req->authorization.substr(pos + 1); // TODO : décoder ou non ?idTODO : décoder ou non ?
         }
 	}
-    if (req->cgiType == PHP_CGI) envmap["REDIRECT_STATUS"] = "200"; // For PHP-CGI ... Idk why
+    if (req->cgiType == PHP_CGI)
+        envmap["REDIRECT_STATUS"] = "200";
 
     /* 2) REQUEST HEADERS PASSED TO CGI */
     /* Toutes les variables qui sont envoyées par le client sont aussi passées au script CGI, après que le serveur a rajouté le préfixe « HTTP_ » */
@@ -137,6 +132,7 @@ void Response::execCGI(Request * req) {
     } else {
         if (req->method == "POST") {
             write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+            // TODO : check ereurs
             close(tubes[SIDE_IN]);
         }
         waitpid(pid, &status, 0);
@@ -177,17 +173,15 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
 
     size_t pos;
     size_t endLine;
-
     std::string key;
     std::string value;
     std::string headersSection;
 
     if (cgiType == PHP_CGI)
-        _statusCode = OK_200; // ---> How retrieve php-cgi success code ? Not present in the output
-        // contentType[0] = "text/html";
+        _statusCode = OK_200;
     headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
     if ((pos = headersSection.find("Status")) != std::string::npos) {
-        pos += 8; // After ' '
+        pos += 8;
         endLine = headersSection.find("\r", pos);
         if (endLine == std::string::npos) endLine = headersSection.find("\n", pos);
         _statusCode = std::stoi(headersSection.substr(pos, endLine));
@@ -195,15 +189,14 @@ void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
     pos = headersSection.find("Content-Type");
     if (pos == std::string::npos) pos = headersSection.find("Content-type");
     if (pos != std::string::npos) {
-        pos += 14; // After ': ' 
+        pos += 14;
         endLine = headersSection.find("\r", pos);
         if (endLine == std::string::npos) endLine = headersSection.find("\n", pos);
         contentType[0] = headersSection.substr(pos, endLine);
     }
     pos = endLine = 0;
     pos = buffer.find("\r\n\r\n") + 4;
-    if (pos == std::string::npos)
-        return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
+    if (pos == std::string::npos) return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
     _resBody = buffer.substr(pos);
     _resFile.clear();
 

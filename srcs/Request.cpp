@@ -4,8 +4,6 @@ Request::Request(void) {
     reset();
 }
 
-// Keep Track after (no)successfull served response ?
-
 Request::~Request() {
     reset();
 }
@@ -94,6 +92,8 @@ int Request::parseRequestLine() {
     method      = tab[0];
     uri         = tab[1];
     httpVersion = tab[2];
+    if (httpVersion != "HTTP/1.1")
+        client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
     return (0);
 }
 
@@ -103,7 +103,7 @@ int Request::parseRequestLine() {
 
 void Request::parseUriQueries() {
 
-    // TODO : gérer les failles de sécurités liées aux paramètres d'URL
+    // TODO : gérer les failles de sécurités liées aux paramètres d'URL, injection js ...
 
     int i = 0;
     std::string tmp = uri;
@@ -114,6 +114,8 @@ void Request::parseUriQueries() {
         uriQueries = uri.substr(i + 1, tmp.size());
         uri = tmp.substr(0, i);
     }
+    if (uriQueries.size() > 1024 && client != nullptr)
+        client->res.setErrorParameters(Response::ERROR, REQUEST_URI_TOO_LONG_414);
 }
 
 
@@ -157,6 +159,15 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 }
 
+/*
+** We assign location
+** If location doesn't end with '/', we add it
+** 
+** We check if the uri refers to a directory.
+** If so, we check if autoindex is on, else, we refers to the index parameter of the location
+
+*/
+
 void Request::parseFile(std::vector<Location*> locations)
 {
     std::string tmpFile;
@@ -173,8 +184,6 @@ void Request::parseFile(std::vector<Location*> locations)
             file = reqLocation->root + file;
         else
             file = reqLocation->root + "/" + file;
-        // Here, we check if the uri refers to a directory.
-        // If so, we check if autoindex is on, else, we refers to the index parameter of the location
        resource = file;
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
             // TODO WHEN PARSER READY
@@ -190,8 +199,9 @@ void Request::parseFile(std::vector<Location*> locations)
 
 }
 
-// TODO : case insensitive string comparaison to handle multiple client type
-/* Functions for filling headers value(s) into corresponding variables */
+/*
+** Functions for filling headers value(s) into corresponding variables
+*/
 
 void Request::fillHeader(std::string const key, std::string const value)
 {
@@ -203,9 +213,12 @@ void Request::fillHeader(std::string const key, std::string const value)
         fillUniqueValHeaders(key, value);
 }
 
-// If the variable can have multiple values => map is used to stored them
-// Map key is index after split and map value is request value
-// Example => Content-Language: de-DE, en-CA
+/*
+** If the variable can have multiple values => map is used to stored them
+** Map key is index after split and map value is request value
+** Example => Content-Language: de-DE, en-CA
+*/
+
 void Request::fillMultiValHeaders(std::string const key, std::string const value)
 {
     std::vector<std::string> multiValues = ft::split(value, ',');
@@ -249,31 +262,18 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
     }
 }
 
-// If the variable can only have one value => value is set in corresponding std::string variable
-void Request::fillUniqueValHeaders(std::string const key, std::string const value)
-{
-    if (key == "Keep-Alive")
-        keepAlive = value;
-    else if (key == "Content-Length")
-        contentLength = std::stoi(value);
-    // else if (key == "Content-Location")
-    //     contentLocation = value;
-    else if (key == "Content-Type" || key == "Content-type")
-        contentType = value;
-    else if (key == "Authorization")
-        authorization = value;
-    else if (key == "Date")
-        date = value;
-    else if (key == "Host")
-        host = value;
-    else if (key == "Referer")
-        referer = value;
-    else if (key == "User-Agent")
-        userAgent = value;
+void Request::fillUniqueValHeaders(std::string const key, std::string const value)  {
+
+    if (key == "Keep-Alive") keepAlive = value;
+    else if (key == "Content-Length") contentLength = std::stoi(value);
+    else if (key == "Content-Type" || key == "Content-type") contentType = value;
+    else if (key == "Authorization") authorization = value;
+    else if (key == "Date") date = value;
+    else if (key == "Host") host = value;
+    else if (key == "Referer") referer = value;
+    else if (key == "User-Agent") userAgent = value;
+
 }
-
-
-
 
 void Request::parseHeaders() {
 
@@ -290,12 +290,10 @@ void Request::parseHeaders() {
         key = ft::trim(line.substr(0, pos));
         utils::deleteCarriageReturn(key);
         if (key.empty())
-            continue ; // Continue or break ? Or error 4XX
+            continue ; // TODO : continue or break ? Or error 4XX
         value = ft::trim(line.substr(pos + 1));
-        
         // if (value.empty())
         // Continue or break ? Or error 4XX
-
         utils::deleteCarriageReturn(value);
         fillHeader(key, value);
     }
@@ -385,28 +383,29 @@ void Request::parseSingleBody() {
 
 }
 
+/*
+**  Vérification de l'existence d'un body
+**  1. Si contentLength > 0 ou transferEncoding[0] == "chunked", un body est présent
+**  2. Si oui, on récupère toute la requête après le \r\n\r\n
+**  3. Sinon, la requête est considérée comme complètement reçue / parsée.
+*/
+
 void Request::checkBody() {
 
     size_t bodyOffset;
 
-    // A priori, le seul encoding à gérer pour webserv est le "chunked", mais à confirmer !
-    // TODO : si plusieurs encoding, itérer dessus pour matcher "chunked", du moins retourner erreur si gzpi, deflate, car on gèrera pas à priori
     if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
-        } else
-            LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
+        } else LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         _reqBody = std::string(client->buf);
         bodyOffset = _reqBody.find("\r\n\r\n");
         _reqBody.erase(0, bodyOffset + 4);
-        // Headers already parsed from that point, next body will be read within client->buf and appened in parseChunkedBody() or parseSingleBody()
         memset(client->buf, 0, BUFMAX + 1);
     } else
         client->recvStatus = Client::COMPLETE;
 }
-
-// TODO : Parsing Chunked
 
 void Request::parse(std::vector<Location*> locations) {
 
@@ -418,7 +417,9 @@ void Request::parse(std::vector<Location*> locations) {
     reqBuf.clear(); 
 }
 
-// UTILS
+/* **************************************************** */
+/*                        LOGGER                        */
+/* **************************************************** */
 
 std::string const Request::logInfo(void) {
     std::string ret;
@@ -430,7 +431,6 @@ std::string const Request::logInfo(void) {
 void Request::showReq(void) {
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
-
     std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
     std::cout << std::endl << std::endl;
     std::cout << "    ~ Global \n\n";
@@ -439,8 +439,6 @@ void Request::showReq(void) {
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
     std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
     showFullHeadersReq();
-    
-
     std::cout << std::endl;
     std::cout << GREEN << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
@@ -449,43 +447,27 @@ void Request::showReq(void) {
 void Request::showFullHeadersReq(void) {
 
     std::string indent("    > ");
- 
     std::cout << std::endl;
     std::cout << "    ~ Details";
-
-    std::cout << std::endl;
-    std::cout << std::endl;
-
+    std::cout << std::endl << std::endl;
     utils::displayHeaderMultiMap(acceptCharset, (indent + "Accept-Charset"));
     utils::displayHeaderMultiMap(acceptLanguage, (indent + "Accept-Language"));
     utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
     utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
 
-
-    if (!uriQueries.empty())
-       std::cout << indent << "Queries : " << uriQueries << std::endl;
-    if (!authorization.empty())
-        std::cout << indent << "Authorization : " << authorization << std::endl;
-    if (!contentLocation.empty())
-        std::cout << indent << "Content-Location : " << contentLocation << std::endl;
-    if (!contentType.empty())
-        std::cout << indent << "Content-Type : " << contentType << std::endl;
-    if (!date.empty())
-        std::cout << indent << "Date : " << date << std::endl;
-    if (!host.empty())
-        std::cout << indent << "Host : " << host << std::endl;
-    if (!referer.empty())
-        std::cout << indent << "Referer : " << referer << std::endl;
-    if (!userAgent.empty())
-        std::cout << indent << "User-Agent : " << userAgent << std::endl;
-    if (!keepAlive.empty())
-        std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
+    if (!uriQueries.empty())        std::cout << indent << "Queries : " << uriQueries << std::endl;
+    if (!authorization.empty())     std::cout << indent << "Authorization : " << authorization << std::endl;
+    if (!contentLocation.empty())   std::cout << indent << "Content-Location : " << contentLocation << std::endl;
+    if (!contentType.empty())       std::cout << indent << "Content-Type : " << contentType << std::endl;
+    if (!date.empty())              std::cout << indent << "Date : " << date << std::endl;
+    if (!host.empty())              std::cout << indent << "Host : " << host << std::endl;
+    if (!referer.empty())           std::cout << indent << "Referer : " << referer << std::endl;
+    if (!userAgent.empty())         std::cout << indent << "User-Agent : " << userAgent << std::endl;
+    if (!keepAlive.empty())         std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
     
     std::cout << std::endl;
-
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     std::cout << indent << "_currentParsedReqBodyLength = " << std::to_string(_currentParsedReqBodyLength) << std::endl;
-
     std::cout << indent << "Body : " << _reqBody << std::endl;
 
 }

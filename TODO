@@ -1,38 +1,32 @@
-Actualisée au 31/10/2020 :
+Actualisée au 02/11/2020 :
 
-CONFIG :
+En cours :
+
+    - POST & CGI
+    - Autoindex
+    - uriQueries 255
+    - Testeur rapide
+
+    - Éjection du client
+    - Retry After
+    - Check des headers non utillisés jusqu'ici (review global la fonction setHeaders du coup)
+    - Max de FD
+    - Parsing des headers en plusieurs recv
+
+À répartir :
 
     - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
     - Ajouter l'autoindex on/off dans chaque location
-    - test differentes config
-        -> segfault si le path root est érroné -> à check dans config plutôt que dans le serveur non ?
-        ->
-    - une ligne de log par serveur après parsing config ?
-    - erreur si aucune methode présente ?
-    - check cohérence avec les guidelines de correction
-
-CGI :
-
-    - POST
-
-REQ/RES :
-
-    - Gérer autoindex
-    - Gérer le fichier erreur + remplacement variable
-    - Gérer le matching fichier par content-language : index.html.fr
-    - retry-after, check les headers non utilsés et voir si normal ou pas
-    - gérer max file descriptor
-    - Parsing des headers en plusieurs recv() à gérer (telnet, netcat) --> optionnel, un peu useless au fond
-    - response en chunked
-    - max longueur uriQueries (255 je crois)
-
-GLOBAL :
-
+    - Log après parsing ?
+    - Erreur si aucune methode présente
+    - Voir les guidelines de correction liée à la config
+    - Response en chunked
     - Testeur Shell ou Python
     - Leaks mémoire / socket
     - S'assurer de bien tout reset entre chaque requête, si un même client fait plusieurs requêtes (sauf certaines var)
-    - Ejecter le client au bout d'une minute ?
+    - Commentaire rapide sur toutes les fonctions --> à voir
+    - Parsing des headers en case insensitive ?
 
-Tous les TODO en commentaire visible via :
+Tous les TODO au sein des fichiers :
 
     - grep -rin TODO  srcs/*.cpp

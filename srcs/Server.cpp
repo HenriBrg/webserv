@@ -109,6 +109,7 @@ int Server::start() {
     _errorStatus[UNAUTHORIZED_401] = "401 UNAUTHORIZED";
     _errorStatus[NOT_FOUND_404] = "404 NOT FOUND";
     _errorStatus[METHOD_NOT_ALLOWED_405] = "405 METHOD NOT ALLOWED";
+    _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 URI TOO LONG";
     _errorStatus[CONFLICT_409] = "409 CONFLICT";
     _errorStatus[REQUEST_ENTITY_TOO_LARGE_413] = "413 REQUEST ENTITY TOO LARGE";
     _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 BAD RESQUEST";
@@ -284,7 +285,9 @@ void Server::handleClientRequest(Client *c) {
 }
 
 
-/*  -----------------------------------  LOGGER & EXCEPTIONS ---------------------------------------------------- */
+/* **************************************************** */
+/*                  LOGGER & EXCEPTIONS                 */
+/* **************************************************** */
 
 std::string const Server::logInfo(void) {
     std::string ret;

@@ -23,7 +23,7 @@ void Response::getReq(Request * req) {
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
 
-    req->cgiType = getCGIType(req); // ---------------> S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
+    req->cgiType = getCGIType(req); // ---------------> TODO : S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
     if (req->cgiType) {
         LOGPRINT(INFO, req, ("Response::getReq() : GET - One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
@@ -51,10 +51,8 @@ void Response::headReq(Request * req) {
 **  POST Request handler
 **  1. We call the CGI defined it the location if the requested file extension match the "ext" location paremeter
 **  
-**
 **  2. Else, we handle by ourselve the POST request. We check if the requested file exist
 **  3. If yes, the request will edit the file, else it create the file, both with the body given by the client
-**  4. We then return a short message to the client
 */
 
 void Response::postReq(Request * req) {
@@ -63,7 +61,11 @@ void Response::postReq(Request * req) {
 	struct stat	buffer;
     int action = 0;
 
-    if (getCGIType(req) == NO_CGI) {
+    req->cgiType = getCGIType(req);
+     if (req->cgiType == TESTER_CGI || req->cgiType == PHP_CGI) {
+
+
+    } else if (req->cgiType == NO_CGI) {
         if (stat(req->file.c_str(), &buffer) == -1) {
             action = CREATE;
             LOGPRINT(INFO, this, ("Response::postReq() : POST - stat(" + req->file + ") has returned -1 meaning that the resource doesn't exist, thus, we create it."));
@@ -78,11 +80,11 @@ void Response::postReq(Request * req) {
         write(fd, _resBody.c_str(), _resBody.size());
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
-        _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
+        _resBody.clear(); // --> à confirmer
+        // _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
+        lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
-    } else if (getCGIType(req) >= 1) {
-        // TODO
-    }
+    } 
 
 }
 

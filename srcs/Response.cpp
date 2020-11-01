@@ -113,34 +113,25 @@ void Response::resourceControl(Request * req)
         NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
 }
 
-void Response::control(Request * req, Server * serv)
-{
-    // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
+void Response::control(Request * req, Server * serv) {
     resourceControl(req);
-
-    if (_sendStatus == Response::ERROR)
-        return ;
+    if (_sendStatus == Response::ERROR) return ;
     methodControl(req, serv);
     authControl(req);
-    // ... TODO : Additionnal controls
-        // 1) check http version 
-        // 2) if empty headers meaningfull
-        // 3) max size of uri queries
+    // -> Error if there is empty headers which are mandatory
 }
 
-void Response::callMethod(Request * req)
-{
+void Response::callMethod(Request * req) {
     if (_sendStatus != Response::ERROR)
         (this->*_methodFctPtr)(req);
 }
 
-void Response::setHeaders(Request * req)
-{
+void Response::setHeaders(Request * req) {
+
     // 1) Status Line
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(_statusCode);
-    if (_statusCode == -1)
-        _statusCode = INTERNAL_ERROR_500;
+    if (_statusCode == -1) _statusCode = INTERNAL_ERROR_500;
     
     // 2) Basic headers
     date = ft::getDate();
@@ -149,29 +140,27 @@ void Response::setHeaders(Request * req)
     // 3) Error headers
     // Ok ---> Donc ici en fait on aura tous les hd qui auront pu être rempli au cours du traitement si erreur il y a 
     if (_sendStatus != Response::ERROR) {
-
         allow.clear();              // Unless Error 405
-        wwwAuthenticate.clear(); // Unless an authorization was asked ?         --------------> POURQUOI UN CLEAR() SEG FAULT ?
+        wwwAuthenticate.clear();
         retryAfter.clear();         // Quid du status 301
-
     }
 
+    if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
+
     // 4) Other headers
-    // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
+    // contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte
     contentLanguage.clear();
 
-    if (req->method == "PUT")
-        contentLocation[0] = req->file;
-    else
-        contentLocation.clear();            // We don't care
+    if (req->method == "PUT") contentLocation[0] = req->file;
+    else contentLocation.clear();
 
-    location.clear();                   // Use only with 300 status code
+    if (_statusCode == CREATED_201) location = req->uri;
+    else location.clear();
 
-    // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
-    transfertEncoding.clear();
     // TODO : à confirmer mais le fait de recevoir un body chunked n'implique en rien de répondre avec un body chunked
     // if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
     //     transfertEncoding[0] = "chunked";
+    transfertEncoding.clear();
 
     // 5) Body headers cleared in case of no body in response
     if (contentType.empty()) // We set it in CGI
@@ -228,8 +217,7 @@ void Response::setBodyHeaders(void)
 }
 
 
-void Response::format(void)
-{
+void Response::format(void) {
 
     formatedResponse.clear();
     // 1) Status Line
@@ -251,23 +239,25 @@ void Response::format(void)
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
     // QUID de www-authenticate ?
     formatedResponse.append("\r\n");
-    if (contentLength > 0)
-        formatedResponse.append(_resBody);
+    if (contentLength > 0) formatedResponse.append(_resBody);
+
 }
 
-/*  -----------------------------------  LOGGER ---------------------------------------------------- */
+/* **************************************************** */
+/*                        LOGGER                        */
+/* **************************************************** */
 
 std::string const Response::logInfo(void) {
+
     std::string ret;
-    if (resClient == NULL)
-        return "LOG WOULD SEGFAULT - We dont print it";
-    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " \
-                                                       + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
+    if (resClient == NULL) return "LOG WOULD SEGFAULT - We dont print it";
+    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
     return (ret);
+
 }
 
-
 void Response::showRes(void) {
+
     std::string indent("    > ");
     std::cout << std::endl << std::endl;
     std::cout << ORANGE << "    RESPONSE THAT WILL BE SENT ----------------" << END;
@@ -280,14 +270,12 @@ void Response::showRes(void) {
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
+
 }
-
-
 
 void Response::showFullHeadersRes(void) {
 
     std::string indent("    > ");
- 
     std::cout << std::endl;
     std::cout << "    ~ Details";
     std::cout << std::endl;
@@ -296,21 +284,14 @@ void Response::showFullHeadersRes(void) {
     utils::displayHeaderMap(contentType, (indent + "Content-Type"));
     utils::displayHeaderMap(wwwAuthenticate, (indent + "WWW-Authenticate"));
     utils::displayHeaderMap(transfertEncoding, (indent + "Transfer-Encoding"));
-    if (!lastModified.empty())
-        std::cout << indent << "Last-Modified : " << lastModified << std::endl;
-    if (!location.empty())
-        std::cout << indent << "Location : " << location << std::endl;
-    if (!date.empty())
-        std::cout << indent << "Date : " << date << std::endl;
-    if (!retryAfter.empty())
-        std::cout << indent << "Retry-After: " << retryAfter << std::endl;
-    if (!server.empty())
-        std::cout << indent << "Server : " << server << std::endl;
+    if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
+    if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
+    if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;
+    if (!retryAfter.empty())    std::cout << indent << "Retry-After: " << retryAfter << std::endl;
+    if (!server.empty())        std::cout << indent << "Server : " << server << std::endl;
     std::cout << std::endl;
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
-    if (!_errorFileName.empty())
-        std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
-    if (!_resFile.empty())
-        std::cout << indent << "_resFile : " << _resFile << std::endl;
+    if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
+    if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
 
 }

@@ -11,6 +11,8 @@
 
 # include "Server.hpp"
 
+# define MAX_QUERIES_STRING 1024
+
 class Client;
 
 /* 
