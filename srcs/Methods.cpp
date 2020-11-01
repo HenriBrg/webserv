@@ -44,6 +44,7 @@ void Response::getReq(Request * req) {
 
 void Response::headReq(Request * req) {
     getReq(req);
+    _resFile.clear();
 }
 
 
@@ -93,11 +94,7 @@ void Response::putReq(Request * req)
     bool isCreated(true);
 
     if (stat(req->resource.c_str(), &fileStat) == 0)
-    {
-        if (S_ISDIR(fileStat.st_mode))
-            return (setErrorParameters(Response::ERROR, CONFLICT_409));
         isCreated = false;
-    }
     if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0600)) != -1)
     {
         if (write(fileFd, req->_reqBody.c_str(), req->_reqBody.size()) != -1)
@@ -182,6 +179,7 @@ void Response::negotiateAcceptLanguage(Request * req)
         if (stat(path.c_str(), &fileStat) == -1)
             continue;
         req->file = path;
+        _isLanguageNegociated = true;
         return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
@@ -198,7 +196,11 @@ void Response::negotiateAcceptCharset(Request * req)
     for (; it != ite; it++)
     {
         if ((*it).second == "utf-8" || (*it).second == "*")
+        {
+            if ((*it).first == 0) // Set as unacceptable // TO DO: Add representation with utf-8 in respoonse
+                setErrorParameters(Response::ERROR, NOT_ACCEPTABLE_406);
             return ;
+        }
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
     //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
