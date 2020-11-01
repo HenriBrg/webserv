@@ -17,6 +17,7 @@ void Response::reset() {
     reason.clear();
     allow.clear();
     contentLanguage.clear();
+    _isLanguageNegociated = false;
     contentLocation.clear();
     contentType.clear();
     lastModified.clear();
@@ -96,6 +97,15 @@ void Response::methodControl(Request * req, Server * serv)
         _methodFctPtr = serv->methodsTab[req->method];
 }
 
+void Response::versionControl(Request *req)
+{
+    if (req->httpVersion.size() < 8
+    || req->httpVersion.substr(0, 5) != "HTTP/")
+        setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+    else if (req->httpVersion.at(5) != '1')
+        setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
+}
+
 void Response::resourceControl(Request * req)
 {
     struct stat fileStat;
@@ -105,7 +115,17 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     }
-    else if (req->method != "PUT") { // POST aussi non ?
+    else if (req->method == "PUT" || req->method == "POST")
+    {
+        if (req->resource.back() == '/')
+            setErrorParameters(Response::ERROR, CONFLICT_409);
+         if (req->method == "POST" && req->isolateFileName.empty()) {
+            LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
+            setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+        }
+    }
+    else
+    {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
@@ -114,11 +134,17 @@ void Response::resourceControl(Request * req)
 }
 
 void Response::control(Request * req, Server * serv) {
-    resourceControl(req);
-    if (_sendStatus == Response::ERROR) return ;
-    methodControl(req, serv);
-    authControl(req);
-    // -> Error if there is empty headers which are mandatory
+    
+    if (_sendStatus != Response::ERROR)
+        versionControl(req);
+    if (_sendStatus != Response::ERROR)
+        resourceControl(req);
+    if (_sendStatus != Response::ERROR)
+        methodControl(req, serv);
+    if (_sendStatus != Response::ERROR)
+        authControl(req);
+
+    // TODO : be sure that we dont forget meaningfull headers
 }
 
 void Response::callMethod(Request * req) {
@@ -149,6 +175,10 @@ void Response::setHeaders(Request * req) {
 
     // 4) Other headers
     // contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte
+    // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
+    // if (_isLanguageNegociated)
+    //     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
+
     contentLanguage.clear();
 
     if (req->method == "PUT") contentLocation[0] = req->file;

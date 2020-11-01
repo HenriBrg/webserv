@@ -109,6 +109,7 @@ int Server::start() {
     _errorStatus[UNAUTHORIZED_401] = "401 UNAUTHORIZED";
     _errorStatus[NOT_FOUND_404] = "404 NOT FOUND";
     _errorStatus[METHOD_NOT_ALLOWED_405] = "405 METHOD NOT ALLOWED";
+    _errorStatus[NOT_ACCEPTABLE_406] = "406 NOT ACCEPTABLE";
     _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 URI TOO LONG";
     _errorStatus[CONFLICT_409] = "409 CONFLICT";
     _errorStatus[REQUEST_ENTITY_TOO_LARGE_413] = "413 REQUEST ENTITY TOO LARGE";
@@ -117,6 +118,8 @@ int Server::start() {
     _errorStatus[INTERNAL_ERROR_500] = "500 INTERNAL ERROR";
     _errorStatus[NOT_IMPLEMENTED_501] = "501 NOT IMPLEMENTED";
     _errorStatus[SERVICE_UNAVAILABLE_503] = "503 SERVICE UNAVAILABLE";
+    _errorStatus[HTTP_VERSION_NOT_SUPPORTED_505] = "505 HTTP VERSION NOT SUPPORTED";
+    
 
     return (EXIT_SUCCESS);
 }
@@ -162,6 +165,7 @@ void Server::readClientRequest(Client *c) {
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
             if (strstr(c->buf, "\r\n\r\n") != NULL) {
+                // recv 2 eme fois
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 // TODO : We should find a way to avoid buffer dupllication for optimization
                 c->req.reqBuf = std::string(c->buf); 

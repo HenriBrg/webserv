@@ -6,7 +6,6 @@
 **  2. We check if the requested file exist
 **  3. We call the CGI defined it the location if the requested file extension match the "ext" location paremeter
 **      3.1. We parse its output
-**
 */
 
 void Response::getReq(Request * req) {
@@ -23,9 +22,9 @@ void Response::getReq(Request * req) {
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
 
-    req->cgiType = getCGIType(req); // ---------------> TODO : S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
-    if (req->cgiType) {
-        LOGPRINT(INFO, req, ("Response::getReq() : GET - One CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
+    req->cgiType = getCGIType(req); // ---------------> S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
+    if (req->cgiType == TESTER_CGI || req->cgiType == PHP_CGI) {
+        LOGPRINT(INFO, req, ("Response::getReq() : GET - CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
         LOGPRINT(INFO, this, ("Response::getReq() : GET - CGI has been performed !"));
     } else {
@@ -39,17 +38,16 @@ void Response::getReq(Request * req) {
 /*
 **  HEAD Request handler
 **  It's a simple GET, except that we will cut the body when formating the response
-**  CF. GET
 */
 
 void Response::headReq(Request * req) {
     getReq(req);
+    _resFile.clear();
 }
-
 
 /*
 **  POST Request handler
-**  1. We call the CGI defined it the location if the requested file extension match the "ext" location paremeter
+**  1. We call the CGI defined if needed (i.e. the requested file extension match the "ext" location parameter)
 **  
 **  2. Else, we handle by ourselve the POST request. We check if the requested file exist
 **  3. If yes, the request will edit the file, else it create the file, both with the body given by the client
@@ -66,6 +64,13 @@ void Response::postReq(Request * req) {
 
 
     } else if (req->cgiType == NO_CGI) {
+        
+         if (req->isolateFileName.empty()) {
+            LOGPRINT(INFO, this, ("Response::postReq() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
+            return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+        }
+        // NOCLASSLOGPRINT(DEBUG, " isolateFileName --> " + req->isolateFileName + " and resource --> " + req->resource);
+
         if (stat(req->file.c_str(), &buffer) == -1) {
             action = CREATE;
             LOGPRINT(INFO, this, ("Response::postReq() : POST - stat(" + req->file + ") has returned -1 meaning that the resource doesn't exist, thus, we create it."));
@@ -77,7 +82,8 @@ void Response::postReq(Request * req) {
             LOGPRINT(INFO, this, ("Response::postReq() : POST - Could not open the file (" + req->file + "), open() has returned -1 on it. "));
             return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
-        write(fd, _resBody.c_str(), _resBody.size());
+        write(fd, req->_reqBody.c_str(), req->_reqBody.size());
+        // TODO : check erreur ?
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
         _resBody.clear(); // --> à confirmer
@@ -95,11 +101,7 @@ void Response::putReq(Request * req)
     bool isCreated(true);
 
     if (stat(req->resource.c_str(), &fileStat) == 0)
-    {
-        if (S_ISDIR(fileStat.st_mode))
-            return (setErrorParameters(Response::ERROR, CONFLICT_409));
         isCreated = false;
-    }
     if ((fileFd = open(req->file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0600)) != -1)
     {
         if (write(fileFd, req->_reqBody.c_str(), req->_reqBody.size()) != -1)
@@ -184,6 +186,7 @@ void Response::negotiateAcceptLanguage(Request * req)
         if (stat(path.c_str(), &fileStat) == -1)
             continue;
         req->file = path;
+        _isLanguageNegociated = true;
         return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
@@ -200,7 +203,11 @@ void Response::negotiateAcceptCharset(Request * req)
     for (; it != ite; it++)
     {
         if ((*it).second == "utf-8" || (*it).second == "*")
+        {
+            if ((*it).first == 0) // Set as unacceptable // TO DO: Add representation with utf-8 in respoonse
+                setErrorParameters(Response::ERROR, NOT_ACCEPTABLE_406);
             return ;
+        }
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
     //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
