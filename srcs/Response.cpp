@@ -105,7 +105,7 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     }
-    else if (req->method != "PUT") { // POST aussi non ?
+    else if (req->method != "PUT" && req->method != "POST") {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
@@ -117,7 +117,6 @@ void Response::control(Request * req, Server * serv)
 {
     // DON'T DEBUG THE FUNCTION methodControl, it causes LLDB crash !
     resourceControl(req);
-
     if (_sendStatus == Response::ERROR)
         return ;
     methodControl(req, serv);
@@ -165,7 +164,8 @@ void Response::setHeaders(Request * req)
     else
         contentLocation.clear();            // We don't care
 
-    location.clear();                   // Use only with 300 status code
+    if (req->method == "POST" && _statusCode == CREATED_201) location = req->uri;
+    else location.clear();                   // Use only with 300 status code
 
     // Encoding : do we need to handle multiple encoding ? gzip, ... or just chunked
     transfertEncoding.clear();

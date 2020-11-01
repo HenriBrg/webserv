@@ -2,13 +2,12 @@ Actualisée au 31/10/2020 :
 
 CONFIG :
 
-    - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
     - Ajouter l'autoindex on/off dans chaque location
     - test differentes config
         -> segfault si le path root est érroné -> à check dans config plutôt que dans le serveur non ?
         ->
     - une ligne de log par serveur après parsing config ?
-    - erreur si aucune methode présente ?
+    - erreur si aucune methode présente à priori
     - check cohérence avec les guidelines de correction
 
 CGI :
@@ -28,11 +27,20 @@ REQ/RES :
 
 GLOBAL :
 
-    - Testeur Shell ou Python
     - Leaks mémoire / socket
     - S'assurer de bien tout reset entre chaque requête, si un même client fait plusieurs requêtes (sauf certaines var)
     - Ejecter le client au bout d'une minute ?
+    - Run le testeur SIEGE
 
 Tous les TODO en commentaire visible via :
 
     - grep -rin TODO  srcs/*.cpp
+
+
+
+À voir si on fait ça ou non :
+
+    - Content-Location en réponse
+    - PATCH
+    - Testeur
+    - Le code HTTP 300
