@@ -1,13 +1,8 @@
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
 import os
 import sys
 import requests
-
+import logging
 class bcolors:
-    
     HEADER = '\033[95m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
@@ -15,21 +10,20 @@ class bcolors:
     ENDC = '\033[0m'
 
 def assertResponse(r, code):
-    if (r.status_code == code):
-        info = (bcolors.OKGREEN + "OK" + bcolors.ENDC)
-    else: 
-        info = (bcolors.FAIL + "KO" + bcolors.ENDC)
-    print("       [" + r.request.method, r.request.url + "] = " + info, "(" + str(r.status_code), r.raw.reason + ")")
+    if (r.status_code == code): info = bcolors.OKGREEN + "OK" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason
+    else:                       info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Should receive : " + str(code)
+    url = "           • " + str(r.request.method) + " " + str(r.request.url)
+    url = str(url).ljust(60, ' ')
+    print(url + "   =   " + info)
+
 
 # -----------------------------------------------------------------------------
+# ------------------------------------ GET ------------------------------------
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
 
-# GET
+print("\n     ~ GET REQUESTS ------------------------> \n")
 
-print("\n     ~ GET REQUESTS ------------------------ \n")
-
-# -------- GET : 200
+# ------- GET : 200
 r = requests.get("http://localhost:7777")
 assertResponse(r, 200)
 r = requests.get("http://localhost:7777/index.html")
@@ -44,7 +38,6 @@ r = requests.get("http://localhost:7777/php/index.html")
 assertResponse(r, 200)
 
 # ------- GET : 400
-
 
 # ------- GET : 403 
 
