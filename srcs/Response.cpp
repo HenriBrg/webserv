@@ -318,7 +318,7 @@ void Response::showFullHeadersRes(void) {
     if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;
-    if (!retryAfter != -1)      std::cout << indent << "Retry-After: " << retryAfter << std::endl;
+    if (retryAfter != -1)      std::cout << indent << "Retry-After: " << retryAfter << std::endl;
     if (!server.empty())        std::cout << indent << "Server : " << server << std::endl;
     std::cout << std::endl;
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;

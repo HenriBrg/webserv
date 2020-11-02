@@ -1,6 +1,6 @@
 # include "../inc/Webserv.hpp"
 
-Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr): server(server), acceptFd(acceptFd), res(this) {
+Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr): server(server), acceptFd(acceptFd), res(this), req(this) {
     
     isConnected = true;
     _isAccepted = true; // By default we consider we are able to accept an user

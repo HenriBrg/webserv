@@ -4,13 +4,19 @@ Request::Request(void) {
     reset();
 }
 
+Request::Request(Client * c) 
+: client(c) 
+{
+    reset();
+}
+
 Request::~Request() {
     reset();
 }
 
 void Request::reset(void) {
 
-    client = nullptr;
+    //client = nullptr // segfaut as on response 
     reqLocation = nullptr;
     reqBuf.clear();
     _reqBody.clear();

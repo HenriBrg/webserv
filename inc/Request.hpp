@@ -30,6 +30,7 @@ class Request {
         /* METHODS */
 
         Request();
+        Request(Client *c);
         virtual ~Request();
 
         void parse(std::vector<Location*> locations);

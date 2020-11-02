@@ -110,7 +110,6 @@ int Server::start() {
     _errorStatus[NOT_FOUND_404] = "404 NOT FOUND";
     _errorStatus[METHOD_NOT_ALLOWED_405] = "405 METHOD NOT ALLOWED";
     _errorStatus[NOT_ACCEPTABLE_406] = "406 NOT ACCEPTABLE";
-    _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 URI TOO LONG";
     _errorStatus[CONFLICT_409] = "409 CONFLICT";
     _errorStatus[REQUEST_ENTITY_TOO_LARGE_413] = "413 REQUEST ENTITY TOO LARGE";
     _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 BAD RESQUEST";
@@ -145,7 +144,7 @@ void Server::acceptNewClient(void) {
     clients.push_back(newClient);
 
 
-    if (gConfig._availableConnections <= 0)
+    if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
         newClient->res.setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
         newClient->res.retryAfter = 10;
@@ -161,35 +160,48 @@ void Server::acceptNewClient(void) {
 
 void Server::readClientRequest(Client *c) {
 
-    int ret = -1;
+    char recvBuffer[BUFMAX];
+    int recvRet(-1);
     int error;
 
     c->resetTimeOut();
-    c->req.client = c;
-    ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
-    if (ret == -1 || ret == 0) {
+    recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0);;
+    if (recvRet == -1 || recvRet == 0)
+    {
         c->isConnected = false;
-        if (ret == 0)
+        if (recvRet == 0)
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
-        if (ret == -1)
+        if (recvRet == -1)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
-    } else {
-        c->buf[ret] = '\0';
-        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
-        if (c->recvStatus == Client::HEADER) {
-            if (strstr(c->buf, "\r\n\r\n") != NULL) {
-                // recv 2 eme fois
+    }
+    else
+    {
+        recvBuffer[recvRet] = '\0';
+
+        std::cout << RED << "============================================\n" << END;
+        std::cout << recvBuffer << std::endl;
+        std::cout << RED << "============================================\n" << END;
+        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(recvRet) + " bytes"));
+        if (c->recvStatus == Client::HEADER)
+        {
+            c->req.reqBuf.append(recvBuffer);
+            if (recvRet != 4096 && strstr(c->req.reqBuf.c_str(), "\r\n\r\n") != NULL) //c->req.reqBuf.c_str()
+            {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                // TODO : We should find a way to avoid buffer dupllication for optimization
-                c->req.reqBuf = std::string(c->buf); 
                 c->req.parse(locations); // TODO : set errors if invalid request format
-            } else { 
+            }
+            else
+            { 
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
                 return ;
             }
         }
-        if (c->recvStatus == Client::BODY) {
+
+
+
+        if (c->recvStatus == Client::BODY)
+        {
             if ((c->req.transferEncoding[0] == "chunked"))
                 c->req.parseChunkedBody();
             else if (c->req.contentLength > 0)
@@ -221,7 +233,7 @@ void Server::writeClientResponse(Client *c) {
 
     if (c->res._sendStatus == Response::PREPARE)
         setClientResponse(c);
-    
+
     if (c->res._sendStatus == Response::ERROR) {
         /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
         LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
@@ -272,11 +284,6 @@ int Server::sendClientResponse(Client *c)
     int bytesSent(0);
     int bytesToSend(0);
 
-
-    // std::cout << RED << "============================================" << END << std::endl;
-    // std::cout << c->res.formatedResponse << std::endl;
-    // std::cout << RED << "============================================" << END << std::endl;
-
     if (c->res._sendStatus == Response::SENDING)
     {
         bytesToSend = c->res.formatedResponse.size();
@@ -314,9 +321,7 @@ void Server::checkTimeOutClient(Client *c)
 }
 
 
-/* **************************************************** */
-/*                  LOGGER & EXCEPTIONS                 */
-/* **************************************************** */
+/*  -----------------------------------  LOGGER & EXCEPTIONS ---------------------------------------------------- */
 
 std::string const Server::logInfo(void) {
     std::string ret;
