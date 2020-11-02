@@ -67,7 +67,6 @@ void Response::postReq(Request * req) {
         LOGPRINT(INFO, req, ("Response::postReq() : POST - CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - CGI has been performed !"));
-
     } else if (req->cgiType == NO_CGI) {
         
          if (req->isolateFileName.empty()) {
@@ -91,7 +90,8 @@ void Response::postReq(Request * req) {
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
         _resBody.clear(); // --> à confirmer
-        // _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
+        // The 201 response payload typically describes and links to the resource(s) created
+        _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
     } 

@@ -197,7 +197,8 @@ void Response::setHeaders(Request * req) {
     if (contentType.empty()) // We set it in CGI
         contentType.clear();
     // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
-    contentLength = -1; // --> Updated in setBodyHeaders
+    if (_resFile.empty() && _resBody.empty()) // ---> à voir
+        contentLength = -1; // --> Updated in setBodyHeaders
 }
 
 void Response::setBody(const Server *server) {
@@ -206,7 +207,7 @@ void Response::setBody(const Server *server) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    if (!(_resFile.empty()))
+    if (!(_resFile.empty()) /* && _resBody.empty() --> A voir */)
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -245,9 +246,6 @@ void Response::setBodyHeaders(void)
         lastModified = ft::getLastModifDate(_resFile);
         contentLength = _resBody.size();
     }
-    if (resClient->req.method == "POST" && (_statusCode == OK_200 || _statusCode == CREATED_201))
-        contentLength = 0;
-   
     // À confirmer mais répondre avec un Content-Length à -1 semble faire bug tous les clients
     if (resClient->req.method == "GET" && contentLength == -1)
         contentLength = 0;
@@ -325,11 +323,12 @@ void Response::showFullHeadersRes(void) {
     if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;
-    if (!retryAfter != -1)      std::cout << indent << "Retry-After: " << retryAfter << std::endl;
+    if (retryAfter != -1)      std::cout << indent << "Retry-After: " << retryAfter << std::endl;
     if (!server.empty())        std::cout << indent << "Server : " << server << std::endl;
     std::cout << std::endl;
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
+    std::cout << indent << "Body : " << _resBody << std::endl;
 
 }

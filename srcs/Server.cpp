@@ -233,6 +233,7 @@ void Server::writeClientResponse(Client *c) {
     if (c->res._bytesSent == c->res.formatedResponse.size())
     {
         LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+        LOGPRINT(INFO, &c->res, "Response DONE");
         c->res._sendStatus = Response::DONE;
     } 
     else
@@ -252,6 +253,7 @@ void Server::setClientResponse(Client *c)
     c->res.control(&c->req, this); // Control (+set) method & authorization
     NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Calling " + c->req.method + " Handler"));
     c->res.callMethod(&c->req); // Use requested method
+
     NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set and Format Header"));
     c->res.setHeaders(&c->req); // Set headers
 
@@ -260,6 +262,7 @@ void Server::setClientResponse(Client *c)
         c->res.setBody(c->server); // Set body
         c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
     }
+
     c->res.format(); // Format response
     c->res._sendStatus = Response::SENDING;
     c->res.showRes();

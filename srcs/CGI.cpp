@@ -162,14 +162,14 @@ void Response::handleCGIOutput(int cgiType) {
         LOGPRINT(LOGERROR, this, ("Response::handleCGIOutput() : CGI (type : " + std::to_string(cgiType) + ") output doesn't contain <CR><LR><CR><LR> pattern. Invalid CGI. Internal Error"));
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
-    parseCGIHeadersOutput(cgiType, buffer);
+    parseCGIOutput(cgiType, buffer);
     remove(CGI_OUTPUT_TMPFILE);
     buffer.clear();
     _cgiOutputBody.clear();
 
 }
 
-void Response::parseCGIHeadersOutput(int cgiType, std::string & buffer) {
+void Response::parseCGIOutput(int cgiType, std::string & buffer) {
 
     size_t pos;
     size_t endLine;

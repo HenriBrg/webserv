@@ -120,7 +120,7 @@ class Response {
         char    **buildCGIEnv(Request * req);
         int     getCGIType(Request * req);
         void    handleCGIOutput(int cgiType);
-        void    parseCGIHeadersOutput(int cgiType, std::string & buffer);
+        void    parseCGIOutput(int cgiType, std::string & buffer);
 
 
         /* BODY */

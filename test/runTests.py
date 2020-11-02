@@ -3,6 +3,11 @@ import sys
 import requests
 import json
 
+# r.request.body
+# r.request.headers
+# res.headers
+# res.text
+
 class assertTypes:     
     BODY_CONTAIN_ASSERT = 1
     FILE_CONTAIN_ASSERT = 2
@@ -241,68 +246,3 @@ elif (len(sys.argv) == 3):
     elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
 
 print()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# -----------------------------------------------------------------------------
-
-
-# POST 1
-
-# hd = { "Content-Type": "text/plain" }
-# body = "abcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyz"
-# res = requests.post("http://localhost:8082/text", body, headers=hd)
-# print ()
-# print ("Status code:", res.status_code)
-# print ("Reason:", res.raw.reason)
-# print ()
-
-# print (res.request.method, "on", res.request.url)
-# print ()
-# for h in res.request.headers:
-#     print (h + ": " + res.request.headers[h])
-# print ()
-# print ("Body:", res.request.body)
-
-# print ()
-# print ()
-# print ()
-
-# for h in res.headers:
-# 	print (h + ": " + res.headers[h])
-# 	print ()
-# 	print ("Body:", res.text)
-
-
-# -----------------------------------------------------------------------------
-
-# def printReqRes(req):
-#     # print (bcolors.WARNING, "\n    NEW REQUEST :", req.request.method, "|", uri, bcolors.ENDC)
-#     print ("\n    Request : \n")
-#     for h in req.request.headers:
-#         print ("    > " + h + ":" + req.request.headers[h])
-#     print ("\n    Response : \n")
-#     print ("    Status :", req.status_code)
-#     print ("    Reason :", req.raw.reason)
-#     print ()
-#     for h in req.headers:
-#         print ("    > " + h + ":" + req.headers[h])
-#     print ()
-#     print ("    Body :", req.text)
-#     print (bcolors.HEADER, "\n    ---------------------------\n", bcolors.ENDC)
