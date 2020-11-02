@@ -47,10 +47,12 @@ class Client {
 
         // The client might disconnect while we're handle its request
         bool        isConnected;
+        bool        _isAccepted;
         int         recvStatus;
 
         int         port;
         int         acceptFd;
+        time_t      _lastRequest;
 
         Server      *server;
         std::string ip;
@@ -66,6 +68,7 @@ class Client {
         virtual ~Client();
         void reset();
         std::string const logInfo(void);
+        void resetTimeOut(void);
 
     private:
 

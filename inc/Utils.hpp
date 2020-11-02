@@ -5,6 +5,7 @@
 
 namespace ft
 {
+	time_t						getTime(void);
     std::string					getTimestamp(void);
 	std::string					getDate(void);
 	std::string					getLastModifDate(std::string file);

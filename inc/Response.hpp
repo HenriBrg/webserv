@@ -188,7 +188,7 @@ class Response {
 
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Retry-After
         // Use : 503 / 429 / 301
-        std::string retryAfter;
+        int retryAfter;
 
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Serveur
         std::string server;

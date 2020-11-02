@@ -3,6 +3,7 @@
 Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr): server(server), acceptFd(acceptFd), res(this) {
     
     isConnected = true;
+    _isAccepted = true; // By default we consider we are able to accept an user
     ip = inet_ntoa(clientAddr.sin_addr);
     port = htons(clientAddr.sin_port);
     req.client = this;
@@ -11,8 +12,8 @@ Client::Client(Server *server, int acceptFd, struct sockaddr_in clientAddr): ser
     recvStatus = Client::HEADER;
     buf = (char*)malloc(sizeof(char) * (BUFMAX + 1));
     memset((void*)buf, 0, BUFMAX + 1);
-    cgipid = -1; 
-
+    _lastRequest = 0;
+    cgipid = -1;
 }
 
 Client::~Client() {
@@ -24,6 +25,8 @@ Client::~Client() {
     close(acceptFd);
     acceptFd = -1;
 
+    if (_isAccepted)
+        gConfig._availableConnections++;
 }
 
 /*
@@ -42,6 +45,11 @@ void Client::reset() {
     res.reset();
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
 
+}
+
+void Client::resetTimeOut(void)
+{
+    _lastRequest = ft::getTime();
 }
 
 std::string const Client::logInfo(void) {

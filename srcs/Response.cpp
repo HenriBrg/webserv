@@ -23,7 +23,7 @@ void Response::reset() {
     lastModified.clear();
     location.clear();
     date.clear();
-    retryAfter.clear();
+    retryAfter = -1;
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
@@ -165,10 +165,11 @@ void Response::setHeaders(Request * req) {
 
     // 3) Error headers
     // Ok ---> Donc ici en fait on aura tous les hd qui auront pu être rempli au cours du traitement si erreur il y a 
+
     if (_sendStatus != Response::ERROR) {
         allow.clear();              // Unless Error 405
         wwwAuthenticate.clear();
-        retryAfter.clear();         // Quid du status 301
+        retryAfter = -1;         // Quid du status 301
     }
 
     if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
@@ -317,7 +318,7 @@ void Response::showFullHeadersRes(void) {
     if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;
-    if (!retryAfter.empty())    std::cout << indent << "Retry-After: " << retryAfter << std::endl;
+    if (!retryAfter != -1)      std::cout << indent << "Retry-After: " << retryAfter << std::endl;
     if (!server.empty())        std::cout << indent << "Server : " << server << std::endl;
     std::cout << std::endl;
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;

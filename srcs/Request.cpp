@@ -184,7 +184,7 @@ void Request::parseFile(std::vector<Location*> locations)
             file = reqLocation->root + file;
         else
             file = reqLocation->root + "/" + file;
-       resource = file;
+        resource = file;
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
             // TODO WHEN PARSER READY
             // if (reqLocation->autoindex == 1 && method == "GET")
