@@ -207,7 +207,7 @@ void Server::writeClientResponse(Client *c) {
 
     if (c->res._sendStatus == Response::PREPARE)
         setClientResponse(c);
-
+    
     if (c->res._sendStatus == Response::ERROR) {
         /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
         LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));

@@ -92,8 +92,8 @@ int Request::parseRequestLine() {
     method      = tab[0];
     uri         = tab[1];
     httpVersion = tab[2];
-    if (httpVersion != "HTTP/1.1")
-        client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+    // if (httpVersion != "HTTP/1.1")
+    //     client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
     return (0);
 }
 
@@ -409,11 +409,24 @@ void Request::checkBody() {
 
 void Request::parse(std::vector<Location*> locations) {
 
+    LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
+
     parseRequestLine();
+
+    LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
+
     parseUriQueries();
+    LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
+
     parseFile(locations);
+    LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
+
     parseHeaders();
+    LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
+
     checkBody();
+    LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
+
     reqBuf.clear(); 
 }
 
@@ -423,8 +436,7 @@ void Request::parse(std::vector<Location*> locations) {
 
 std::string const Request::logInfo(void) {
     std::string ret;
-    ret = "Request | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri + \
-    " | Location Assigned : " + reqLocation->uri;
+    ret = "Request | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri;
     return (ret);
 }
 

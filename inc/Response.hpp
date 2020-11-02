@@ -15,6 +15,7 @@
 # define USE_PROXY_305                      305	
 # define BAD_REQUEST_400			    	400
 # define UNAUTHORIZED_401			    	401
+# define FORBIDDEN_403  			    	403
 # define NOT_FOUND_404 					    404
 # define METHOD_NOT_ALLOWED_405			    405
 # define NOT_ACCEPTABLE_406                 406

@@ -2,24 +2,10 @@ Actualisée au 02/11/2020 :
 
 En cours :
 
-<<<<<<< HEAD
     - POST & CGI
     - Autoindex
     - uriQueries 255
     - Testeur rapide
-=======
-    - Ajouter l'autoindex on/off dans chaque location
-    - test differentes config
-        -> segfault si le path root est érroné -> à check dans config plutôt que dans le serveur non ?
-        ->
-    - une ligne de log par serveur après parsing config ?
-    - erreur si aucune methode présente à priori
-    - check cohérence avec les guidelines de correction
-
-CGI :
-
-    - POST avec cgi
->>>>>>> master
 
     - Éjection du client
     - Retry After
@@ -27,7 +13,6 @@ CGI :
     - Max de FD
     - Parsing des headers en plusieurs recv
 
-<<<<<<< HEAD
 À répartir :
 
     - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
@@ -41,27 +26,13 @@ CGI :
     - S'assurer de bien tout reset entre chaque requête, si un même client fait plusieurs requêtes (sauf certaines var)
     - Commentaire rapide sur toutes les fonctions --> à voir
     - Parsing des headers en case insensitive ?
-=======
-    - Gérer autoindex
-    - retry-after, check les headers non utilsés et voir si normal ou pas
-    - gérer max file descriptor --> 503 retry after
-    - Parsing des headers en plusieurs recv() à gérer (telnet, netcat)
-    - response en chunked
-    - max longueur uriQueries (255 je crois)
-
-GLOBAL :
-
-    - Leaks mémoire / socket
-    - S'assurer de bien tout reset entre chaque requête, si un même client fait plusieurs requêtes (sauf certaines var)
-    - Ejecter le client au bout d'une minute ?
-    - Run le testeur SIEGE
->>>>>>> master
+    - Compiler avec les 3 flags
+    - Check HTTP Version (semble y avoi un bug dans le parsing, étrange)
+    - Gérer le forbidden 403 sur un get :7777/..
 
 Tous les TODO au sein des fichiers :
 
     - grep -rin TODO  srcs/*.cpp
-
-
 
 À voir si on fait ça ou non :
 
