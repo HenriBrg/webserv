@@ -22,7 +22,7 @@ void Response::getReq(Request * req) {
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
 
-    req->cgiType = getCGIType(req); // ---------------> S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
+    req->cgiType = getCGIType(req); // ---------------> TODO : S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
     if (req->cgiType == TESTER_CGI || req->cgiType == PHP_CGI) {
         LOGPRINT(INFO, req, ("Response::getReq() : GET - CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
@@ -51,6 +51,9 @@ void Response::headReq(Request * req) {
 **  
 **  2. Else, we handle by ourselve the POST request. We check if the requested file exist
 **  3. If yes, the request will edit the file, else it create the file, both with the body given by the client
+**
+**  Usefull LOGs :
+**  NOCLASSLOGPRINT(DEBUG, " isolateFileName --> " + req->isolateFileName + " and resource --> " + req->resource);
 */
 
 void Response::postReq(Request * req) {
@@ -61,7 +64,9 @@ void Response::postReq(Request * req) {
 
     req->cgiType = getCGIType(req);
      if (req->cgiType == TESTER_CGI || req->cgiType == PHP_CGI) {
-
+        LOGPRINT(INFO, req, ("Response::postReq() : POST - CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
+        execCGI(req);
+        LOGPRINT(INFO, this, ("Response::postReq() : POST - CGI has been performed !"));
 
     } else if (req->cgiType == NO_CGI) {
         
@@ -69,7 +74,6 @@ void Response::postReq(Request * req) {
             LOGPRINT(INFO, this, ("Response::postReq() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
             return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
         }
-        // NOCLASSLOGPRINT(DEBUG, " isolateFileName --> " + req->isolateFileName + " and resource --> " + req->resource);
 
         if (stat(req->file.c_str(), &buffer) == -1) {
             action = CREATE;
