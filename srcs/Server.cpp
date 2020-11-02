@@ -142,6 +142,19 @@ void Server::acceptNewClient(void) {
     Client *newClient = new Client(this, acceptFd, clientAddr);
     newClient->req.client = newClient;
     clients.push_back(newClient);
+
+
+    if (gConfig._availableConnections <= 0)
+    {
+        newClient->res.setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
+        newClient->res.retryAfter = 10;
+        writeClientResponse(newClient);
+        newClient->isConnected = false;
+        newClient->_isAccepted = false;
+    }
+    else
+        gConfig._availableConnections--;
+
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
@@ -150,6 +163,7 @@ void Server::readClientRequest(Client *c) {
     int ret = -1;
     int error;
 
+    c->resetTimeOut();
     c->req.client = c;
     ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
     if (ret == -1 || ret == 0) {
@@ -256,6 +270,11 @@ int Server::sendClientResponse(Client *c)
     int bytesSent(0);
     int bytesToSend(0);
 
+
+    // std::cout << RED << "============================================" << END << std::endl;
+    // std::cout << c->res.formatedResponse << std::endl;
+    // std::cout << RED << "============================================" << END << std::endl;
+
     if (c->res._sendStatus == Response::SENDING)
     {
         bytesToSend = c->res.formatedResponse.size();
@@ -283,7 +302,13 @@ void Server::handleClientRequest(Client *c) {
     if (FD_ISSET(c->acceptFd, &gConfig.writeSet) && c->recvStatus == Client::COMPLETE)
         writeClientResponse(c);
     else LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't writable"));
+    checkTimeOutClient(c);
+}
 
+void Server::checkTimeOutClient(Client *c)
+{
+    if (c->_lastRequest && (ft::getTime() - c->_lastRequest) > 1000)
+        c->isConnected = false;
 }
 
 

@@ -25,6 +25,7 @@ class Config {
         fd_set          writeSetBackup;
 
         std::set<int>           activeFds;
+        static int              _availableConnections;
         std::vector<Server*>    servers;
 
         Config();

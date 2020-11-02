@@ -1,5 +1,7 @@
 #include "../inc/Webserv.hpp"
 
+int Config::_availableConnections = 10;
+
 Config::Config() {
     run = 1;
     FD_ZERO(&readSet);

@@ -117,6 +117,15 @@ namespace ft {
 		return (result);
 	}
 
+	time_t		getTime(void)
+	{
+		struct timeval 	tv;
+		struct timezone tz;
+
+		gettimeofday(&tv, &tz);
+		return (tv.tv_sec);
+	}
+
 	std::string 	getDate(void) {
 		struct timeval 	tv;
 		struct tm 		time;

@@ -175,7 +175,7 @@ void Request::parseFile(std::vector<Location*> locations)
             file = reqLocation->root + "/" + file;
         // Here, we check if the uri refers to a directory.
         // If so, we check if autoindex is on, else, we refers to the index parameter of the location
-       resource = file;
+        resource = file;
         if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
             // TODO WHEN PARSER READY
             // if (reqLocation->autoindex == 1 && method == "GET")

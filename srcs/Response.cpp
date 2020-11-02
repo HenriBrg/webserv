@@ -23,7 +23,7 @@ void Response::reset() {
     lastModified.clear();
     location.clear();
     date.clear();
-    retryAfter.clear();
+    retryAfter = -1;
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
@@ -169,12 +169,12 @@ void Response::setHeaders(Request * req)
 
     // 3) Error headers
     // Ok ---> Donc ici en fait on aura tous les hd qui auront pu être rempli au cours du traitement si erreur il y a 
+
     if (_sendStatus != Response::ERROR) {
 
         allow.clear();              // Unless Error 405
         wwwAuthenticate.clear(); // Unless an authorization was asked ?         --------------> POURQUOI UN CLEAR() SEG FAULT ?
-        retryAfter.clear();         // Quid du status 301
-
+        retryAfter = -1;         // Quid du status 301
     }
 
     // 4) Other headers
@@ -329,7 +329,7 @@ void Response::showFullHeadersRes(void) {
         std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())
         std::cout << indent << "Date : " << date << std::endl;
-    if (!retryAfter.empty())
+    if (retryAfter != -1)
         std::cout << indent << "Retry-After: " << retryAfter << std::endl;
     if (!server.empty())
         std::cout << indent << "Server : " << server << std::endl;

@@ -67,9 +67,8 @@ class Server {
 
         /* Request functions */
         void handleClientRequest(Client *c);
-
         void readClientRequest(Client *c);
-
+        void checkTimeOutClient(Client *c);
 
         /* Response functions */
         void writeClientResponse(Client *c);
