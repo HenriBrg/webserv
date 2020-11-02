@@ -407,26 +407,24 @@ void Request::checkBody() {
         client->recvStatus = Client::COMPLETE;
 }
 
+/*
+**  We parse the headers request in 5 steps
+**  Inside them, we check possible syntax / format errors
+**  We check if there is a body. If yes, we set status to Request::BODY and it will parsed later
+*/
+
 void Request::parse(std::vector<Location*> locations) {
-
-    LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
     parseRequestLine();
-
-    LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
     parseUriQueries();
-    LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
     parseFile(locations);
-    LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
     parseHeaders();
-    LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
     checkBody();
-    LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
-
+    // LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
     reqBuf.clear(); 
 }
 

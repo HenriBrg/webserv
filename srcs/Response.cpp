@@ -197,7 +197,7 @@ void Response::setHeaders(Request * req) {
     if (contentType.empty()) // We set it in CGI
         contentType.clear();
     // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
-    contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+    contentLength = -1; // --> Updated in setBodyHeaders
 }
 
 void Response::setBody(const Server *server) {
@@ -233,7 +233,7 @@ void Response::setBody(const Server *server) {
     }
     if (_sendStatus == Response::ERROR)
         replaceErrorCode(server);
-    _didCGIPassed = false; // ---> Reset somewhere else ?
+    _didCGIPassed = false;
 
 }
 
@@ -242,9 +242,16 @@ void Response::setBodyHeaders(void)
     if (!(_resBody.empty())) {
         if (contentType[0].empty() && !_resFile.empty())
             contentType[0] = responseUtils::getContentType(_resFile);
-        lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
-        contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+        lastModified = ft::getLastModifDate(_resFile);
+        contentLength = _resBody.size();
     }
+    if (resClient->req.method == "POST" && (_statusCode == OK_200 || _statusCode == CREATED_201))
+        contentLength = 0;
+   
+    // À confirmer mais répondre avec un Content-Length à -1 semble faire bug tous les clients
+    if (resClient->req.method == "GET" && contentLength == -1)
+        contentLength = 0;
+
 }
 
 

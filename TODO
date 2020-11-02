@@ -4,8 +4,6 @@ En cours :
 
     - POST & CGI
     - Autoindex
-    - uriQueries 255
-    - Testeur rapide
 
     - Éjection du client
     - Retry After
@@ -29,6 +27,8 @@ En cours :
     - Compiler avec les 3 flags
     - Check HTTP Version (semble y avoi un bug dans le parsing, étrange)
     - Gérer le forbidden 403 sur un get :7777/..
+    - Voir pourquoi le read d'un fichier png ne fonctionne pas
+    - Delete fonction interdites (notamment sur le cgi xD)
 
 Tous les TODO au sein des fichiers :
 
@@ -38,5 +38,4 @@ Tous les TODO au sein des fichiers :
 
     - Content-Location en réponse
     - PATCH
-    - Testeur
     - Le code HTTP 300
