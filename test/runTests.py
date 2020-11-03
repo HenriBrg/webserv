@@ -12,9 +12,11 @@
 
 import os
 import sys
-import requests
-from requests.auth import HTTPBasicAuth
 import json
+import requests
+
+from requests.auth import HTTPBasicAuth
+from sys import platform
 
 global verbose
 verbose = 0
@@ -164,6 +166,7 @@ def GET_TESTS(testNum = 0):
 
     # ------- GET : 200 (with CGI)
     index += 1
+    # if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
     if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/index.bla")
         assertResponse(r, 200, index)
@@ -260,6 +263,8 @@ def GET_TESTS(testNum = 0):
 # -----------------------------------------------------------------------------
 # ----------------------------------- POST ------------------------------------
 # -----------------------------------------------------------------------------
+
+# ATTENTION : Run indépendament des autres les POST peut en faire rater certains
 
 def POST_TESTS(testNum = 0):
 

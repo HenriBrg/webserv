@@ -55,8 +55,10 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries;
 	if (!req->contentType.empty()) envmap["CONTENT_TYPE"] = req->contentType;
     envmap["SCRIPT_NAME"]         = getCGIType(req) == TESTER_CGI ? req->reqLocation->cgi : req->reqLocation->php;
-    if (PLATFORM == "Linux")
-        envmap["SCRIPT_NAME"] = envmap["SCRIPT_NAME"].replace(envmap["SCRIPT_NAME"].find("cgi_tester"), sizeof("cgi_tester") - 1, "ubuntu_cgi_tester");
+    if (req->cgiType == TESTER_CGI && PLATFORM == "Linux" && envmap["SCRIPT_NAME"].find(".pl") == std::string::npos) {
+        envmap["SCRIPT_NAME"] = envmap["SCRIPT_NAME"].replace(envmap["SCRIPT_NAME"].find("cgi_tester"), sizeof("cgi_tester"), "ubuntu_") + "cgi_tester";
+    }
+
 
 	envmap["SERVER_NAME"]         = "127.0.0.1";
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port);
@@ -107,6 +109,8 @@ void clearCGI(char **args, char **env) {
 **  Not remember process communication ? --> http://www.zeitoun.net/articles/communication-par-tuyau/start
 **  NOCLASSLOGPRINT(DEBUG, "DEBUG 2 - executable = " + executable + " and file = " + req->file);
 **  NOCLASSLOGPRINT(DEBUG, ("DEBUG 3 ---> 0 = " + std::string(args[0]) + " 1 = " + std::string(args[1])));
+**
+**  The CGI differs depending the OS, so on Linux, we replace the name of cgi with ubuntu_ before
 */
 
 void Response::execCGI(Request * req) {
@@ -127,8 +131,10 @@ void Response::execCGI(Request * req) {
     else if (req->cgiType == PHP_CGI)
         executable = req->reqLocation->php;
     else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error - If we reach execCGI(), the cgi should be TESTER_CGI or PHP_CGI"));
-    if (PLATFORM == "Linux")
-        executable = executable.replace(executable.find("cgi_tester"), sizeof("cgi_tester") - 1, "ubuntu_cgi_tester");
+    if (req->cgiType == TESTER_CGI && PLATFORM == "Linux" && executable.find(".pl") == std::string::npos) {
+        executable = executable.replace(executable.find("cgi_tester"), sizeof("cgi_tester"), "ubuntu_") + "cgi_tester";
+    }
+
     env = buildCGIEnv(req);
     args = (char **)(malloc(sizeof(char*) * 3));
     args[0] = strdup(executable.c_str());
