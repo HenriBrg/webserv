@@ -166,7 +166,7 @@ def GET_TESTS(testNum = 0):
 
     # ------- GET : 200 (with CGI)
     index += 1
-    if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
+    if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/index.bla")
         assertResponse(r, 200, index)
     index += 1
@@ -293,7 +293,8 @@ def POST_TESTS(testNum = 0):
     
     # ------- POST CHUNKED - 200/201 - NO CGI
     index += 1
-    if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
+    # if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
+    if (testNum == 0 or index == int(testNum)):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
         hd = {'Transfer-Encoding': 'chunked'}
