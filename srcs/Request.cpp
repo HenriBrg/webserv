@@ -115,27 +115,25 @@ void Request::parseUriQueries() {
 }
 
 
-// Location NGinx : http://nginx.org/en/docs/beginners_guide.html
-// Faille de sécurité à gérer ultérieurement : Directory Traversal    
-// 1) If URI requested match directly one of server's locations, we match here
-// TODO : à confirmer mais, si échec de location de la ressource, la location de base "/"" doit être utilisée pour réessayer l'association d'une location à la requête ?
+/*
+** Location NGinx : http://nginx.org/en/docs/beginners_guide.html
+** 1) If URI requested match directly one of server's locations, we match here
+** Si échec de location de la ressource, la location de base "/"" doit être utilisée pour réessayer l'association d'une location à la requête ?
+** La variable file : http://localhost/pouet --> file = pouet
+*/
 
 void Request::assignLocation(std::vector<Location*> vecLocs) {
 
     Location * root;
 
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
-
         if (vecLocs[i]->uri == uri) {
             reqLocation = vecLocs[i];
-            LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned, the index of the location should be the resource to return"));
-            return ;
+            return LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned, the index of the location should be the resource to return"));
         }
     }
-
     size_t i = uri.size() - 1;
     std::string tmpUri = uri;
-
     while (tmpUri.size() > 0) {                     // Parcours URI entier
 		while (tmpUri[i] != '/' && i != 0)          // Si / alors arret
 			i--;
@@ -144,11 +142,9 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 			tmpUri = "/";
 		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
 			if (vecLocs[x]->uri == tmpUri) {
-                // For example, http://localhost/pouet --> file = pouet
 				file = uri.substr(i + 1, uri.size());
 				reqLocation = vecLocs[x];
-                LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned. file = " + file));
-                return ;
+                return LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned. file = " + file));
 			}
 		}
 	}
@@ -161,7 +157,6 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 ** 
 ** We check if the uri refers to a directory.
 ** If so, we check if autoindex is on, else, we refers to the index parameter of the location
-
 */
 
 void Request::parseFile(std::vector<Location*> locations)
@@ -169,7 +164,7 @@ void Request::parseFile(std::vector<Location*> locations)
     std::string tmpFile;
     int         i;
     struct stat info;
-
+   
     assignLocation(locations);
 
     if (reqLocation)
@@ -228,9 +223,12 @@ void Request::fillMultiValHeaders(std::string const key, std::string const value
     }
 }
 
-// If the variable can have multiple weighted values => multimap is used to stored them
-// Map key is weight after split and map value is request value
-// Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5
+/*
+** If the variable can have multiple weighted values => multimap is used to stored them
+** Map key is weight after split and map value is request value
+** Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5
+*/
+
 void Request::fillMultiWeightValHeaders(std::string const key, std::string const value)
 {
     std::vector<std::string> multiValues = ft::split(value, ',');
@@ -239,15 +237,15 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
     for (size_t count = 0; count < multiValues.size(); count++)
     {
         multiValues[count] = ft::trim(multiValues[count]);
-        if ((weightPos = multiValues[count].find(";q=")) == std::string::npos) // If no weigth then key is 1.0
-        {
+        if ((weightPos = multiValues[count].find(";q=")) == std::string::npos) {
+            /* If no weigth then key is 1.0 */
             if (key == "Accept-Charset")
                 acceptCharset.insert(std::make_pair(1.0, multiValues[count]));
             else if (key == "Accept-Language")
                 acceptLanguage.insert(std::make_pair(1.0, multiValues[count]));
         }
-        else // If weight then key is specified weight
-        {
+        else {
+            /* If weight then key is specified weight */
             multiValues[count].replace(weightPos, 3, " ");
             std::vector<std::string> weight = ft::split(multiValues[count], ' ');
             if (key == "Accept-Charset")
@@ -286,10 +284,11 @@ void Request::parseHeaders() {
         key = ft::trim(line.substr(0, pos));
         utils::deleteCarriageReturn(key);
         if (key.empty())
-            continue ; // TODO : continue or break ? Or error 4XX
+            continue ;
         value = ft::trim(line.substr(pos + 1));
-        // if (value.empty())
-        // Continue or break ? Or error 4XX
+        if (value.substr(0, value.size() - 1).find_first_not_of(' ') == std::string::npos)
+            client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+            LOGPRINT(LOGERROR, this, ("Request::parseHeaders() : Header --> " + key + " with empty value --> " + value));
         utils::deleteCarriageReturn(value);
         fillHeader(key, value);
     }
@@ -297,12 +296,13 @@ void Request::parseHeaders() {
 }
 
 
-// Really good article
-// https://en.wikipedia.org/wiki/Chunked_transfer_encoding
-// Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
-// Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
-
-// TODO : response chunked : https://www.codeproject.com/articles/648526/all-about-http-chunked-responses
+/*
+** parseChunkedBody()
+** https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+** Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
+** Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
+** Response chunked : https://www.codeproject.com/articles/648526/all-about-http-chunked-responses
+*/
 
 void Request::parseChunkedBody() {
 
@@ -313,7 +313,6 @@ void Request::parseChunkedBody() {
     _reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
-
         separator = _reqBody.find("\r\n", _optiChunkOffset);
         if (separator == std::string::npos) {
             client->recvStatus = Client::ERROR;
@@ -353,7 +352,6 @@ void Request::parseChunkedBody() {
             client->recvStatus = Client::COMPLETE;
             break ;
         }
-        
     }
     memset(client->buf, 0, BUFMAX + 1);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End chunked body parsing"));

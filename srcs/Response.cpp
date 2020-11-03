@@ -62,13 +62,18 @@ void Response::replaceErrorCode(const Server *server) {
     
 }
 
+/*
+**  Contrôle de l'authentification
+**  Le header authorization est décodé en supposant un encodage Basic (Base64)
+**  Si différences il y a, l'erreur UNAUTHORIZED_401 est retournée au client
+**  if (!req->reqLocation->auth.empty())
+**  NOCLASSLOGPRINT(LOGERROR, ("req->reqLocation = " + req->reqLocation->uri));
+**  NOCLASSLOGPRINT(LOGERROR, ("req->reqLocation auth = " + req->reqLocation->auth));
+*/
 
 void Response::authControl(Request * req) {
     
     std::vector<std::string> tab;
-
-    if (!req->reqLocation->auth.empty())
-        NOCLASSLOGPRINT(LOGERROR, ("!req->reqLocation->auth.size() = " + std::to_string(req->reqLocation->auth.size())));
 
     if (!req->reqLocation->auth.empty() && req->authorization.empty()) {
         setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
@@ -78,7 +83,11 @@ void Response::authControl(Request * req) {
     if (!req->reqLocation->auth.empty()) {
         tab = ft::split(req->authorization, ' ');
         if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
-        if (tab[0] != "Basic" && tab[0] != "BASIC") LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
+        if (tab[0] != "Basic" && tab[0] != "BASIC") {
+            setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
+            LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
+            return ;
+        }
         LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
         if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
             setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
@@ -138,6 +147,14 @@ void Response::resourceControl(Request * req) {
 
 }
 
+void Response::reqHeadersControl(Request * req) {
+
+    if (req->host.empty()) {
+        LOGPRINT(INFO, this, ("Response::reqHeadersControl() : Host header is absent of the request headers. 400 BAD REQUEST"));
+        return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+    }
+}
+
 void Response::control(Request * req, Server * serv) {
     
     if (_sendStatus != Response::ERROR)
@@ -148,8 +165,9 @@ void Response::control(Request * req, Server * serv) {
         methodControl(req, serv);
     if (_sendStatus != Response::ERROR)
         authControl(req);
+    if (_sendStatus != Response::ERROR)
+        reqHeadersControl(req);
 
-    // TODO : be sure that we dont forget meaningfull headers
 }
 
 void Response::callMethod(Request * req) {

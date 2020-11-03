@@ -97,6 +97,7 @@ class Response {
         void    resourceControl(Request * req);
         void    methodControl(Request * req, Server * serv);
         void    authControl(Request * req);
+        void    reqHeadersControl(Request * req);
 
         /* LOGS AND ERRORS */
         std::string const logInfo(void);

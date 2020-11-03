@@ -1,40 +1,22 @@
-Actualisée au 02/11/2020 :
+Actualisée au 03/11/2020 :
 
 En cours :
 
-    - Autoindex
-    - Éjection du client
-    - Retry After
-    - Check des headers non utillisés jusqu'ici (review global la fonction setHeaders du coup)
-    - Max de FD
-    - Parsing des headers en plusieurs recv
-
-À répartir :
-
+    PARSING CONFIG :
     - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
     - Ajouter l'autoindex on/off dans chaque location
     - Log après parsing ?
     - Erreur si aucune methode présente
-    - Voir les guidelines de correction liée à la config
-    - Response en chunked
-    - Testeur Shell ou Python
-    - Leaks mémoire / socket
-    - S'assurer de bien tout reset entre chaque requête, si un même client fait plusieurs requêtes (sauf certaines var)
-    - Commentaire rapide sur toutes les fonctions --> à voir
-    - Parsing des headers en case insensitive ?
-    - Compiler avec les 3 flags
-    - Check HTTP Version (semble y avoi un bug dans le parsing, étrange)
-    - Gérer le forbidden 403 sur un get :7777/..
-    - Voir pourquoi le read d'un fichier png ne fonctionne pas
-    - Delete fonction interdites (notamment sur le cgi xD)
-    - nego ext. cgi match
+    - Autoindex
 
-Tous les TODO au sein des fichiers :
+    AUTRES :
+    - Leaks mémoire / socket
+    - Brief commentaire des fonctions
+    - Compiler avec les 3 flags
+    - Read fichier PNG
+    - Delete fonction interdites
+    - Autoindex GET
+    - Content-Location en réponse --> à voir
 
     - grep -rin TODO  srcs/*.cpp
 
-À voir si on fait ça ou non :
-
-    - Content-Location en réponse
-    - PATCH
-    - Le code HTTP 300

@@ -13,7 +13,13 @@
 import os
 import sys
 import requests
+from requests.auth import HTTPBasicAuth
 import json
+
+global verbose
+verbose = 0
+if (len(sys.argv) == 4 and sys.argv[3] == '-v'):
+    verbose = 1
 
 if (os.system('lsof -c webserv > /dev/null') != 0):
     print("Webserv is not running")
@@ -109,9 +115,9 @@ def assertResponse(r, code, index, assertLevel = [], *args):
         info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Should have been received : " + str(code)
     url = "           • #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
     if (len(r.request.url) > 50):
-        url += r.request.url[16:50] + " ..."
+        url += r.request.url[16:50] + " [..." + str(len(r.request.url)) + "]"
     else: url += str(r.request.url)[16:]
-    url = str(url).ljust(65, ' ')
+    url = str(url).ljust(70, ' ')
     print(url + "   =   " + info)
     
     if verbose == 1:
@@ -183,14 +189,25 @@ def GET_TESTS(testNum = 0):
         assertResponse(r, 401, index)
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        hd = {"Authorization": "Basic cm9vdDpwYXNz"} 
+        hd = {"Authorization": "Basic cm9vdDpwYXNz"}
+        r = requests.get("http://localhost:7777/auth/index.html", headers=hd)
+        assertResponse(r, 200, index)
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {"Authorization": "Digest cm9vdDpwYXNz"} 
         r = requests.get("http://localhost:7777/auth", headers=hd)
+        assertResponse(r, 401, index)
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        # hd = {"Authorization": "Basic cm9vdDpwYXNz"} 
+        r = requests.get("http://localhost:7777/auth", auth=HTTPBasicAuth('root', 'pass'), headers={})
         assertResponse(r, 200, index)
     index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {"Authorization": "Basic zagGFDSsdfjAC0"}
         r = requests.get("http://localhost:7777/auth", headers=hd)
         assertResponse(r, 401, index)
+
 
 
     # ------- GET : Negotiation
@@ -213,7 +230,13 @@ def GET_TESTS(testNum = 0):
 
     # ------- GET : 400
     
-    # ... Find some examples
+    # ---> Working but Python doesn't sendd the HOST header if it is empty or full of space
+    # ---> Test with CURL
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {"Host": ''}
+        r = requests.get("http://localhost:7777/", headers=hd)
+        assertResponse(r, 400, index)
 
     # ------- GET : 404
     index += 1
@@ -285,7 +308,7 @@ def POST_TESTS(testNum = 0):
     if (testNum == 0 or index == int(testNum)):
         payload = "I am a payload"
         r = requests.post('http://localhost:7777/ftcgi/index.bla', data=payload, headers={})
-        assertResponse(r, 200, index)
+        assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "I AM A PAYLOAD")
 
     # FREEZE ERROR
     
@@ -351,8 +374,7 @@ def DELETE_TESTS(testNum = 0):
 # ----------------------------------- MAIN ------------------------------------
 # -----------------------------------------------------------------------------
 
-global verbose
-verbose = 0
+
 
 if (len(sys.argv) == 1):
     GET_TESTS()
@@ -366,14 +388,7 @@ elif (len(sys.argv) == 2):
     elif (sys.argv[1] == "POST"):   POST_TESTS()
     elif (sys.argv[1] == "PUT"):    PUT_TESTS()
     elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
-elif (len(sys.argv) == 3):
-    if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
-elif (len(sys.argv) == 4 and sys.argv[3] == '-v'):
-    verbose = 1
+elif (len(sys.argv) >= 3):
     if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
     elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
     elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
