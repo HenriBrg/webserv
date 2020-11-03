@@ -172,7 +172,6 @@ void Response::setHeaders(Request * req) {
         retryAfter = -1;         // Quid du status 301
     }
 
-    if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 
     // 4) Other headers
     // contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte
@@ -199,6 +198,9 @@ void Response::setHeaders(Request * req) {
     // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
     if (_resFile.empty() && _resBody.empty()) // ---> à voir
         contentLength = -1; // --> Updated in setBodyHeaders
+    
+    /* On set également ce header lors de l'authentification */
+    if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
 void Response::setBody(const Server *server) {
@@ -207,7 +209,7 @@ void Response::setBody(const Server *server) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    if (!(_resFile.empty()) /* && _resBody.empty() --> A voir */)
+    if (!(_resFile.empty()) /* && _resBody.empty() --> TODO : A voir */)
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -249,6 +251,11 @@ void Response::setBodyHeaders(void)
     // À confirmer mais répondre avec un Content-Length à -1 semble faire bug tous les clients
     if (resClient->req.method == "GET" && contentLength == -1)
         contentLength = 0;
+
+    if (resClient->req.method == "HEAD") {
+        contentLength = _resBody.size();
+        _resBody.clear();
+    }
 
 }
 
@@ -329,6 +336,7 @@ void Response::showFullHeadersRes(void) {
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
-    std::cout << indent << "Body : " << _resBody << std::endl;
+    std::cout << indent << "Body Size : " << std::to_string(_resBody.size()) << std::endl;
+    // std::cout << indent << "Body : " << _resBody << std::endl;
 
 }

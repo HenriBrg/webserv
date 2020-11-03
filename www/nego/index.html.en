@@ -16,7 +16,7 @@
 
 <body>
     <div class="bg">
-        <h1>Welcome to Webserv !</h1>
+        <h1>Welcome to Webserv ! ENGLAND </h1>
         <p>If you see this page, the WebServ server is successfully installed and
             working. Further configuration is possible.</p>
 
@@ -25,6 +25,13 @@
         </p>
 
         <p><em>Thank you for using Webserv.</em></p>
+        
+        <br>
+        <br>
+        <br>
+
+        <!-- <img src="42.png"> -->
+
     </div>
 </body>
 

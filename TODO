@@ -2,9 +2,7 @@ Actualisée au 02/11/2020 :
 
 En cours :
 
-    - POST & CGI
     - Autoindex
-
     - Éjection du client
     - Retry After
     - Check des headers non utillisés jusqu'ici (review global la fonction setHeaders du coup)
@@ -29,6 +27,7 @@ En cours :
     - Gérer le forbidden 403 sur un get :7777/..
     - Voir pourquoi le read d'un fichier png ne fonctionne pas
     - Delete fonction interdites (notamment sur le cgi xD)
+    - nego ext. cgi match
 
 Tous les TODO au sein des fichiers :
 

@@ -9,6 +9,8 @@ print "\r\n\r\n";
 
 print "<html><head><title> PERL CGI</title> </head><body>";
  
+print "<p>PERL CGI</p>";
+
 foreach my $key (keys %ENV) {
     print "<br>$key --> $ENV{$key}</br>";
 }

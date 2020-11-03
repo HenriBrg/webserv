@@ -257,11 +257,9 @@ void Server::setClientResponse(Client *c)
     NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set and Format Header"));
     c->res.setHeaders(&c->req); // Set headers
 
-    if (c->req.method != "HEAD") {
-        NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set Body and Body Headers"));
-        c->res.setBody(c->server); // Set body
-        c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
-    }
+    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set Body and Body Headers"));
+    c->res.setBody(c->server); // Set body
+    c->res.setBodyHeaders(); // Set body headers to actual value (cleared in setHeaders())
 
     c->res.format(); // Format response
     c->res._sendStatus = Response::SENDING;

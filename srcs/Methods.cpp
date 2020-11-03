@@ -42,7 +42,6 @@ void Response::getReq(Request * req) {
 
 void Response::headReq(Request * req) {
     getReq(req);
-    _resFile.clear();
 }
 
 /*

@@ -92,8 +92,6 @@ int Request::parseRequestLine() {
     method      = tab[0];
     uri         = tab[1];
     httpVersion = tab[2];
-    // if (httpVersion != "HTTP/1.1")
-    //     client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
     return (0);
 }
 
@@ -102,8 +100,6 @@ int Request::parseRequestLine() {
 // and the storage of the query : ?name1=value1
 
 void Request::parseUriQueries() {
-
-    // TODO : gérer les failles de sécurités liées aux paramètres d'URL, injection js ...
 
     int i = 0;
     std::string tmp = uri;
