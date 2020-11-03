@@ -212,25 +212,51 @@ void Response::setBody(const Server *server) {
         int fileFd(0);
         int retRead(0);
 
-        // stat() le file avant ?
+        struct stat fileStat;
+        int retStat;
+
+        retStat = stat(_resFile.c_str(), &fileStat);
+        std::cout << GREEN << "file size = " << END << fileStat.st_size << std::endl;
+
+
+        std::cout << ORANGE << "AVANT OPEN BODY FILE\n" << END;
         
         if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
 
+            //lseek(fileFd, 9, SEEK_SET);
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
+                std::cout << MAGENTA << "===============================\n" << END;
                 // NOCLASSLOGPRINT(DEBUG, "READING");
 
                 // TODO : Ajouter gestion d'erreur
-                fileBuf[retRead] = '\0';
-                _resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
+                std::cout << "retRead = " << retRead << std::endl;
+                //fileBuf[retRead] = '\0';
+                std::cout << "retRead = " << retRead << std::endl;
+                std::cout << "fileBuf = " << fileBuf << std::endl;
+                std::cout << ORANGE << "size fileBuf = " << END << strlen(fileBuf) << std::endl;
+                std::cout << "sizeof(_resBody) = " << sizeof(_resBody) << std::endl;
+                _resBody = std::string(fileBuf);
+                std::cout << "sizeof(_resBody) = " << sizeof(_resBody) << std::endl;
+                //_resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
             }
+            //_resBody.erase(0, 8);
+            std::cout << GREEN <<  "_resBody.size() = " << _resBody.size() << END << std::endl;
+
             // NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
             // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
 
             close(fileFd);
         }
+        contentLength = fileStat.st_size;
     }
+
+    std::cout << BLUE << "=================================" << END << std::endl;
+    std::cout << _resBody << std::endl;
+    std::cout << BLUE << "=================================" << END << std::endl;
+
+
     if (_sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false; // ---> Reset somewhere else ?
@@ -243,7 +269,8 @@ void Response::setBodyHeaders(void)
         if (contentType[0].empty() && !_resFile.empty())
             contentType[0] = responseUtils::getContentType(_resFile);
         lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
-        contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+        //contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
+        //contentLength = 1128;
     }
 }
 
@@ -270,7 +297,12 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
     // QUID de www-authenticate ?
     formatedResponse.append("\r\n");
-    if (contentLength > 0) formatedResponse.append(_resBody);
+    if (contentLength > 0)
+    {
+        
+    }
+
+    //if (contentLength > 0) formatedResponse.append(_resBody);
 
 }
 

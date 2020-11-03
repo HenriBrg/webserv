@@ -46,6 +46,7 @@
 # define DEBUG 4
 # define DISCONNECT 5
 # define SELECT 6
+# define OK 7
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 
@@ -81,6 +82,8 @@ class Logger {
                     break ;
                 case DISCONNECT:
                     std::cout << MAGENTA << " [CLOSE] " << END  << str << std::endl;
+                case OK:
+                    std::cout << GREEN << " [OK] " << END  << str << std::endl;
                 default:
                     break ;
             }

@@ -162,70 +162,54 @@ void Server::readClientRequest(Client *c) {
 
     char recvBuffer[BUFMAX];
     int recvRet(-1);
-    int error;
+    //int error;
+    bool recvCheck(false);
 
     c->resetTimeOut();
-    recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0);;
-    if (recvRet == -1 || recvRet == 0)
+    while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
+    {
+        recvBuffer[recvRet] = '\0';
+        c->req.reqBuf.append(recvBuffer);
+        recvCheck = true;
+    }
+
+    if (!(recvCheck) || recvRet == 0)
     {
         c->isConnected = false;
         if (recvRet == 0)
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
-        if (recvRet == -1)
+        if (recvRet == false)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
     }
     else
     {
-        recvBuffer[recvRet] = '\0';
-
-        std::cout << RED << "============================================\n" << END;
-        std::cout << recvBuffer << std::endl;
-        std::cout << RED << "============================================\n" << END;
-        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(recvRet) + " bytes"));
+        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req.reqBuf.size()) + " bytes"));
         if (c->recvStatus == Client::HEADER)
         {
-            c->req.reqBuf.append(recvBuffer);
-            if (recvRet != 4096 && strstr(c->req.reqBuf.c_str(), "\r\n\r\n") != NULL) //c->req.reqBuf.c_str()
+            if (strstr(c->req.reqBuf.c_str(), "\r\n\r\n") != NULL)
             {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                c->req.parse(locations); // TODO : set errors if invalid request format
+                c->req.parse(locations);
             }
             else
-            { 
+            {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
                 return ;
             }
         }
 
+        c->req.parseBody();
 
-
-        if (c->recvStatus == Client::BODY)
+        if (c->recvStatus == Client::ERROR)
         {
-            if ((c->req.transferEncoding[0] == "chunked"))
-                c->req.parseChunkedBody();
-            else if (c->req.contentLength > 0)
-                c->req.parseSingleBody();
-            else 
-                LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Anormal body"));
-            if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > c->req.reqLocation->max_body) {
-                LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(c->req.reqLocation->max_body)));
-                c->recvStatus = Client::ERROR;
-                c->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
-            } 
+            LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Client Request Error"));
         }
-        if (c->recvStatus == Client::COMPLETE) {
+        else if (c->recvStatus == Client::COMPLETE) // Else not compiling without {}
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
-            FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
-            c->req.showReq();
-        }
-        if (c->recvStatus == Client::ERROR) {
-            // TODO : Passage à tester
-            c->recvStatus = Client::COMPLETE; // Because We will respond even if we get error
-            c->res.setErrorParameters(Response::ERROR, (c->res._statusCode == -1 ? BAD_REQUEST_400 : c->res._statusCode));
-            LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
-            FD_SET(c->acceptFd, &gConfig.writeSetBackup);
-        }
+        c->recvStatus = Client::COMPLETE;
+        FD_SET(c->acceptFd, &gConfig.writeSetBackup);
+        c->req.showReq();
     }
 }
 
@@ -283,6 +267,10 @@ int Server::sendClientResponse(Client *c)
     int retSend(0);
     int bytesSent(0);
     int bytesToSend(0);
+
+    std::cout << RED << "=================================" << END << std::endl;
+    std::cout << c->res.formatedResponse << std::endl;
+    std::cout << RED << "=================================" << END << std::endl;
 
     if (c->res._sendStatus == Response::SENDING)
     {

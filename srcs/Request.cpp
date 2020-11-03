@@ -307,6 +307,33 @@ void Request::parseHeaders() {
 }
 
 
+
+/*
+**  Choix du parsing selon les headers recus et leurs valeurs 
+**  1. Vérification présence d'un body
+**  2. Appel de la fonction correspondante si chunked ou pas
+**  3. Vérification taille du body ne dépasse pas la taille max défini dans le fichier de config
+*/
+void Request::parseBody()
+{
+    if (client->recvStatus == Client::BODY)
+    {
+        if (transferEncoding[0] == "chunked")
+            parseChunkedBody();
+        else if (contentLength > 0)
+            parseSingleBody();
+        else
+            LOGPRINT(LOGERROR, client, ("Server::readClientRequest() : Anormal body"));
+        if (reqLocation->max_body != -1 && _reqBody.size() > reqLocation->max_body)
+        {
+            LOGPRINT(REQERROR, client, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(reqLocation->max_body)));
+            client->recvStatus = Client::ERROR;
+            client->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
+        }
+    }
+}
+
+
 // Really good article
 // https://en.wikipedia.org/wiki/Chunked_transfer_encoding
 // Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
@@ -320,7 +347,7 @@ void Request::parseChunkedBody() {
     std::string tmp;
 
     tmp.clear();
-    _reqBody.append(client->buf);
+    //_reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
 
@@ -365,29 +392,30 @@ void Request::parseChunkedBody() {
         }
         
     }
-    memset(client->buf, 0, BUFMAX + 1);
+    //memset(client->buf, 0, BUFMAX + 1);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End chunked body parsing"));
 }
 
+/*
+**  Vérification de la taille du body
+**  1. Si contentLength est égale à la taille du body alors le parsing de la requete est complete
+**  2. Autrement log + ???
+*/
 void Request::parseSingleBody() {
 
-    size_t      size;
-    char        *newBodyRead = client->buf;
+    size_t      bodySize;
 
-    _reqBody.append(newBodyRead);
-    /* We check if body is fully received by comparing its length with the Content-Length header value */
-    /* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
-    size = _reqBody.length();
-    _currentParsedReqBodyLength = size;
-    memset(newBodyRead, 0, BUFMAX + 1);
-    if (size >= contentLength) {
+    bodySize = _reqBody.length();
+    if (bodySize == contentLength)
+    {
         client->recvStatus = Client::COMPLETE;
-        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
-         + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
-    } else
+        LOGPRINT(OK, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
+         + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(bodySize)));
+    }
+    else // Do something about it ?
         LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not fully received yet"));
-
 }
+
 
 /*
 **  Vérification de l'existence d'un body
@@ -395,21 +423,26 @@ void Request::parseSingleBody() {
 **  2. Si oui, on récupère toute la requête après le \r\n\r\n
 **  3. Sinon, la requête est considérée comme complètement reçue / parsée.
 */
-
-void Request::checkBody() {
-
+void Request::checkBody()
+{
     size_t bodyOffset;
 
-    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
+    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked"))
+    {
         client->recvStatus = Client::BODY;
-        if (transferEncoding[0] == "chunked") {
+        if (transferEncoding[0] == "chunked")
+        {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
-        } else LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
-        _reqBody = std::string(client->buf);
-        bodyOffset = _reqBody.find("\r\n\r\n");
-        _reqBody.erase(0, bodyOffset + 4);
-        memset(client->buf, 0, BUFMAX + 1);
-    } else
+        }
+        else // Erreur sur le else si pas de {}
+        {
+            LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
+        }
+        _reqBody.append(reqBuf);
+        if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
+            _reqBody.erase(0, bodyOffset + 1);
+    }
+    else
         client->recvStatus = Client::COMPLETE;
 }
 
@@ -432,6 +465,10 @@ void Request::parse(std::vector<Location*> locations) {
 
     checkBody();
     LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
+
+    std::cout << BLUE << "====================================]\n" << END << std::endl;
+    std::cout << _reqBody << std::endl;
+    std::cout << BLUE << "====================================]\n" << END << std::endl;
 
     reqBuf.clear(); 
 }

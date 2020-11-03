@@ -54,7 +54,9 @@ class Request {
         void    fillMultiWeightValHeaders(std::string const key, std::string const value);
         void    fillUniqueValHeaders(std::string const key, std::string const value);
         
+        /* Body functions */
         void    checkBody();
+        void    parseBody();
         void    parseChunkedBody();
         void    parseSingleBody();
 

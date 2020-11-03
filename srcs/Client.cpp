@@ -40,7 +40,7 @@ void Client::reset() {
     memset((void*)buf, 0, BUFMAX + 1);
     strbuf.clear();
     isConnected = true;
-	recvStatus = HEADER;
+	recvStatus = Client::HEADER;
     req.reset();
     res.reset();
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
