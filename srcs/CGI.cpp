@@ -134,6 +134,10 @@ void Response::execCGI(Request * req) {
     if (req->cgiType == TESTER_CGI && PLATFORM == "Linux" && executable.find(".pl") == std::string::npos) {
         executable = executable.replace(executable.find("cgi_tester"), sizeof("cgi_tester"), "ubuntu_") + "cgi_tester";
     }
+    if (PLATFORM == "Linux" && req->cgiType == PHP_CGI) {
+        size_t pos = executable.find("local/");
+        executable.erase(pos, sizeof("local/"));
+    }
 
     env = buildCGIEnv(req);
     args = (char **)(malloc(sizeof(char*) * 3));
