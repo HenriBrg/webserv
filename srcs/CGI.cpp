@@ -55,6 +55,9 @@ char ** Response::buildCGIEnv(Request * req) {
 	envmap["QUERY_STRING"]        = req->uriQueries.empty() ? "" : req->uriQueries;
 	if (!req->contentType.empty()) envmap["CONTENT_TYPE"] = req->contentType;
     envmap["SCRIPT_NAME"]         = getCGIType(req) == TESTER_CGI ? req->reqLocation->cgi : req->reqLocation->php;
+    if (PLATFORM == "Linux")
+        envmap["SCRIPT_NAME"] = envmap["SCRIPT_NAME"].replace(envmap["SCRIPT_NAME"].find("cgi_tester"), sizeof("cgi_tester") - 1, "ubuntu_cgi_tester");
+
 	envmap["SERVER_NAME"]         = "127.0.0.1";
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port);
     if (!req->authorization.empty()) {
