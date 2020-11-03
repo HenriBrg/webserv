@@ -124,6 +124,8 @@ void Response::execCGI(Request * req) {
     else if (req->cgiType == PHP_CGI)
         executable = req->reqLocation->php;
     else return LOGPRINT(LOGERROR, this, ("Request::execCGI() : Internal Error - If we reach execCGI(), the cgi should be TESTER_CGI or PHP_CGI"));
+    if (PLATFORM == "Linux")
+        executable = executable.replace(executable.find("cgi_tester"), sizeof("cgi_tester") - 1, "ubuntu_cgi_tester");
     env = buildCGIEnv(req);
     args = (char **)(malloc(sizeof(char*) * 3));
     args[0] = strdup(executable.c_str());

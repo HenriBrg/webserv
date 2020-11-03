@@ -286,9 +286,10 @@ void Request::parseHeaders() {
         if (key.empty())
             continue ;
         value = ft::trim(line.substr(pos + 1));
-        if (value.substr(0, value.size() - 1).find_first_not_of(' ') == std::string::npos)
+        if (value.substr(0, value.size() - 1).find_first_not_of(' ') == std::string::npos) {
             client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-            LOGPRINT(LOGERROR, this, ("Request::parseHeaders() : Header --> " + key + " with empty value --> " + value));
+            LOGPRINT(REQERROR, this, ("Request::parseHeaders() : Header --> " + key + " with empty value --> " + value));
+        }
         utils::deleteCarriageReturn(value);
         fillHeader(key, value);
     }

@@ -8,6 +8,12 @@
 
 # include "Server.hpp"
 
+# ifndef __APPLE__
+    # define PLATFORM "Linux"
+# else
+    # define PLATFORM "Macos"
+# endif
+
 # define OK_200							    200
 # define CREATED_201					    201
 # define ACCEPTED_202					    202

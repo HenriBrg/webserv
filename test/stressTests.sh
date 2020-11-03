@@ -4,8 +4,6 @@ END='\e[0m'
 RED='\e[31m'
 GREEN='\e[32m'
 
-
-lsof -c webserv
 if [ "$?" -ne 0 ]; then
     echo "Webserv isn't running"
     exit
@@ -31,18 +29,7 @@ if [ "$1" -eq 1 ]; then
     exit
 fi
 
-echo
-echo
-
-# TEST n°2 : SIEGE
-
-if [ "$1" -eq 2 ]; then 
-    echo "  2) Running SIEGE on http://localhost:7777"
-    
-    exit
-fi
-
-
 # ----------------
 
 echo "Test n°$1 not found"
+echo
