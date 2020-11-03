@@ -300,7 +300,7 @@ def POST_TESTS(testNum = 0):
         r = requests.post("http://localhost:7777/newFile", data=payload, headers=hd)
         assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789", "www/newFile")
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
         hd = {'Transfer-Encoding': 'chunked'}
         r = requests.post("http://localhost:7777/newFile", data=payload, headers=hd)
