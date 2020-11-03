@@ -4,8 +4,7 @@ Response::Response(void) {
     reset();
 }
 
-Response::Response(Client *c) 
-{
+Response::Response(Client *c)  {
     reset();
     resClient = c;
 }
@@ -27,8 +26,6 @@ void Response::reset() {
     server.clear();
     transfertEncoding.clear();
     wwwAuthenticate.clear();
-
-    // resClient = nullptr; // Segfault on seccond request
     _errorFileName.clear();
     formatedResponse.clear();
     _bytesSent = 0;
@@ -48,19 +45,21 @@ Response::~Response() {
 }
 
 void Response::setErrorParameters(int sendStatus, int code) {
+
     _sendStatus = sendStatus;
     _statusCode = code;
-    _errorFileName = "./www/errors/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+    _errorFileName = "./www/errors/error.html";
     _resFile = "./www/errors/error.html";
+    
 }
 
-void Response::replaceErrorCode(const Server *server)
-{
-    size_t pos(0);
+void Response::replaceErrorCode(const Server *server) {
 
+    size_t pos(0);
     pos = _resBody.find("_ERROR_");
     if (pos != std::string::npos)
         _resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
+    
 }
 
 
@@ -68,7 +67,15 @@ void Response::authControl(Request * req) {
     
     std::vector<std::string> tab;
 
-    if (!req->reqLocation->auth.empty() && !req->authorization.empty()) {
+    if (!req->reqLocation->auth.empty())
+        NOCLASSLOGPRINT(LOGERROR, ("!req->reqLocation->auth.size() = " + std::to_string(req->reqLocation->auth.size())));
+
+    if (!req->reqLocation->auth.empty() && req->authorization.empty()) {
+        setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
+        LOGPRINT(LOGERROR, this, ("Response::authControl() : Header Authentification is not sent in the request"));
+        return ;
+    }
+    if (!req->reqLocation->auth.empty()) {
         tab = ft::split(req->authorization, ' ');
         if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
         if (tab[0] != "Basic" && tab[0] != "BASIC") LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
@@ -82,8 +89,8 @@ void Response::authControl(Request * req) {
 
 }
 
-void Response::methodControl(Request * req, Server * serv)
-{
+void Response::methodControl(Request * req, Server * serv) {
+
     std::vector<std::string>    allowedMethods;
     std::vector<std::string>::iterator    tmp;
 
@@ -95,42 +102,40 @@ void Response::methodControl(Request * req, Server * serv)
         LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
     } else
         _methodFctPtr = serv->methodsTab[req->method];
+    
 }
 
-void Response::versionControl(Request *req)
-{
+void Response::versionControl(Request *req) {
+
     if (req->httpVersion.size() < 8
     || req->httpVersion.substr(0, 5) != "HTTP/")
         setErrorParameters(Response::ERROR, BAD_REQUEST_400);
     else if (req->httpVersion.at(5) != '1')
         setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
+
 }
 
-void Response::resourceControl(Request * req)
-{
+void Response::resourceControl(Request * req) {
+    
     struct stat fileStat;
     int retStat;
 
     if (req->method == "DELETE") {
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
-    }
-    else if (req->method == "PUT" || req->method == "POST")
-    {
+    } else if (req->method == "PUT" || req->method == "POST") {
         if (req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
          if (req->method == "POST" && req->isolateFileName.empty()) {
             LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
             setErrorParameters(Response::ERROR, BAD_REQUEST_400);
         }
-    }
-    else
-    {
+    } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
-    if (retStat == -1)
-        NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
+    if (retStat == -1) NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
+
 }
 
 void Response::control(Request * req, Server * serv) {
@@ -164,16 +169,14 @@ void Response::setHeaders(Request * req) {
     server = "webserv";
 
     // 3) Error headers
-    // Ok ---> Donc ici en fait on aura tous les hd qui auront pu être rempli au cours du traitement si erreur il y a 
-
     if (_sendStatus != Response::ERROR) {
-        allow.clear();              // Unless Error 405
+        allow.clear();
         wwwAuthenticate.clear();
-        retryAfter = -1;         // Quid du status 301
+        retryAfter = -1;
     }
 
-
     // 4) Other headers
+    // TODO BELOW !
     // contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte
     // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
     // if (_isLanguageNegociated)
@@ -209,7 +212,10 @@ void Response::setBody(const Server *server) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    if (!(_resFile.empty()) /* && _resBody.empty() --> TODO : A voir */)
+    if (!(_resFile.empty() && !_resBody.empty())) 
+        NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
+
+    if (!(_resFile.empty()))
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -245,10 +251,10 @@ void Response::setBodyHeaders(void)
     if (!(_resBody.empty())) {
         if (contentType[0].empty() && !_resFile.empty())
             contentType[0] = responseUtils::getContentType(_resFile);
-        lastModified = ft::getLastModifDate(_resFile);
+        if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
+            lastModified = ft::getLastModifDate(_resFile);
         contentLength = _resBody.size();
     }
-    // À confirmer mais répondre avec un Content-Length à -1 semble faire bug tous les clients
     if (resClient->req.method == "GET" && contentLength == -1)
         contentLength = 0;
 

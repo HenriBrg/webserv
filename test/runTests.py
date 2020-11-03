@@ -1,3 +1,15 @@
+# Tester dedicated to the 42 project webserv.
+# 01/11/2020
+# Feel free to use it, just be sure that configuration file is properly set
+
+# Usage : runTests.py [METHOD] [TEST NUM] [VERBOSE]
+# python3 runTests.py
+# python3 runTests.py GET
+# python3 runTests.py PUT
+# python3 runTests.py GET 2
+# python3 runTests.py GET 7
+# python3 runTests.py GET 7 -v
+
 import os
 import sys
 import requests
@@ -21,6 +33,18 @@ class bcolors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
+
+def printHdReqRes(r):
+    print()
+    indent = "          Request >  "
+    for idA, reqKey in enumerate(r.request.headers):
+        print(indent + reqKey + ": " + r.request.headers[reqKey])
+    print()
+    indent = "          Response > "
+    for idB, resKey in enumerate(r.headers):
+        print(indent + resKey + ": " + r.headers[resKey])
+    print()
+
 
 # ------ ASSERTS FUNCTIONS ------
 
@@ -82,13 +106,16 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     if (ret and r.status_code == code):
         info = bcolors.OKGREEN + "OK" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason
     else:
-        info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Received : " + str(code)
+        info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Should have been received : " + str(code)
     url = "           • #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
     if (len(r.request.url) > 50):
         url += r.request.url[16:50] + " ..."
     else: url += str(r.request.url)[16:]
     url = str(url).ljust(65, ' ')
     print(url + "   =   " + info)
+    
+    if verbose == 1:
+        printHdReqRes(r)
 
 # -----------------------------------------------------------------------------
 # ------------------------------------ GET ------------------------------------
@@ -149,6 +176,11 @@ def GET_TESTS(testNum = 0):
 
     # ------- GET : Authentification (root:pass = cm9vdDpwYXNz)
 
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        # hd = {"Authorization": "Basic cm9vdDpwYXNz"} --> Test without the Authorization header
+        r = requests.get("http://localhost:7777/auth", headers={})
+        assertResponse(r, 401, index)
     index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {"Authorization": "Basic cm9vdDpwYXNz"} 
@@ -319,6 +351,9 @@ def DELETE_TESTS(testNum = 0):
 # ----------------------------------- MAIN ------------------------------------
 # -----------------------------------------------------------------------------
 
+global verbose
+verbose = 0
+
 if (len(sys.argv) == 1):
     GET_TESTS()
     POST_TESTS()
@@ -332,6 +367,13 @@ elif (len(sys.argv) == 2):
     elif (sys.argv[1] == "PUT"):    PUT_TESTS()
     elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
 elif (len(sys.argv) == 3):
+    if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
+    elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
+    elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
+    elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
+    elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
+elif (len(sys.argv) == 4 and sys.argv[3] == '-v'):
+    verbose = 1
     if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
     elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
     elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])

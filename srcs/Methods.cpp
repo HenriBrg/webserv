@@ -207,7 +207,7 @@ void Response::negotiateAcceptCharset(Request * req)
     {
         if ((*it).second == "utf-8" || (*it).second == "*")
         {
-            if ((*it).first == 0) // Set as unacceptable // TO DO: Add representation with utf-8 in respoonse
+            if ((*it).first == 0) // Set as unacceptable // TODO: Add representation with utf-8 in respoonse
                 setErrorParameters(Response::ERROR, NOT_ACCEPTABLE_406);
             return ;
         }
