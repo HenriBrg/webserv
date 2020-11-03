@@ -142,7 +142,7 @@ void Response::execCGI(Request * req) {
     args[2] = 0;
     if (stat(executable.c_str(), &buffer) != 0 || !(buffer.st_mode & S_IFREG)) {
         clearCGI(args, env);
-        return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable"));
+        return LOGPRINT(LOGERROR, this, ("Request::execCGI() : The CGI provided in the configuration file isn't executable (path = " + executable));
     }
     if ((tmpFd = open(CGI_OUTPUT_TMPFILE, O_WRONLY | O_CREAT, 0666)) == -1) {
         clearCGI(args, env);

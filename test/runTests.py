@@ -293,8 +293,7 @@ def POST_TESTS(testNum = 0):
     
     # ------- POST CHUNKED - 200/201 - NO CGI
     index += 1
-    # if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
-    if (testNum == 0 or index == int(testNum)):
+    if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
         hd = {'Transfer-Encoding': 'chunked'}
