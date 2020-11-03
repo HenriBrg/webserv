@@ -290,9 +290,8 @@ def POST_TESTS(testNum = 0):
         hd = {"Content-Type": "application/json"}
         r = requests.post('http://localhost:7777/newFile',  data=json.dumps(payload), headers=hd)
         assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "{\"hello\": \"world\"}", "www/newFile")
-    
-    # ------- POST CHUNKED - 200/201 - NO CGI
     index += 1
+    # ------- POST CHUNKED - 200/201 - NO CGI
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
