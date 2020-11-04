@@ -42,6 +42,7 @@ namespace responseUtils {
 	int getContentLength(std::string file);
 	int setupBytesArray(Response *res);
 	void copyBytes(char* dest, const char* src, size_t limit, size_t offset);
+	char* setBodyNoFile(std::string src, int size, int &contentLength);
 	std::string getReasonPhrase(int code);
 	void headerFormat(std::string & respStr, std::string key, int value);
 	void headerFormat(std::string & respStr, std::string key, std::string value);

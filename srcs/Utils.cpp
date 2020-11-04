@@ -369,6 +369,18 @@ namespace responseUtils
 		return (0);
 	}
 
+	char* setBodyNoFile(std::string src, int size, int &contentLength)
+	{
+		char *dest;
+		
+		if (!(dest = (char*)malloc(sizeof(char) * (size + 1))))
+			NOCLASSLOGPRINT(LOGERROR, ("Response::setBody() : allocation body failed"));
+		contentLength = size;
+		responseUtils::copyBytes(dest, src.c_str(), size, 0);
+		dest[size] = '\0';
+		return (dest);
+	}
+
 	void copyBytes(char* dest, const char* src, size_t limit, size_t offset)
 	{
 		if (dest && src)
