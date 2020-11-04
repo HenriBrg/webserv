@@ -119,8 +119,8 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     else:
         info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Should have been received : " + str(code)
     url = "           • #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
-    if (len(r.request.url) > 50):
-        url += r.request.url[16:50] + " [..." + str(len(r.request.url)) + "]"
+    if (len(r.request.url) > 60):
+        url += r.request.url[16:60] + " [..." + str(len(r.request.url)) + "]"
     else: url += str(r.request.url)[16:]
     url = str(url).ljust(70, ' ')
     print(url + "   =   " + info)
@@ -139,19 +139,21 @@ def run(sys):
         DELETE_TESTS
         HEAD_TESTS
     elif (len(sys.argv) == 2):
-        if (sys.argv[1] == "GET"):      GET_TESTS()
+        if (len(sys.argv) == 2 and sys.argv[1] == "TESTER42"):
+            TESTS_42()
+        elif (sys.argv[1] == "GET"):      GET_TESTS()
         elif (sys.argv[1] == "HEAD"):   HEAD_TESTS()
         elif (sys.argv[1] == "POST"):   POST_TESTS()
         elif (sys.argv[1] == "PUT"):    PUT_TESTS()
         elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
     elif (len(sys.argv) >= 3):
-        if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
+        if (sys.argv[1] == "TESTER42"):
+            TESTS_42(sys.argv[2])
+        elif (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
         elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
         elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
         elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
         elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
-    elif (len(sys.argv) == 2 and sys.argv[1] == "T42"):
-        TESTS_42()
     print()
     
 
@@ -294,7 +296,7 @@ def GET_TESTS(testNum = 0):
 # ----------------------------------- POST ------------------------------------
 # -----------------------------------------------------------------------------
 
-# ATTENTION : Run indépendament des autres les POST peut en faire rater certains
+# ATTENTION : Run indépendament des autres les POST peut faire KO le suivant
 
 def POST_TESTS(testNum = 0):
 
@@ -403,12 +405,93 @@ def DELETE_TESTS(testNum = 0):
 
 
 # -----------------------------------------------------------------------------
-# ----------------------------------- MAIN ------------------------------------
+# ------------------------------------ 42 -------------------------------------
 # -----------------------------------------------------------------------------
 
-def TESTS_42():
-    print("42")
+def TESTS_42(testNum = 0):
 
+    index = 0
+    print("\n     ~ 42 TESTS ------------------------> \n")
+    
+    # ------- STAGE 1
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/")
+        assertResponse(r, 200, index)
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        payload = ""
+        r = requests.post("http://localhost:8888/", data=payload)
+        assertResponse(r, 405, index)
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.head("http://localhost:8888/")
+        assertResponse(r, 405, index)
+    index += 1
+    # Should return ./youpi.bad_extension
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory")
+        assertResponse(r, 200, index)
+    index += 1
+    # Should return ./youpi.bla
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/youpi.bla")
+        assertResponse(r, 200, index)
+    index += 1
+    # Should return Error
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/oulalala")
+        assertResponse(r, 404, index)
+    index += 1
+
+    # Error in parse file / location
+
+    # Should return youpi.bad_extension
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/nop")
+        assertResponse(r, 200, index)
+    index += 1
+    # Should return youpi.bad_extension
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/nop/")
+        assertResponse(r, 200, index)
+    index += 1
+    # Should return other.pouic
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/nop/other.pouic")
+        assertResponse(r, 200, index)
+    index += 1
+    # Should return Error 404
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/nop/other.pouac")
+        assertResponse(r, 404, index)
+    index += 1
+    # Should return Error 404
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/Yeah")
+        assertResponse(r, 404, index)
+    index += 1
+    # --> Simple GET
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:8888/directory/Yeah/not_happy.bad_extension")
+        assertResponse(r, 200, index)
+    index += 1
+    
+    
+    # WAIT FOR CONFIG FIX
+
+
+    # File should exist after with a size of 1000
+    # if (testNum == 0 or index == int(testNum)):
+    #     if os.path.exists("www/test42/not_happy.bad_extension"): os.remove("www/test42/not_happy.bad_extension")
+    #     payload = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    #     r = requests.put("http://localhost:8888/put_test/file_should_exist_after", data=payload)
+    #     assertResponse(r, 201, index)
+  
+
+# -----------------------------------------------------------------------------
+# ----------------------------------- MAIN ------------------------------------
+# -----------------------------------------------------------------------------
 
 
 run(sys)

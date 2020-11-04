@@ -12,7 +12,6 @@ En cours :
 
     AUTRES :
     
-    - Leaks mémoire / socket
     - Brief commentaire des fonctions
     - Compiler avec les 3 flags
     - Read fichier PNG
@@ -22,3 +21,6 @@ En cours :
     - Est-ce qu'on utilise bien toutes les fonctions autorisées par le sujet (sinon, on a peut être zap qqchose)
 
     - grep -rin TODO  srcs/*.cpp ---> à voir ensemble sur une session rush
+
+
+    - À voir ensemble : Response::control

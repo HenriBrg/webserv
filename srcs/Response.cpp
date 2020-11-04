@@ -127,7 +127,7 @@ void Response::versionControl(Request *req) {
 void Response::resourceControl(Request * req) {
     
     struct stat fileStat;
-    int retStat;
+    int retStat = 0;
 
     if (req->method == "DELETE") {
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
@@ -135,7 +135,7 @@ void Response::resourceControl(Request * req) {
     } else if (req->method == "PUT" || req->method == "POST") {
         if (req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
-         if (req->method == "POST" && req->isolateFileName.empty()) {
+        if (req->method == "POST" && req->isolateFileName.empty()) {
             LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
             setErrorParameters(Response::ERROR, BAD_REQUEST_400);
         }
@@ -157,17 +157,17 @@ void Response::reqHeadersControl(Request * req) {
 
 void Response::control(Request * req, Server * serv) {
     
-    if (_sendStatus != Response::ERROR)
+    // if (_sendStatus != Response::ERROR)
         versionControl(req);
-    if (_sendStatus != Response::ERROR)
-        resourceControl(req);
-    if (_sendStatus != Response::ERROR)
-        methodControl(req, serv);
-    if (_sendStatus != Response::ERROR)
-        authControl(req);
-    if (_sendStatus != Response::ERROR)
+    // if (_sendStatus != Response::ERROR)
         reqHeadersControl(req);
-
+    // if (_sendStatus != Response::ERROR)
+        resourceControl(req);
+    // if (_sendStatus != Response::ERROR)
+        methodControl(req, serv);
+    // if (_sendStatus != Response::ERROR)
+        authControl(req);
+    
 }
 
 void Response::callMethod(Request * req) {
@@ -218,8 +218,8 @@ void Response::setBody(const Server *server) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    if (!(_resFile.empty() && !_resBody.empty())) 
-        NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
+    // if (!(_resFile.empty() && !_resBody.empty())) 
+    //     NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
 
     if (!(_resFile.empty()))
     {

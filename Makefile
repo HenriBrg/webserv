@@ -43,9 +43,9 @@ run: all
 	@printf "\033c"
 	@./$(NAME) conf/default.conf
 
-silentRun: all
+test: all
 	@printf "\033c"
-	@./$(NAME) conf/default.conf
+	@./$(NAME) conf/tester.conf
 
 $(NAME): $(OBJS) $(HEADERS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME) 
