@@ -1,63 +1,63 @@
 # include "../inc/Webserv.hpp"
 
 Response::Response(void) {
-    reset();
+	reset();
 }
 
 Response::Response(Client *c)  {
-    reset();
-    resClient = c;
+	reset();
+	resClient = c;
 }
 
 void Response::reset() {
 
-    httpVersion.clear();
-    _statusCode = -1;
-    reason.clear();
-    allow.clear();
-    contentLanguage.clear();
-    _isLanguageNegociated = false;
-    contentLocation.clear();
-    contentType.clear();
-    lastModified.clear();
-    location.clear();
-    date.clear();
-    retryAfter = -1;
-    server.clear();
-    transfertEncoding.clear();
-    wwwAuthenticate.clear();
-    _errorFileName.clear();
-    formatedResponse.clear();
-    _bytesSent = 0;
-    _sendStatus = Response::PREPARE;
-    _resBody.clear();
-    _resFile.clear();
-    _cgiOutputBody.clear();
-    contentLength = -1;
-    _methodFctPtr = nullptr;
-    _didCGIPassed = false;
+	httpVersion.clear();
+	_statusCode = -1;
+	reason.clear();
+	allow.clear();
+	contentLanguage.clear();
+	_isLanguageNegociated = false;
+	contentLocation.clear();
+	contentType.clear();
+	lastModified.clear();
+	location.clear();
+	date.clear();
+	retryAfter = -1;
+	server.clear();
+	transfertEncoding.clear();
+	wwwAuthenticate.clear();
+	_errorFileName.clear();
+	formatedResponse.clear();
+	_bytesSent = 0;
+	_sendStatus = Response::PREPARE;
+	_resBody.clear();
+	_resFile.clear();
+	_cgiOutputBody.clear();
+	contentLength = -1;
+	_methodFctPtr = nullptr;
+	_didCGIPassed = false;
 
 }
 
 Response::~Response() {
-    reset();
+	reset();
 }
 
 void Response::setErrorParameters(int sendStatus, int code) {
 
-    _sendStatus = sendStatus;
-    _statusCode = code;
-    _errorFileName = resClient->server->error + "/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
-    _resFile =  resClient->server->error + "/error.html";;
+	_sendStatus = sendStatus;
+	_statusCode = code;
+	_errorFileName = resClient->server->error + "/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+	_resFile =  resClient->server->error + "/error.html";;
 }
 
 void Response::replaceErrorCode(const Server *server) {
 
-    size_t pos(0);
-    pos = _resBody.find("_ERROR_");
-    if (pos != std::string::npos)
-        _resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
-    
+	size_t pos(0);
+	pos = _resBody.find("_ERROR_");
+	if (pos != std::string::npos)
+		_resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
+	
 }
 
 /*
@@ -70,55 +70,55 @@ void Response::replaceErrorCode(const Server *server) {
 */
 
 void Response::authControl(Request * req) {
-    
-    std::vector<std::string> tab;
+	
+	std::vector<std::string> tab;
 
-    if (!req->reqLocation->auth.empty() && req->authorization.empty()) {
-        setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
-        LOGPRINT(LOGERROR, this, ("Response::authControl() : Header Authentification is not sent in the request"));
-        return ;
-    }
-    if (!req->reqLocation->auth.empty()) {
-        tab = ft::split(req->authorization, ' ');
-        if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
-        if (tab[0] != "Basic" && tab[0] != "BASIC") {
-            setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
-            LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
-            return ;
-        }
-        LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
-        if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
-            setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
-            LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
-            return ;
-        } else LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
-    }
+	if (!req->reqLocation->auth.empty() && req->authorization.empty()) {
+		setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
+		LOGPRINT(LOGERROR, this, ("Response::authControl() : Header Authentification is not sent in the request"));
+		return ;
+	}
+	if (!req->reqLocation->auth.empty()) {
+		tab = ft::split(req->authorization, ' ');
+		if (tab.size() < 2) LOGPRINT(LOGERROR, this, ("Response::authControl() : Incomplete www-authenticate header"));
+		if (tab[0] != "Basic" && tab[0] != "BASIC") {
+			setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
+			LOGPRINT(LOGERROR, this, ("Response::authControl() : Unknow www-authenticate encoding"));
+			return ;
+		}
+		LOGPRINT(INFO, this, ("Response::authControl() : Server credentials are : " + req->reqLocation->auth + " and given authorization header is : " + ft::decodeBase64(tab[1])));
+		if (ft::decodeBase64(tab[1]) != req->reqLocation->auth) {
+			setErrorParameters(Response::ERROR, UNAUTHORIZED_401);
+			LOGPRINT(LOGERROR, this, ("Response::authControl() : Failed authentification"));
+			return ;
+		} else LOGPRINT(INFO, this, ("Response::authControl() : Successfull authentification"));
+	}
 
 }
 
 void Response::methodControl(Request * req, Server * serv) {
 
-    std::vector<std::string>    allowedMethods;
-    std::vector<std::string>::iterator    tmp;
+	std::vector<std::string>    allowedMethods;
+	std::vector<std::string>::iterator    tmp;
 
-    allowedMethods = ft::split(req->reqLocation->methods, ',');
-    tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
-    if (tmp == allowedMethods.end()) {
-        allow = req->reqLocation->methods;
-        setErrorParameters(Response::ERROR, METHOD_NOT_ALLOWED_405);
-        LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
-    } else
-        _methodFctPtr = serv->methodsTab[req->method];
-    
+	allowedMethods = ft::split(req->reqLocation->methods, ',');
+	tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
+	if (tmp == allowedMethods.end()) {
+		allow = req->reqLocation->methods;
+		setErrorParameters(Response::ERROR, METHOD_NOT_ALLOWED_405);
+		LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
+	} else
+		_methodFctPtr = serv->methodsTab[req->method];
+	
 }
 
 void Response::versionControl(Request *req) {
 
-    if (req->httpVersion.size() < 8
-    || req->httpVersion.substr(0, 5) != "HTTP/")
-        setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-    else if (req->httpVersion.at(5) != '1')
-        setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
+	if (req->httpVersion.size() < 8
+	|| req->httpVersion.substr(0, 5) != "HTTP/")
+		setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+	else if (req->httpVersion.at(5) != '1')
+		setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
 
 }
 
@@ -147,10 +147,10 @@ void Response::resourceControl(Request * req) {
 
 void Response::reqHeadersControl(Request * req) {
 
-    if (req->host.empty()) {
-        LOGPRINT(INFO, this, ("Response::reqHeadersControl() : Host header is absent of the request headers. 400 BAD REQUEST"));
-        return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-    }
+	if (req->host.empty()) {
+		LOGPRINT(INFO, this, ("Response::reqHeadersControl() : Host header is absent of the request headers. 400 BAD REQUEST"));
+		return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+	}
 }
 
 void Response::control(Request * req, Server * serv) {
@@ -183,45 +183,45 @@ void Response::control(Request * req, Server * serv) {
 }
 
 void Response::callMethod(Request * req) {
-    if (_sendStatus != Response::ERROR)
-        (this->*_methodFctPtr)(req);
+	if (_sendStatus != Response::ERROR)
+		(this->*_methodFctPtr)(req);
 }
 
 void Response::setHeaders(Request * req) {
 
-    /* 1) Status Line */
-    httpVersion = "HTTP/1.1";
-    reason = responseUtils::getReasonPhrase(_statusCode);
-    if (_statusCode == -1) _statusCode = INTERNAL_ERROR_500;
-    /* 2) Basic headers */
-    date = ft::getDate();
-    server = "webserv";
-    /* 3) Error headers */
-    if (_sendStatus != Response::ERROR) {
-        allow.clear();
-        wwwAuthenticate.clear();
-        retryAfter = -1;
-    }
-    /* 4) Other headers */
-    /* TODO BELOW ! */
-    /* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
-    /* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
-    /* if (_isLanguageNegociated) */
-    /*     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? */
-    contentLanguage.clear();
-    if (req->method == "PUT") contentLocation[0] = req->file;
-    else contentLocation.clear();
-    if (_statusCode == CREATED_201) location = req->uri;
-    else location.clear();
-    transfertEncoding.clear();
-    /* 5) Body headers cleared in case of no body in response */
-    if (contentType.empty()) // We set it in CGI
-        contentType.clear();
-    /* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
-    if (_resFile.empty() && _resBody.empty()) // ---> à voir
-        contentLength = -1; // --> Updated in setBodyHeaders
-    /* On set également ce header lors de l'authentification */
-    if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
+	/* 1) Status Line */
+	httpVersion = "HTTP/1.1";
+	reason = responseUtils::getReasonPhrase(_statusCode);
+	if (_statusCode == -1) _statusCode = INTERNAL_ERROR_500;
+	/* 2) Basic headers */
+	date = ft::getDate();
+	server = "webserv";
+	/* 3) Error headers */
+	if (_sendStatus != Response::ERROR) {
+		allow.clear();
+		wwwAuthenticate.clear();
+		retryAfter = -1;
+	}
+	/* 4) Other headers */
+	/* TODO BELOW ! */
+	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
+	/* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
+	/* if (_isLanguageNegociated) */
+	/*     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? */
+	contentLanguage.clear();
+	if (req->method == "PUT") contentLocation[0] = req->file;
+	else contentLocation.clear();
+	if (_statusCode == CREATED_201) location = req->uri;
+	else location.clear();
+	transfertEncoding.clear();
+	/* 5) Body headers cleared in case of no body in response */
+	if (contentType.empty()) // We set it in CGI
+		contentType.clear();
+	/* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
+	if (_resFile.empty() && _resBody.empty()) // ---> à voir
+		contentLength = -1; // --> Updated in setBodyHeaders
+	/* On set également ce header lors de l'authentification */
+	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
 void Response::setBody(const Server *server) {
@@ -258,6 +258,10 @@ void Response::setBody(const Server *server) {
             // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
 
             close(fileFd);
+			struct stat autoStat;
+			if (stat("autoindex/autoindex.html", &autoStat) == 0)
+				unlink("autoindex/autoindex.html");
+			rmdir("autoindex");
         }
     }
     if (_sendStatus == Response::ERROR)
@@ -267,48 +271,45 @@ void Response::setBody(const Server *server) {
 
 void Response::setBodyHeaders(void)
 {
-    if (!(_resBody.empty())) {
-        if (contentType[0].empty() && !_resFile.empty())
-            contentType[0] = responseUtils::getContentType(_resFile);
-        if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
-            lastModified = ft::getLastModifDate(_resFile);
-        contentLength = _resBody.size();
-    }
-    if (resClient->req.method == "GET" && contentLength == -1)
-        contentLength = 0;
+	if (!(_resBody.empty())) {
+		if (contentType[0].empty() && !_resFile.empty())
+			contentType[0] = responseUtils::getContentType(_resFile);
+		if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
+			lastModified = ft::getLastModifDate(_resFile);
+		contentLength = _resBody.size();
+	}
+	if (resClient->req.method == "GET" && contentLength == -1)
+		contentLength = 0;
 
-    if (resClient->req.method == "HEAD") {
-        contentLength = _resBody.size();
-        _resBody.clear();
-    }
-
+	if (resClient->req.method == "HEAD") {
+		contentLength = _resBody.size();
+		_resBody.clear();
+	}
 }
-
 
 void Response::format(void) {
 
-    formatedResponse.clear();
-    // 1) Status Line
-    formatedResponse.append(httpVersion);
-    formatedResponse.append(" " + std::to_string(_statusCode) + " ");
-    formatedResponse.append(reason);
-    formatedResponse.append("\r\n");
-    // 2) Headers
-    responseUtils::headerFormat(formatedResponse, "Allow", allow);
-    responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
-    responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
-    responseUtils::headerFormat(formatedResponse, "Content-Location", contentLocation);
-    responseUtils::headerFormat(formatedResponse, "Content-Type", contentType);
-    responseUtils::headerFormat(formatedResponse, "Last-Modified", lastModified);
-    responseUtils::headerFormat(formatedResponse, "Location", location);
-    responseUtils::headerFormat(formatedResponse, "Date", date);
-    responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
-    responseUtils::headerFormat(formatedResponse, "Host", server);
-    responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-    // QUID de www-authenticate ?
-    formatedResponse.append("\r\n");
-    if (contentLength > 0) formatedResponse.append(_resBody);
-
+	formatedResponse.clear();
+	// 1) Status Line
+	formatedResponse.append(httpVersion);
+	formatedResponse.append(" " + std::to_string(_statusCode) + " ");
+	formatedResponse.append(reason);
+	formatedResponse.append("\r\n");
+	// 2) Headers
+	responseUtils::headerFormat(formatedResponse, "Allow", allow);
+	responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
+	responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
+	responseUtils::headerFormat(formatedResponse, "Content-Location", contentLocation);
+	responseUtils::headerFormat(formatedResponse, "Content-Type", contentType);
+	responseUtils::headerFormat(formatedResponse, "Last-Modified", lastModified);
+	responseUtils::headerFormat(formatedResponse, "Location", location);
+	responseUtils::headerFormat(formatedResponse, "Date", date);
+	responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
+	responseUtils::headerFormat(formatedResponse, "Host", server);
+	responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
+	// QUID de www-authenticate ?
+	formatedResponse.append("\r\n");
+	if (contentLength > 0) formatedResponse.append(_resBody);
 }
 
 /* **************************************************** */
@@ -317,10 +318,10 @@ void Response::format(void) {
 
 std::string const Response::logInfo(void) {
 
-    std::string ret;
-    if (resClient == NULL) return "LOG WOULD SEGFAULT - We dont print it";
-    ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
-    return (ret);
+	std::string ret;
+	if (resClient == NULL) return "LOG WOULD SEGFAULT - We dont print it";
+	ret = "Response | Destination : Client from port " + std::to_string(resClient->port) + " (socket n°" + std::to_string(resClient->acceptFd) + ") | Method : " + resClient->req.method + " | Response Status : " + std::to_string(_sendStatus) + " | Response Code : " + std::to_string(_statusCode);
+	return (ret);
 
 }
 
@@ -366,6 +367,4 @@ void Response::showFullHeadersRes(void) {
     int x =  _resBody.size();
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
 	std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
-
-
 }
