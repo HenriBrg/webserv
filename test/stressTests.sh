@@ -12,6 +12,9 @@ if [ "$#" -eq 0 ]; then
     echo "Usage: sh runStressTests.sh <num test>"
     exit
 fi
+if [ ! -f "webserv" ]; then
+	make run
+fi
 echo
 echo
 

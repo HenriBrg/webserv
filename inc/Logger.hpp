@@ -46,13 +46,6 @@
 # define DISCONNECT 5
 # define SELECT 6
 
-# ifndef SILENTLOGS
-    # define SILENT_LOGGER 0
-# else
-    # define SILENT_LOGGER 1
-# endif
-
-
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
 
@@ -62,7 +55,7 @@ class Logger {
         template <typename T>
         static void print(int type, T *x, std::string const & message) {
 
-            if (SILENT_LOGGER == 1)
+            if (SILENTLOGS == 1)
                 return ;
             
             std::string str;
@@ -96,7 +89,7 @@ class Logger {
         // Fonction requise car impossible de passer NULL à un paramètre définit par template
         static void noClassLogPrint(int type, std::string const & message) {
 
-            if (SILENT_LOGGER == 1)
+            if (SILENTLOGS == 1)
                 return ;
 
             std::string timestamp;

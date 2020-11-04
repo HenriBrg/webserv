@@ -128,6 +128,34 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     if verbose == 1:
         printHdReqRes(r)
 
+def run(sys):
+
+    print("\n       Platform = " + platform)
+
+    if (len(sys.argv) == 1):
+        GET_TESTS()
+        POST_TESTS()
+        PUT_TESTS
+        DELETE_TESTS
+        HEAD_TESTS
+    elif (len(sys.argv) == 2):
+        if (sys.argv[1] == "GET"):      GET_TESTS()
+        elif (sys.argv[1] == "HEAD"):   HEAD_TESTS()
+        elif (sys.argv[1] == "POST"):   POST_TESTS()
+        elif (sys.argv[1] == "PUT"):    PUT_TESTS()
+        elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
+    elif (len(sys.argv) >= 3):
+        if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
+        elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
+        elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
+        elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
+        elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
+    elif (len(sys.argv) == 2 and sys.argv[1] == "T42"):
+        TESTS_42()
+    print()
+    
+
+
 # -----------------------------------------------------------------------------
 # ------------------------------------ GET ------------------------------------
 # -----------------------------------------------------------------------------
@@ -378,26 +406,9 @@ def DELETE_TESTS(testNum = 0):
 # ----------------------------------- MAIN ------------------------------------
 # -----------------------------------------------------------------------------
 
+def TESTS_42():
+    print("42")
 
-print("\n       Platform = " + platform)
 
-if (len(sys.argv) == 1):
-    GET_TESTS()
-    POST_TESTS()
-    PUT_TESTS
-    DELETE_TESTS
-    HEAD_TESTS
-elif (len(sys.argv) == 2):
-    if (sys.argv[1] == "GET"):      GET_TESTS()
-    elif (sys.argv[1] == "HEAD"):   HEAD_TESTS()
-    elif (sys.argv[1] == "POST"):   POST_TESTS()
-    elif (sys.argv[1] == "PUT"):    PUT_TESTS()
-    elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
-elif (len(sys.argv) >= 3):
-    if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
-    elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
 
-print()
+run(sys)

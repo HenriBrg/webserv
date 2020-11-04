@@ -48,7 +48,6 @@ silentRun: all
 	@./$(NAME) conf/default.conf
 
 $(NAME): $(OBJS) $(HEADERS)
-	echo $(LOGS)
 	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME) 
 
 $(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
