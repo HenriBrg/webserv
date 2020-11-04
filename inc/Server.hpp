@@ -74,7 +74,7 @@ class Server {
         void writeClientResponse(Client *c);
         void setClientResponse(Client *c);
         int sendClientResponse(Client *c);
-
+        int sendBytes(Client *c, char *toSend, size_t bytesToSend);
 
         std::string const logInfo(void);
 

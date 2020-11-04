@@ -33,7 +33,9 @@ void Response::reset() {
     formatedResponse.clear();
     _bytesSent = 0;
     _sendStatus = Response::PREPARE;
-    _resBody.clear();
+
+    _resBody = nullptr;
+
     _resFile.clear();
     _cgiOutputBody.clear();
     contentLength = -1;
@@ -54,13 +56,35 @@ void Response::setErrorParameters(int sendStatus, int code) {
     _resFile = "./www/errors/error.html";
 }
 
+/*
+**  Replace tag _ERROR_ in error.html by response error status
+**  1. Get index of _ERROR_ tag
+**  2. Create new char* of final size
+**  3. Fullfil new char* with pre-tag chars
+**  4. Fullfil new char* with response error status
+**  5. Fullfil new char* with post-tag chars
+**  6. Free _resBody and attribuate new char* to it
+*/
 void Response::replaceErrorCode(const Server *server)
 {
-    size_t pos(0);
+    int index(0);
 
-    pos = _resBody.find("_ERROR_");
-    if (pos != std::string::npos)
-        _resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
+    index = ft::ft_strstr(_resBody, "_ERROR_", responseUtils::getContentLength(_resFile));
+    if (index >= 0)
+    {
+        int fileLength = responseUtils::getContentLength(_resFile) - 7;
+        int replaceLength = server->_errorStatus.at(_statusCode).size();
+        int totalLength = fileLength + replaceLength;
+        char *tmp = (char*)malloc(sizeof(char) * totalLength);
+
+        responseUtils::copyBytes(tmp, _resBody, index, 0);
+        responseUtils::copyBytes(tmp, server->_errorStatus.at(_statusCode).c_str(), replaceLength, index);
+        responseUtils::copyBytes(tmp, &(_resBody[index + 7]), (fileLength - index),(replaceLength + index));
+
+        free(_resBody);
+        _resBody = tmp;
+        contentLength = totalLength;
+    }
 }
 
 
@@ -82,6 +106,13 @@ void Response::authControl(Request * req) {
 
 }
 
+/*
+**  Verify if received METHOD is valid
+**  1. Get all allowed methods of location
+**  2. Compare them to received method
+**  3. If no one match then error 405
+**  4. Else attribuate corresponding method function
+*/
 void Response::methodControl(Request * req, Server * serv)
 {
     std::vector<std::string>    allowedMethods;
@@ -97,6 +128,13 @@ void Response::methodControl(Request * req, Server * serv)
         _methodFctPtr = serv->methodsTab[req->method];
 }
 
+
+/*
+**  Verify if received version is valid
+**  1. Verify total size (segfault)
+**  2. Verify HTTP 
+**  3. Verify http version
+*/
 void Response::versionControl(Request *req)
 {
     if (req->httpVersion.size() < 8
@@ -106,6 +144,13 @@ void Response::versionControl(Request *req)
         setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
 }
 
+
+/*
+**  Verify if requested resource is valid
+**  1. If Delete -> verify if resource exists
+**  2. If PUT || POST -> verify if resource is a directory (if true then error)
+**  3. Else verify if file exists
+*/
 void Response::resourceControl(Request * req)
 {
     struct stat fileStat;
@@ -133,6 +178,10 @@ void Response::resourceControl(Request * req)
         NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
 }
 
+
+/*
+**  Dispatching function for controlling request
+*/
 void Response::control(Request * req, Server * serv) {
     
     if (_sendStatus != Response::ERROR)
@@ -147,11 +196,19 @@ void Response::control(Request * req, Server * serv) {
     // TODO : be sure that we dont forget meaningfull headers
 }
 
+
+/*
+**  Call for corresponding method function set in methodControl()
+*/
 void Response::callMethod(Request * req) {
     if (_sendStatus != Response::ERROR)
         (this->*_methodFctPtr)(req);
 }
 
+
+/*
+**  SET ALL HEADERS TODO
+*/
 void Response::setHeaders(Request * req) {
 
     // 1) Status Line
@@ -200,6 +257,12 @@ void Response::setHeaders(Request * req) {
     contentLength = -1;   // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
 }
 
+/*
+**  Function to fullfit body (bytes array) with file content
+**  1. Allocate char* of file size
+**  2. Read file to retreive bytes
+**  3. If error html page then contextualize body with corresponding error status
+*/
 void Response::setBody(const Server *server) {
 
     if (_didCGIPassed == true) {
@@ -211,66 +274,46 @@ void Response::setBody(const Server *server) {
         char fileBuf[4096];
         int fileFd(0);
         int retRead(0);
+        int saveOffset(0);
 
-        struct stat fileStat;
-        int retStat;
-
-        retStat = stat(_resFile.c_str(), &fileStat);
-        std::cout << GREEN << "file size = " << END << fileStat.st_size << std::endl;
-
-
-        std::cout << ORANGE << "AVANT OPEN BODY FILE\n" << END;
-        
+        if (responseUtils::setupBytesArray(this) == -1)
+            return ;
         if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
-
-            //lseek(fileFd, 9, SEEK_SET);
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
-                std::cout << MAGENTA << "===============================\n" << END;
-                // NOCLASSLOGPRINT(DEBUG, "READING");
-
-                // TODO : Ajouter gestion d'erreur
-                std::cout << "retRead = " << retRead << std::endl;
-                //fileBuf[retRead] = '\0';
-                std::cout << "retRead = " << retRead << std::endl;
-                std::cout << "fileBuf = " << fileBuf << std::endl;
-                std::cout << ORANGE << "size fileBuf = " << END << strlen(fileBuf) << std::endl;
-                std::cout << "sizeof(_resBody) = " << sizeof(_resBody) << std::endl;
-                _resBody = std::string(fileBuf);
-                std::cout << "sizeof(_resBody) = " << sizeof(_resBody) << std::endl;
-                //_resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
+                if (retRead == -1)
+                {
+                    LOGPRINT(LOGERROR, this, ("Response::setBody() : read() body file failed | Bytes copied = " + std::to_string(saveOffset)));
+                    break ;
+                }
+                responseUtils::copyBytes(_resBody, fileBuf, retRead, saveOffset);
+                saveOffset += retRead;
             }
-            //_resBody.erase(0, 8);
-            std::cout << GREEN <<  "_resBody.size() = " << _resBody.size() << END << std::endl;
-
-            // NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
-            // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
-
+            contentLength = saveOffset;
             close(fileFd);
         }
-        contentLength = fileStat.st_size;
+        else
+            LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
+        
     }
-
-    std::cout << BLUE << "=================================" << END << std::endl;
-    std::cout << _resBody << std::endl;
-    std::cout << BLUE << "=================================" << END << std::endl;
-
-
-    if (_sendStatus == Response::ERROR)
+    if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false; // ---> Reset somewhere else ?
 
 }
 
+
+/*
+**  Set body headers values
+*/
 void Response::setBodyHeaders(void)
 {
-    if (!(_resBody.empty())) {
+    if (_resBody)
+    {
         if (contentType[0].empty() && !_resFile.empty())
             contentType[0] = responseUtils::getContentType(_resFile);
         lastModified = ft::getLastModifDate(_resFile); // Is here the right place to call ?
-        //contentLength = _resBody.size();    // https://stackoverflow.com/questions/13821263/should-newline-be-included-in-http-response-content-length
-        //contentLength = 1128;
     }
 }
 
@@ -297,13 +340,6 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
     // QUID de www-authenticate ?
     formatedResponse.append("\r\n");
-    if (contentLength > 0)
-    {
-        
-    }
-
-    //if (contentLength > 0) formatedResponse.append(_resBody);
-
 }
 
 /* **************************************************** */

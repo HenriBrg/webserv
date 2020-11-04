@@ -5,6 +5,7 @@
 # include <string>
 # include <map>
 # include <unistd.h>
+# include <deque>
 
 # include "Server.hpp"
 
@@ -143,8 +144,7 @@ class Response {
 
         // https://web.maths.unsw.edu.au/~lafaye/CCM/internet/http.htm
 
-        std::string _resBody;
-
+        char *_resBody;
         
         /* 1) Ligne de statut */
         

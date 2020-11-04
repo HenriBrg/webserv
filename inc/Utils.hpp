@@ -21,6 +21,7 @@ namespace ft
 	int							countElem(std::string str, std::string target);
 	std::string 				getcwdString();
     int             			putstrError(std::string str);
+	int						ft_strstr(char *str, std::string search, int size);
 
 }
 
@@ -38,6 +39,9 @@ namespace utils {
 namespace responseUtils {
 
 	std::string	getContentType(std::string file);
+	int getContentLength(std::string file);
+	int setupBytesArray(Response *res);
+	void copyBytes(char* dest, const char* src, size_t limit, size_t offset);
 	std::string getReasonPhrase(int code);
 	void headerFormat(std::string & respStr, std::string key, int value);
 	void headerFormat(std::string & respStr, std::string key, std::string value);

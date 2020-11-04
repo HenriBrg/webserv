@@ -86,7 +86,8 @@ void Response::postReq(Request * req) {
         // TODO : check erreur ?
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
-        _resBody.clear(); // --> à confirmer
+
+        _resBody = nullptr;
         // _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
@@ -126,6 +127,11 @@ void Response::patchReq(Request * req) {
 
 }
 
+/*
+**  Delete method function
+**  1. If target is a directory then call deleteDir()
+**  2. Else unlink target
+*/
 void Response::deleteReq(Request * req)
 {
     struct stat fileStat;
@@ -137,9 +143,17 @@ void Response::deleteReq(Request * req)
     
 }
 
+/*
+**  Delete method function
+**  1. Open directory
+**  2. Browse directory
+**  3. Ignore current and previous directory
+**  4. If entry is a directory call function on it
+**  5. Else unlink entry
+**  6. When no more entry in directory delete it
+*/
 void Response::deleteDir(std::string directory)
 {
-    // Add error management on syscall
     DIR *dir;
     struct dirent *dirEntry;
     std::string entryName;
@@ -164,9 +178,13 @@ void Response::deleteDir(std::string directory)
 }
 
 
-
-/* https://developer.mozilla.org/fr/docs/Web/HTTP/Content_negotiation */
-
+/*
+**  Negociation on languages
+**  1. If header in request
+**  2. Browse all value of Accept-Language header
+**  3. Seek for language extension of file (example.html.fr or example.html.de)
+**  4. if file then set as reponse file
+*/
 void Response::negotiateAcceptLanguage(Request * req)
 {
     if (req->acceptLanguage.empty())
@@ -190,9 +208,13 @@ void Response::negotiateAcceptLanguage(Request * req)
         return ;
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptLanguage() : Unknow Language"));
-
 }
 
+/*
+**  Negociation on charset
+**  1. If header in request
+**  2. Seek for utf-8 or * (* is everything) in values of Accept-charset header
+*/
 void Response::negotiateAcceptCharset(Request * req)
 {
     if (req->acceptCharset.empty())

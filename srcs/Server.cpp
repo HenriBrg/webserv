@@ -215,25 +215,14 @@ void Server::readClientRequest(Client *c) {
 
 void Server::writeClientResponse(Client *c) {
 
-    if (c->res._sendStatus == Response::PREPARE)
-        setClientResponse(c);
-
-    if (c->res._sendStatus == Response::ERROR) {
-        /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
-        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
+    if (c->res._sendStatus == Response::PREPARE || c->res._sendStatus == Response::ERROR)
+    {
+        if (c->res._sendStatus == Response::ERROR)
+            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
         setClientResponse(c);
     }
 
-    if (sendClientResponse(c) == EXIT_FAILURE)
-        c->res._sendStatus = Response::DONE;
-
-    if (c->res._bytesSent == c->res.formatedResponse.size())
-    {
-        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
-        c->res._sendStatus = Response::DONE;
-    } 
-    else
-        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
+    sendClientResponse(c);
 
     if (c->res._sendStatus == Response::DONE)
     {
@@ -264,32 +253,48 @@ void Server::setClientResponse(Client *c)
 
 int Server::sendClientResponse(Client *c)
 {
-    int retSend(0);
+    size_t retSend(0);
     int bytesSent(0);
     int bytesToSend(0);
 
-    std::cout << RED << "=================================" << END << std::endl;
-    std::cout << c->res.formatedResponse << std::endl;
-    std::cout << RED << "=================================" << END << std::endl;
-
     if (c->res._sendStatus == Response::SENDING)
     {
-        bytesToSend = c->res.formatedResponse.size();
-        while (bytesSent < c->res.formatedResponse.size())
+        if (sendBytes(c, &(c->res.formatedResponse[0]), c->res.formatedResponse.size()) == EXIT_FAILURE)
+            LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() headers failed"));
+
+        if (c->res._resBody)
         {
-            retSend = send(c->acceptFd, c->res.formatedResponse.c_str(), bytesToSend, 0);
-            if (retSend == -1)
-            {
-                LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
-                return (EXIT_FAILURE);
-            }
-            bytesSent += retSend;
-            bytesToSend -= retSend;
+            if (sendBytes(c, c->res._resBody, c->res.contentLength) == EXIT_FAILURE)
+                LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() body failed"));
         }
-        c->res._bytesSent += bytesSent;
+    }
+    c->res._sendStatus = Response::DONE;
+    return (EXIT_SUCCESS);
+}
+
+int Server::sendBytes(Client *c, char *toSend, size_t bytesToSend)
+{
+    size_t retSend(0);
+    size_t bytesSent(0);
+    size_t totalBytes = bytesToSend;
+
+    while (bytesSent < totalBytes)
+    {
+        retSend = send(c->acceptFd, toSend, bytesToSend, 0);
+        if (retSend == -1)
+            return (EXIT_FAILURE);
+        bytesSent += retSend;
+        bytesToSend -= retSend;
+    }
+    if (bytesToSend != 0)
+    {
+        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() not complete --> Bytes sent : "
+        + std::to_string(bytesSent) + " (total = " + std::to_string(totalBytes) + ")"));
+        return (EXIT_FAILURE);
     }
     return (EXIT_SUCCESS);
 }
+
 
 void Server::handleClientRequest(Client *c) {
 
