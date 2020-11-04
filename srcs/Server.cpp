@@ -109,7 +109,6 @@ int Server::start() {
     _errorStatus[NOT_FOUND_404] = "404 NOT FOUND";
     _errorStatus[METHOD_NOT_ALLOWED_405] = "405 METHOD NOT ALLOWED";
     _errorStatus[NOT_ACCEPTABLE_406] = "406 NOT ACCEPTABLE";
-    _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 URI TOO LONG";
     _errorStatus[CONFLICT_409] = "409 CONFLICT";
     _errorStatus[REQUEST_ENTITY_TOO_LARGE_413] = "413 REQUEST ENTITY TOO LARGE";
     _errorStatus[REQUEST_URI_TOO_LONG_414] = "414 BAD RESQUEST";
@@ -139,7 +138,7 @@ void Server::acceptNewClient(void) {
     clients.push_back(newClient);
 
 
-    if (gConfig._availableConnections <= 0)
+    if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
         newClient->res.setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
         newClient->res.retryAfter = 10;
@@ -155,45 +154,48 @@ void Server::acceptNewClient(void) {
 
 void Server::readClientRequest(Client *c) {
 
-    int ret = -1;
+    //    int ret = -1;
+    char recvBuffer[BUFMAX];
+    int recvRet(-1);
+    //int error;
+    bool recvCheck(false);
 
     c->resetTimeOut();
-    c->req.client = c;
-    ret = recv(c->acceptFd, c->buf, BUFMAX, 0);
-    if (ret == -1 || ret == 0) {
+    while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
+    {
+        recvBuffer[recvRet] = '\0';
+        c->req.reqBuf.append(recvBuffer);
+        recvCheck = true;
+    }
+
+    if (!(recvCheck) || recvRet == 0)
+    {
         c->isConnected = false;
-        if (ret == 0)
+        if (recvRet == 0)
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
-        if (ret == -1)
+        if (recvRet == false)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
-    } else {
-        c->buf[ret] = '\0';
-        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(ret) + " bytes"));
-        if (c->recvStatus == Client::HEADER) {
-            if (strstr(c->buf, "\r\n\r\n") != NULL) {
-                // recv 2 eme fois
+    }
+    else
+    {
+        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req.reqBuf.size()) + " bytes"));
+        if (c->recvStatus == Client::HEADER)
+        {
+            if (strstr(c->req.reqBuf.c_str(), "\r\n\r\n") != NULL)
+            {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
-                // TODO : We should find a way to avoid buffer dupllication for optimization
-                c->req.reqBuf = std::string(c->buf); 
                 c->req.parse(locations);
-            } else { 
+            }
+            else
+            {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
                 return ;
             }
         }
-        if (c->recvStatus == Client::BODY) {
-            if ((c->req.transferEncoding[0] == "chunked"))
-                c->req.parseChunkedBody();
-            else if (c->req.contentLength > 0)
-                c->req.parseSingleBody();
-            else LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Anormal body"));
-            if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > (size_t)c->req.reqLocation->max_body) {
-                LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(c->req.reqLocation->max_body)));
-                c->recvStatus = Client::ERROR;
-                c->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
-            } 
-        }
+
+        c->req.parseBody();
+
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
@@ -210,24 +212,17 @@ void Server::readClientRequest(Client *c) {
 
 void Server::writeClientResponse(Client *c) {
 
-    if (c->res._sendStatus == Response::PREPARE)
-        setClientResponse(c);
-    if (c->res._sendStatus == Response::ERROR) {
-        /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
-        LOGPRINT(RESERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
+    if (c->res._sendStatus == Response::PREPARE || c->res._sendStatus == Response::ERROR)
+    {
+        if (c->res._sendStatus == Response::ERROR)
+            LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
         setClientResponse(c);
     }
 
-    if (sendClientResponse(c) == EXIT_FAILURE)
-        c->res._sendStatus = Response::DONE;
-    if (c->res._bytesSent == (int)c->res.formatedResponse.size()) {
-        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
-        LOGPRINT(INFO, &c->res, "Response DONE");
-        c->res._sendStatus = Response::DONE;
-    } 
-    else
-        LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() not complete --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
-    if (c->res._sendStatus == Response::DONE) {
+    sendClientResponse(c);
+
+    if (c->res._sendStatus == Response::DONE)
+    {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         c->reset();
     }
@@ -258,32 +253,46 @@ void Server::setClientResponse(Client *c)
 
 int Server::sendClientResponse(Client *c)
 {
-    int retSend(0);
-    int bytesSent(0);
-    int bytesToSend(0);
-
-    // if (c->res.formatedResponse.size() > 500000)
-    //     usleep(10000);
     if (c->res._sendStatus == Response::SENDING)
     {
-        bytesToSend = c->res.formatedResponse.size();
-        while (bytesSent < (int)c->res.formatedResponse.size())
+        if (sendBytes(c, &(c->res.formatedResponse[0]), c->res.formatedResponse.size()) == EXIT_FAILURE)
+            LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() headers failed"));
+
+        if (c->res._resBody)
         {
-            retSend = send(c->acceptFd, c->res.formatedResponse.c_str(), bytesToSend, 0);
-            if (retSend == -1)
-            {
-                LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() failed"));
-                return (EXIT_FAILURE);
-            }
-            bytesSent += retSend;
-            bytesToSend -= retSend;
-            NOCLASSLOGPRINT(INFO, ("Cumulated bytes sent : " + std::to_string(bytesSent)));
+            if (sendBytes(c, c->res._resBody, c->res.contentLength) == EXIT_FAILURE)
+                LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() body failed"));
         }
-        c->res._bytesSent += bytesSent;
+    }
+    c->res._sendStatus = Response::DONE;
+    return (EXIT_SUCCESS);
+}
+
+int Server::sendBytes(Client *c, char *toSend, long bytesToSend)
+{
+    long retSend(0);
+    long bytesSent(0);
+    long totalBytes = bytesToSend;
+
+    while (bytesSent < totalBytes)
+    {
+        retSend = send(c->acceptFd, toSend, bytesToSend, 0);
+        if (retSend == -1)
+            return (EXIT_FAILURE);
+        bytesSent += retSend;
+        bytesToSend -= retSend;
+        NOCLASSLOGPRINT(INFO, ("Cumulated bytes sent : " + std::to_string(bytesSent)));
+    }
+    if (bytesToSend != 0)
+    {
+        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() not complete --> Bytes sent : "
+        + std::to_string(bytesSent) + " (total = " + std::to_string(totalBytes) + ")"));
+        return (EXIT_FAILURE);
     }
 
     return (EXIT_SUCCESS);
 }
+
 
 void Server::handleClientRequest(Client *c) {
 

@@ -15,22 +15,22 @@
 // https://stackoverflow.com/a/2616912/10830328
 
 
-// # define BLACK		"\033[1;30m"
-// # define RED		"\033[1;31m"
-// # define GREEN		"\033[1;32m"
-// # define YELLOW		"\033[1;33m"
-// # define MAGENTA	"\033[1;35m"
-// # define BLUE		"\033[1;36m"
-// # define WHITE	    "\033[1;37m"
+# define BLACK		"\033[1;30m"
+# define RED		"\033[1;31m"
+# define GREEN		"\033[1;32m"
+# define YELLOW		"\033[1;33m"
+# define MAGENTA	"\033[1;35m"
+# define BLUE		"\033[1;36m"
+# define WHITE	    "\033[1;37m"
 # define END		"\033[0m"
 
-# define BLACK		"\033[38;5;0m"
-# define RED		"\033[38;5;160m"
-# define GREEN		"\033[38;5;40m"
-# define YELLOW		"\033[38;5;220m"
-# define MAGENTA	"\033[38;5;99m"
-# define BLUE		"\033[38;5;31m"
-# define WHITE	    "\033[38;5;15m"
+// # define BLACK		"\033[38;5;0m"
+// # define RED		"\033[38;5;160m"
+// # define GREEN		"\033[38;5;40m"
+// # define YELLOW		"\033[38;5;220m"
+// # define MAGENTA	"\033[38;5;99m"
+// # define BLUE		"\033[38;5;31m"
+// # define WHITE	    "\033[38;5;15m"
 # define ORANGE	    "\033[38;5;208m"
 
 # define BCKYELLOW	    "\033[1;43m"
@@ -46,6 +46,7 @@
 # define DEBUG 5
 # define DISCONNECT 6
 # define SELECT 7
+# define OK 8
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
@@ -85,6 +86,8 @@ class Logger {
                     break ;
                 case DISCONNECT:
                     std::cout << MAGENTA << " [CLOSE] " << END  << str << std::endl;
+                case OK:
+                    std::cout << GREEN << " [OK] " << END  << str << std::endl;
                 default:
                     break ;
             }

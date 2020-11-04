@@ -181,7 +181,7 @@ void Response::execCGI(Request * req) {
     }
     _didCGIPassed = true;
     handleCGIOutput(req->cgiType);
-    LOGPRINT(INFO, this, ("Request::execCGI() : END of execCGI(). _resBody.size() = " + std::to_string(_resBody.size())));
+    //@@LOGPRINT(INFO, this, ("Request::execCGI() : END of execCGI(). _resBody.size() = " + std::to_string(_resBody.size())));
     clearCGI(args, env);
 }
 
@@ -212,7 +212,7 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
 
     if (cgiType == PHP_CGI)
         _statusCode = OK_200;
-    headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
+    headersSection = buffer.substr(0, buffer.find("\r\n\r\n") + 1);
     if ((pos = headersSection.find("Status")) != std::string::npos) {
         pos += 8;
         endLine = headersSection.find("\r", pos);
@@ -230,7 +230,8 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
     pos = endLine = 0;
     pos = buffer.find("\r\n\r\n") + 4;
     if (pos == std::string::npos) return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
-    _resBody = buffer.substr(pos);
+    //_resBody = buffer.substr(pos);
+    // _resBody = &(buffer.substr(pos)[0]);
     _resFile.clear();
 
 }

@@ -11,31 +11,36 @@ Response::Response(Client *c)  {
 
 void Response::reset() {
 
-	httpVersion.clear();
-	_statusCode = -1;
-	reason.clear();
-	allow.clear();
-	contentLanguage.clear();
-	_isLanguageNegociated = false;
-	contentLocation.clear();
-	contentType.clear();
-	lastModified.clear();
-	location.clear();
-	date.clear();
-	retryAfter = -1;
-	server.clear();
-	transfertEncoding.clear();
-	wwwAuthenticate.clear();
-	_errorFileName.clear();
-	formatedResponse.clear();
-	_bytesSent = 0;
-	_sendStatus = Response::PREPARE;
-	_resBody.clear();
-	_resFile.clear();
-	_cgiOutputBody.clear();
-	contentLength = -1;
-	_methodFctPtr = nullptr;
-	_didCGIPassed = false;
+    httpVersion.clear();
+    _statusCode = -1;
+    reason.clear();
+    allow.clear();
+    contentLanguage.clear();
+    _isLanguageNegociated = false;
+    contentLocation.clear();
+    contentType.clear();
+    lastModified.clear();
+    location.clear();
+    date.clear();
+    retryAfter = -1;
+    server.clear();
+    transfertEncoding.clear();
+    wwwAuthenticate.clear();
+
+    // resClient = nullptr; // Segfault on seccond request
+    _errorFileName.clear();
+    formatedResponse.clear();
+    _bytesSent = 0;
+    _sendStatus = Response::PREPARE;
+
+    _resBody = nullptr;
+
+    _resFile.clear();
+    _cgiOutputBody.clear();
+    contentLength = -1;
+    _errorFileName.clear();
+    _methodFctPtr = nullptr;
+    _didCGIPassed = false;
 
 }
 
@@ -51,13 +56,35 @@ void Response::setErrorParameters(int sendStatus, int code) {
 	_resFile =  resClient->server->error + "/error.html";;
 }
 
-void Response::replaceErrorCode(const Server *server) {
+/*
+**  Replace tag _ERROR_ in error.html by response error status
+**  1. Get index of _ERROR_ tag
+**  2. Create new char* of final size
+**  3. Fullfil new char* with pre-tag chars
+**  4. Fullfil new char* with response error status
+**  5. Fullfil new char* with post-tag chars
+**  6. Free _resBody and attribuate new char* to it
+*/
+void Response::replaceErrorCode(const Server *server)
+{
+    int index(0);
 
-	size_t pos(0);
-	pos = _resBody.find("_ERROR_");
-	if (pos != std::string::npos)
-		_resBody.replace(pos, 7, server->_errorStatus.at(_statusCode));
-	
+    index = ft::ft_strstr(_resBody, "_ERROR_", responseUtils::getContentLength(_resFile));
+    if (index >= 0)
+    {
+        int fileLength = responseUtils::getContentLength(_resFile) - 7;
+        int replaceLength = server->_errorStatus.at(_statusCode).size();
+        int totalLength = fileLength + replaceLength;
+        char *tmp = (char*)malloc(sizeof(char) * totalLength);
+
+        responseUtils::copyBytes(tmp, _resBody, index, 0);
+        responseUtils::copyBytes(tmp, server->_errorStatus.at(_statusCode).c_str(), replaceLength, index);
+        responseUtils::copyBytes(tmp, &(_resBody[index + 7]), (fileLength - index),(replaceLength + index));
+
+        free(_resBody);
+        _resBody = tmp;
+        contentLength = totalLength;
+    }
 }
 
 /*
@@ -96,34 +123,54 @@ void Response::authControl(Request * req) {
 
 }
 
-void Response::methodControl(Request * req, Server * serv) {
 
-	std::vector<std::string>    allowedMethods;
-	std::vector<std::string>::iterator    tmp;
+/*
+**  Verify if received METHOD is valid
+**  1. Get all allowed methods of location
+**  2. Compare them to received method
+**  3. If no one match then error 405
+**  4. Else attribuate corresponding method function
+*/
+void Response::methodControl(Request * req, Server * serv)
+{
+    std::vector<std::string>    allowedMethods;
+    std::vector<std::string>::iterator    tmp;
 
-	allowedMethods = ft::split(req->reqLocation->methods, ',');
-	tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
-	if (tmp == allowedMethods.end()) {
-		allow = req->reqLocation->methods;
-		setErrorParameters(Response::ERROR, METHOD_NOT_ALLOWED_405);
-		LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
-	} else
-		_methodFctPtr = serv->methodsTab[req->method];
-	
+    allowedMethods = ft::split(req->reqLocation->methods, ',');
+    tmp = std::find(allowedMethods.begin(), allowedMethods.end(), req->method);
+    if (tmp == allowedMethods.end()) {
+        allow = req->reqLocation->methods;
+        setErrorParameters(Response::ERROR, METHOD_NOT_ALLOWED_405);
+        LOGPRINT(LOGERROR, this, ("Response::methodControl() : Method " + req->method + " is not allowed on route " + req->reqLocation->uri));
+    } else
+        _methodFctPtr = serv->methodsTab[req->method];
 }
 
-void Response::versionControl(Request *req) {
 
-	if (req->httpVersion.size() < 8
-	|| req->httpVersion.substr(0, 5) != "HTTP/")
-		setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-	else if (req->httpVersion.at(5) != '1')
-		setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
-
+/*
+**  Verify if received version is valid
+**  1. Verify total size (segfault)
+**  2. Verify HTTP 
+**  3. Verify http version
+*/
+void Response::versionControl(Request *req)
+{
+    if (req->httpVersion.size() < 8
+    || req->httpVersion.substr(0, 5) != "HTTP/")
+        setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+    else if (req->httpVersion.at(5) != '1')
+        setErrorParameters(Response::ERROR, HTTP_VERSION_NOT_SUPPORTED_505);
 }
 
-void Response::resourceControl(Request * req) {
-    
+
+/*
+**  Verify if requested resource is valid
+**  1. If Delete -> verify if resource exists
+**  2. If PUT || POST -> verify if resource is a directory (if true then error)
+**  3. Else verify if file exists
+*/
+void Response::resourceControl(Request * req)
+{
     struct stat fileStat;
     int retStat = -1;
 
@@ -153,6 +200,10 @@ void Response::reqHeadersControl(Request * req) {
 	}
 }
 
+
+/*
+**  Dispatching function for controlling request
+*/
 void Response::control(Request * req, Server * serv) {
     
     int _statusCodeBackup;
@@ -182,11 +233,19 @@ void Response::control(Request * req, Server * serv) {
     
 }
 
+
+/*
+**  Call for corresponding method function set in methodControl()
+*/
 void Response::callMethod(Request * req) {
 	if (_sendStatus != Response::ERROR)
 		(this->*_methodFctPtr)(req);
 }
 
+
+/*
+**  SET ALL HEADERS TODO
+*/
 void Response::setHeaders(Request * req) {
 
 	/* 1) Status Line */
@@ -218,12 +277,18 @@ void Response::setHeaders(Request * req) {
 	if (contentType.empty()) // We set it in CGI
 		contentType.clear();
 	/* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
-	if (_resFile.empty() && _resBody.empty()) // ---> à voir
+	if (_resFile.empty() && !(_resBody)) // ---> à voir
 		contentLength = -1; // --> Updated in setBodyHeaders
 	/* On set également ce header lors de l'authentification */
 	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
+/*
+**  Function to fullfit body (bytes array) with file content
+**  1. Allocate char* of file size
+**  2. Read file to retreive bytes
+**  3. If error html page then contextualize body with corresponding error status
+*/
 void Response::setBody(const Server *server) {
 
     if (_didCGIPassed == true) {
@@ -238,78 +303,83 @@ void Response::setBody(const Server *server) {
         char fileBuf[4096];
         int fileFd(0);
         int retRead(0);
+        int saveOffset(0);
 
-        // stat() le file avant ?
-        
+        if (responseUtils::setupBytesArray(this) == -1)
+            return ;
         if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
-
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
-                // NOCLASSLOGPRINT(DEBUG, "READING");
-
-                fileBuf[retRead] = '\0';
-                _resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
+                if (retRead == -1)
+                {
+                    LOGPRINT(LOGERROR, this, ("Response::setBody() : read() body file failed | Bytes copied = " + std::to_string(saveOffset)));
+                    break ;
+                }
+                responseUtils::copyBytes(_resBody, fileBuf, retRead, saveOffset);
+                saveOffset += retRead;
             }
-            if (retRead <= 0)
-                LOGPRINT(INFO, this, ("Response::setBody() : reading _resFile has return ret = " + std::to_string(retRead)));
-
-            // NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
-            // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
-
+            if (retRead == 0)
+                LOGPRINT(INFO, this, ("Response::setBody() : read() body file returned 0 | Bytes copied = " + std::to_string(saveOffset)));
+            contentLength = saveOffset;
             close(fileFd);
 			struct stat autoStat;
 			if (stat("autoindex/autoindex.html", &autoStat) == 0)
 				unlink("autoindex/autoindex.html");
 			rmdir("autoindex");
         }
+        else
+            LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
+        
     }
-    if (_sendStatus == Response::ERROR)
+    if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false;
 }
 
+
+/*
+**  Set body headers values
+*/
 void Response::setBodyHeaders(void)
 {
-	if (!(_resBody.empty())) {
+	if (_resBody) {
 		if (contentType[0].empty() && !_resFile.empty())
 			contentType[0] = responseUtils::getContentType(_resFile);
 		if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
 			lastModified = ft::getLastModifDate(_resFile);
-		contentLength = _resBody.size();
 	}
 	if (resClient->req.method == "GET" && contentLength == -1)
 		contentLength = 0;
 
-	if (resClient->req.method == "HEAD") {
-		contentLength = _resBody.size();
-		_resBody.clear();
-	}
+	// if (resClient->req.method == "HEAD") {
+	// 	contentLength = _resBody.size();
+	// 	_resBody.clear();
+	// }
 }
 
 void Response::format(void) {
 
-	formatedResponse.clear();
-	// 1) Status Line
-	formatedResponse.append(httpVersion);
-	formatedResponse.append(" " + std::to_string(_statusCode) + " ");
-	formatedResponse.append(reason);
-	formatedResponse.append("\r\n");
-	// 2) Headers
-	responseUtils::headerFormat(formatedResponse, "Allow", allow);
-	responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
-	responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
-	responseUtils::headerFormat(formatedResponse, "Content-Location", contentLocation);
-	responseUtils::headerFormat(formatedResponse, "Content-Type", contentType);
-	responseUtils::headerFormat(formatedResponse, "Last-Modified", lastModified);
-	responseUtils::headerFormat(formatedResponse, "Location", location);
-	responseUtils::headerFormat(formatedResponse, "Date", date);
-	responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
-	responseUtils::headerFormat(formatedResponse, "Host", server);
-	responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-	// QUID de www-authenticate ?
-	formatedResponse.append("\r\n");
-	if (contentLength > 0) formatedResponse.append(_resBody);
+    formatedResponse.clear();
+    // 1) Status Line
+    formatedResponse.append(httpVersion);
+    formatedResponse.append(" " + std::to_string(_statusCode) + " ");
+    formatedResponse.append(reason);
+    formatedResponse.append("\r\n");
+    // 2) Headers
+    responseUtils::headerFormat(formatedResponse, "Allow", allow);
+    responseUtils::headerFormat(formatedResponse, "Content-Language", contentLanguage);
+    responseUtils::headerFormat(formatedResponse, "Content-Length", contentLength);
+    responseUtils::headerFormat(formatedResponse, "Content-Location", contentLocation);
+    responseUtils::headerFormat(formatedResponse, "Content-Type", contentType);
+    responseUtils::headerFormat(formatedResponse, "Last-Modified", lastModified);
+    responseUtils::headerFormat(formatedResponse, "Location", location);
+    responseUtils::headerFormat(formatedResponse, "Date", date);
+    responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
+    responseUtils::headerFormat(formatedResponse, "Host", server);
+    responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
+    // QUID de www-authenticate ?
+    formatedResponse.append("\r\n");
 }
 
 /* **************************************************** */
@@ -364,7 +434,7 @@ void Response::showFullHeadersRes(void) {
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
     
-    int x =  _resBody.size();
+    int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
 	std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
 }

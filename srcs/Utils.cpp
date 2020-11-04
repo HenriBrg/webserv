@@ -189,6 +189,27 @@ namespace ft {
 		}
 		return (occ);
 	}
+
+	int ft_strstr(char *str, std::string search, int size)
+	{
+		int comp(0);
+
+		for (int count = 0; count < size; count++)
+		{
+			if (str[count] == search[0])
+			{
+				comp = 0;
+				for (; comp < (int)search.size(); comp++)
+				{
+					if (str[count + comp] != search[comp])
+						break ;
+				}
+				if (comp == (int)search.size())
+					return (count);
+			}
+		}
+		return (-1);
+	}
 }
 
 namespace utils
@@ -321,6 +342,38 @@ namespace responseUtils
 			j++;
 		}
 		return ("text/plain");
+	}
+
+	int getContentLength(std::string file)
+	{
+		struct stat fileStat;
+
+		if (stat(file.c_str(), &fileStat) != -1)
+			return (fileStat.st_size);
+		return(-1);
+	}
+
+	int setupBytesArray(Response *res)
+	{
+        struct stat fileStat;
+        int retStat;
+
+		if (res->_resBody)
+			free(res->_resBody);
+        retStat = stat(res->_resFile.c_str(), &fileStat);
+        if (!(res->_resBody = (char*)malloc(sizeof(char) * fileStat.st_size)))
+		{
+            LOGPRINT(LOGERROR, res, ("Response::setBody() : allocation body failed"));
+			return (-1);
+		}
+		return (0);
+	}
+
+	void copyBytes(char* dest, const char* src, size_t limit, size_t offset)
+	{
+		if (dest && src)
+			for (size_t count = 0; count < limit; count++)
+				dest[count + offset] = src[count];
 	}
 
 	std::string getReasonPhrase(int code) {

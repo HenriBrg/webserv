@@ -1,6 +1,6 @@
 # include "../inc/Webserv.hpp"
 
-Client::Client(int acceptFd, Server *server, struct sockaddr_in clientAddr): acceptFd(acceptFd), server(server), res(this) {
+Client::Client(int acceptFd, Server *server, struct sockaddr_in clientAddr): acceptFd(acceptFd), server(server), req(this), res(this) {
     
     isConnected = true;
     _isAccepted = true; // By default we consider we are able to accept an user
@@ -40,7 +40,7 @@ void Client::reset() {
     memset((void*)buf, 0, BUFMAX + 1);
     strbuf.clear();
     isConnected = true;
-	recvStatus = HEADER;
+	recvStatus = Client::HEADER;
     req.reset();
     res.reset();
 	FD_CLR(acceptFd, &gConfig.writeSetBackup);
