@@ -33,7 +33,6 @@
 # define WHITE	    "\033[38;5;15m"
 # define ORANGE	    "\033[38;5;208m"
 
-
 # define BCKYELLOW	    "\033[1;43m"
 # define BCKBLACK	    "\033[38;5;41m"
 
@@ -47,9 +46,14 @@
 # define DISCONNECT 5
 # define SELECT 6
 
-# define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
+# ifndef SILENTLOGS
+    # define SILENT_LOGGER 0
+# else
+    # define SILENT_LOGGER 1
+# endif
 
-// delete noclass log
+
+# define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
 
 class Logger {
@@ -58,6 +62,9 @@ class Logger {
         template <typename T>
         static void print(int type, T *x, std::string const & message) {
 
+            if (SILENT_LOGGER == 1)
+                return ;
+            
             std::string str;
             std::string timestamp;
 
@@ -88,6 +95,9 @@ class Logger {
 
         // Fonction requise car impossible de passer NULL à un paramètre définit par template
         static void noClassLogPrint(int type, std::string const & message) {
+
+            if (SILENT_LOGGER == 1)
+                return ;
 
             std::string timestamp;
             std::cout << ft::getTimestamp();

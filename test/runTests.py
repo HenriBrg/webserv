@@ -2,6 +2,10 @@
 # 01/11/2020
 # Feel free to use it, just be sure that configuration file is properly set
 
+# For leaks (after having set an exit() call on a relevant place) :
+# valgrind --track-origins=yes --leak-check=full --log-file="output" --show-leak-kinds=all ./webserv conf/default.conf
+# leaks webserv --fullStacks --fullContent
+
 # Usage : runTests.py [METHOD] [TEST NUM] [VERBOSE]
 # python3 runTests.py
 # python3 runTests.py GET
@@ -52,7 +56,6 @@ def printHdReqRes(r):
     for idB, resKey in enumerate(r.headers):
         print(indent + resKey + ": " + r.headers[resKey])
     print()
-
 
 # ------ ASSERTS FUNCTIONS ------
 
@@ -323,8 +326,6 @@ def POST_TESTS(testNum = 0):
     #     hd = {"Content-Type": "image/png", "Transfer-Encoding": "chunked"}
     #     r = requests.post('http://localhost:7777/youpi/pouet/42.png', files=img,  headers=hd)
     #     assertResponse(r, 201, index)
-
-
 
     # ------- POST - REQUEST_ENTITY_TOO_LARGE_413
 

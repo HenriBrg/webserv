@@ -59,7 +59,6 @@ char ** Response::buildCGIEnv(Request * req) {
         envmap["SCRIPT_NAME"] = envmap["SCRIPT_NAME"].replace(envmap["SCRIPT_NAME"].find("cgi_tester"), sizeof("cgi_tester"), "ubuntu_") + "cgi_tester";
     }
 
-
 	envmap["SERVER_NAME"]         = "127.0.0.1";
 	envmap["SERVER_PORT"]         = std::to_string(req->client->server->port);
     if (!req->authorization.empty()) {
@@ -78,17 +77,18 @@ char ** Response::buildCGIEnv(Request * req) {
 			envmap["HTTP_" + it->first] = it->second;
 		++it;
 	}
+    hdmap.clear();
     showCGIEnv(envmap);
     int i = -1;
     env = (char**)malloc(sizeof(char*) * (envmap.size() + 1));
     it = envmap.begin();
     while (it != envmap.end()) {
-        env[++i] = strdup((it->first + "=" + it->second).c_str());
+        env[++i] = (char*)strdup((it->first + "=" + it->second).c_str());
 		it++;
 	}
-    env[i] = 0;
+    env[++i] = 0;
+    envmap.clear();
     return env;
-
 }
 
 void clearCGI(char **args, char **env) {
@@ -116,6 +116,7 @@ void clearCGI(char **args, char **env) {
 void Response::execCGI(Request * req) {
 
     int     ret = -1;
+    int     wRet = -1;
     int     tmpFd = -1;
     char    **args = NULL;
     char    **env = NULL;
@@ -164,7 +165,9 @@ void Response::execCGI(Request * req) {
         exit(ret);
     } else {
         if (req->method == "POST") {
-            write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+            wRet = write(tubes[SIDE_IN], req->_reqBody.c_str(), req->_reqBody.size());
+            if (wRet <= 0)
+                LOGPRINT(INFO, this, ("Response::execCGI() : Writing Body into STDIN child has return wRet = " + std::to_string(wRet)));
             close(tubes[SIDE_IN]);
         }
         waitpid(pid, &status, 0);
@@ -242,3 +245,23 @@ int Response::getCGIType(Request * req) {
     else
         return (NO_CGI);
 }
+
+
+// server {
+
+// 	listen 	8888
+	
+// 	server_name testYoupi
+// 	error   	www/errors
+
+// 	location / {
+// 		index       index.html                
+//         max_body    100                    
+//         method      GET,POST,PUT,PATCH,DELETE
+//         root        ./www             
+//         cgi         ./www/cgi-bin/cgi_test.pl
+//         php         /usr/local/bin/php-cgi 
+//         ext         .bla
+// 	}
+
+// }

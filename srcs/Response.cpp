@@ -177,49 +177,37 @@ void Response::callMethod(Request * req) {
 
 void Response::setHeaders(Request * req) {
 
-    // 1) Status Line
+    /* 1) Status Line */
     httpVersion = "HTTP/1.1";
     reason = responseUtils::getReasonPhrase(_statusCode);
     if (_statusCode == -1) _statusCode = INTERNAL_ERROR_500;
-    
-    // 2) Basic headers
+    /* 2) Basic headers */
     date = ft::getDate();
     server = "webserv";
-
-    // 3) Error headers
+    /* 3) Error headers */
     if (_sendStatus != Response::ERROR) {
         allow.clear();
         wwwAuthenticate.clear();
         retryAfter = -1;
     }
-
-    // 4) Other headers
-    // TODO BELOW !
-    // contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte
-    // contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr 
-    // if (_isLanguageNegociated)
-    //     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
-
+    /* 4) Other headers */
+    /* TODO BELOW ! */
+    /* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
+    /* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
+    /* if (_isLanguageNegociated) */
+    /*     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? */
     contentLanguage.clear();
-
     if (req->method == "PUT") contentLocation[0] = req->file;
     else contentLocation.clear();
-
     if (_statusCode == CREATED_201) location = req->uri;
     else location.clear();
-
-    // TODO : à confirmer mais le fait de recevoir un body chunked n'implique en rien de répondre avec un body chunked
-    // if (req->transferEncoding.size() && req->transferEncoding[0] == "chunked" && !req->_reqBody.empty())
-    //     transfertEncoding[0] = "chunked";
     transfertEncoding.clear();
-
-    // 5) Body headers cleared in case of no body in response
+    /* 5) Body headers cleared in case of no body in response */
     if (contentType.empty()) // We set it in CGI
         contentType.clear();
-    // lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp
+    /* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
     if (_resFile.empty() && _resBody.empty()) // ---> à voir
         contentLength = -1; // --> Updated in setBodyHeaders
-    
     /* On set également ce header lors de l'authentification */
     if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
@@ -248,10 +236,12 @@ void Response::setBody(const Server *server) {
             {
                 // NOCLASSLOGPRINT(DEBUG, "READING");
 
-                // TODO : Ajouter gestion d'erreur
                 fileBuf[retRead] = '\0';
                 _resBody.append(fileBuf); // --> Impossible d'éviter duplication du body en mémoire ?
             }
+            if (retRead <= 0)
+                LOGPRINT(INFO, this, ("Response::setBody() : reading _resFile has return ret = " + std::to_string(retRead)));
+
             // NOCLASSLOGPRINT(DEBUG, "SIZE = " + std::to_string(_resBody.size()));
             // NOCLASSLOGPRINT(DEBUG, "CONTENT = " + _resBody);
 

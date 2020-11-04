@@ -3,6 +3,7 @@ Actualisée au 03/11/2020 :
 En cours :
 
     PARSING CONFIG :
+
     - Gérer les cas d'erreurs dans la configuration, au cas où le correcteur teste la config mais bon
     - Ajouter l'autoindex on/off dans chaque location
     - Log après parsing ?
@@ -10,13 +11,14 @@ En cours :
     - Autoindex
 
     AUTRES :
+    
     - Leaks mémoire / socket
     - Brief commentaire des fonctions
     - Compiler avec les 3 flags
     - Read fichier PNG
     - Delete fonction interdites
     - Autoindex GET
-    - Content-Location en réponse --> à voir
+    - Quid de Content-Location ?
+    - Est-ce qu'on utilise bien toutes les fonctions autorisées par le sujet (sinon, on a peut être zap qqchose)
 
-    - grep -rin TODO  srcs/*.cpp
-
+    - grep -rin TODO  srcs/*.cpp ---> à voir ensemble sur une session rush

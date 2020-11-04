@@ -176,7 +176,7 @@ void Server::readClientRequest(Client *c) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 // TODO : We should find a way to avoid buffer dupllication for optimization
                 c->req.reqBuf = std::string(c->buf); 
-                c->req.parse(locations); // TODO : set errors if invalid request format
+                c->req.parse(locations);
             } else { 
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
                 return ;
@@ -200,8 +200,7 @@ void Server::readClientRequest(Client *c) {
             c->req.showReq();
         }
         if (c->recvStatus == Client::ERROR) {
-            // TODO : Passage à tester
-            c->recvStatus = Client::COMPLETE; // Because We will respond even if we get error
+            c->recvStatus = Client::COMPLETE;
             c->res.setErrorParameters(Response::ERROR, (c->res._statusCode == -1 ? BAD_REQUEST_400 : c->res._statusCode));
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup);
@@ -231,6 +230,7 @@ void Server::writeClientResponse(Client *c) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         c->reset();
     }
+
 }
 
 void Server::setClientResponse(Client *c)

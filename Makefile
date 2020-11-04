@@ -22,11 +22,18 @@ DHEADERS = ./inc/
 DSRCS	= ./srcs/
 DOBJS	= ./comp/
 
+
 HEADERS = ./inc/*
 # SOURCES
 
 SRCS = main.cpp Parser.cpp Config.cpp Server.cpp Client.cpp Request.cpp Response.cpp Utils.cpp Methods.cpp CGI.cpp
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
+
+ifeq ($(SILENTLOGS), 1)
+	LOGS=1
+else
+	LOGS=0
+endif
 
 # COMPILATION
 
@@ -36,8 +43,13 @@ run: all
 	@printf "\033c"
 	@./$(NAME) conf/default.conf
 
+silentRun: all
+	@printf "\033c"
+	@./$(NAME) conf/default.conf
+
 $(NAME): $(OBJS) $(HEADERS)
-	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME)
+	echo $(LOGS)
+	$(CC) -I $(DHEADERS) $(OBJS) -o $(NAME) 
 
 $(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
 
@@ -45,7 +57,7 @@ $(DOBJS):
 	mkdir $(DOBJS)
 
 $(DOBJS)%.o: $(DSRCS)%.cpp
-	$(CC) -I $(DHEADERS) -c $< -o $@
+	$(CC) -I $(DHEADERS) -c $< -o $@ -D SILENTLOGS=$(LOGS)
 
 # CLEAR
 

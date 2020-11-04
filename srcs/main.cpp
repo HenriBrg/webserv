@@ -13,6 +13,7 @@ int init(int ac, char **av) {
         if (ac == 1) configuration = DEFAULT_CONF_PATH;
         else configuration = av[1];
     }
+
     Conf webconf(&configuration[0]);
 	try {
 		webconf.parseConf();
@@ -21,6 +22,9 @@ int init(int ac, char **av) {
 	}
     gConfig.servers = webconf.getServers();
     signal(SIGINT, handleCTRLC);
+
+    if (SILENT_LOGGER == 1)
+        std::cout << "\n     ----- Webserv is running in silent mode ----- \n" << std::endl;
     return (0);
 }
 

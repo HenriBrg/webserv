@@ -15,14 +15,12 @@ void Response::getReq(Request * req) {
     negotiateAcceptLanguage(req);
     negotiateAcceptCharset(req);
     NOCLASSLOGPRINT(INFO, "GET - Language and Charset negotiation done");
-
     bzero(&buffer, sizeof(buffer));
     if (stat(req->file.c_str(), &buffer) == -1) {
         LOGPRINT(INFO, this, ("Response::getReq() : GET - The requested file ( " + req->file + " ) doesn't exist, stat() has returned -1 on it"));
         return setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
-
-    req->cgiType = getCGIType(req); // ---------------> TODO : S'IL Y A EU NEGOTIATION DE LANGUAGE, le getCGIType ne fonctionnera pas --> à vérifier
+    req->cgiType = getCGIType(req);
     if (req->cgiType == TESTER_CGI || req->cgiType == PHP_CGI) {
         LOGPRINT(INFO, req, ("Response::getReq() : GET - CGI is required to handle that request - Its type is " + std::to_string(req->cgiType) + " (1 = 42-CGI and 2 = PHP-CGI)"));
         execCGI(req);
@@ -57,6 +55,7 @@ void Response::headReq(Request * req) {
 
 void Response::postReq(Request * req) {
 
+    int ret;
     int fd = -1;
 	struct stat	buffer;
     int action = 0;
@@ -84,12 +83,11 @@ void Response::postReq(Request * req) {
             LOGPRINT(INFO, this, ("Response::postReq() : POST - Could not open the file (" + req->file + "), open() has returned -1 on it. "));
             return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
         }
-        write(fd, req->_reqBody.c_str(), req->_reqBody.size());
-        // TODO : check erreur ?
+        if ((ret = write(fd, req->_reqBody.c_str(), req->_reqBody.size())) <= 0)
+            LOGPRINT(INFO, this, ("Response::postReq() : POST without CGI - write() _reqBody has returned ret = " + std::to_string(ret)));
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
-        _resBody.clear(); // --> à confirmer
-        // The 201 response payload typically describes and links to the resource(s) created
+        _resBody.clear();
         _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
