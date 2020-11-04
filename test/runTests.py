@@ -123,7 +123,7 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     if (len(r.request.url) > 60):
         url += r.request.url[16:60] + " [..." + str(len(r.request.url)) + "]"
     else: url += str(r.request.url)[16:]
-    url = str(url).ljust(75, ' ')
+    url = str(url).ljust(80, ' ')
     print(url + "   =   " + info)
     
     if verbose == 1:

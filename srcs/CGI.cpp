@@ -212,7 +212,7 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
 
     if (cgiType == PHP_CGI)
         _statusCode = OK_200;
-    headersSection = buffer.substr(0, buffer.find("\r\n\r\n" + 1));
+    headersSection = buffer.substr(0, buffer.find("\r\n\r\n") + 1);
     if ((pos = headersSection.find("Status")) != std::string::npos) {
         pos += 8;
         endLine = headersSection.find("\r", pos);
