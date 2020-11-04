@@ -371,7 +371,7 @@ namespace responseUtils
 	}
 
 	void headerFormat(std::string & respStr, std::string key, std::map<int, std::string> value) {
-		int i = 0;
+		size_t i = 0;
 		if (!value.size())
 			return ;
 		respStr.append(key);

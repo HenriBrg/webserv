@@ -64,7 +64,7 @@ class Client {
 
         pid_t       cgipid;
         
-        Client(Server *server, int acceptFd, struct sockaddr_in clientAddr);
+        Client(int acceptFd, Server *server, struct sockaddr_in clientAddr);
         virtual ~Client();
         void reset();
         std::string const logInfo(void);

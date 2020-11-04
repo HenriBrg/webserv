@@ -1,82 +1,82 @@
 # include "../inc/Webserv.hpp"
 
 Request::Request(void) {
-    reset();
+	reset();
 }
 
 Request::~Request() {
-    reset();
+	reset();
 }
 
 void Request::reset(void) {
 
-    client = nullptr;
-    reqLocation = nullptr;
-    reqBuf.clear();
-    _reqBody.clear();
+	client = nullptr;
+	reqLocation = nullptr;
+	reqBuf.clear();
+	_reqBody.clear();
 
-    _currentParsedReqBodyLength = -1;
-    contentLength = -1;
-    chunkLineBytesSize = -1;
-    _optiChunkOffset = 0;
-    file.clear();
-    isolateFileName.clear();
-    cgiType = NO_CGI;
+	_currentParsedReqBodyLength = -1;
+	contentLength = -1;
+	chunkLineBytesSize = -1;
+	_optiChunkOffset = 0;
+	file.clear();
+	isolateFileName.clear();
+	cgiType = NO_CGI;
 
-    method.clear();
-    uri.clear();
-    resource.clear();
-    httpVersion.clear();
-    uriQueries.clear();
-    acceptCharset.clear();
-    acceptLanguage.clear();
-    authorization.clear();
-    contentLanguage.clear();
-    contentLocation.clear();
-    contentType.clear();
-    date.clear();
-    host.clear();
-    referer.clear();
-    userAgent.clear();
-    uriQueries.clear();
-    transferEncoding.clear();
-    keepAlive.clear();
+	method.clear();
+	uri.clear();
+	resource.clear();
+	httpVersion.clear();
+	uriQueries.clear();
+	acceptCharset.clear();
+	acceptLanguage.clear();
+	authorization.clear();
+	contentLanguage.clear();
+	contentLocation.clear();
+	contentType.clear();
+	date.clear();
+	host.clear();
+	referer.clear();
+	userAgent.clear();
+	uriQueries.clear();
+	transferEncoding.clear();
+	keepAlive.clear();
 
 }
 
 std::string mapToStr(std::map<int, std::string> map, char sep) {
-    
-    size_t i = 0;
-    std::stringstream ret;
+	
+	size_t i = 0;
+	std::stringstream ret;
 
-    ret.clear();    
-    while (i < map.size()) {
-        ret << map[int(i)];
-        if ((i + 1) < map.size())
-            ret << sep << " ";
-        ++i;
-    }
-    return (ret.str());
+	ret.clear();    
+	while (i < map.size()) {
+		ret << map[int(i)];
+		if ((i + 1) < map.size())
+			ret << sep << " ";
+		++i;
+	}
+	return (ret.str());
 }
 
  std::map<std::string, std::string> Request::mapReqHeaders(void) {
-    
-    std::map<std::string, std::string> ret;
+	
+	std::map<std::string, std::string> ret;
 
-    // ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
-    // ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
-    ret["Authorization"] = authorization;
-    ret["Content-Language"] = mapToStr(contentLanguage, ',');
-    ret["Content-Length"] = std::to_string(contentLength);
-    ret["Content-Location"] = contentLocation;
-    ret["Content-Type"] = contentType;
-    ret["Date"] = date;
-    ret["Host"] = host;
-    ret["Referer"] = referer;
-    ret["User-Agent"] = userAgent;
-    ret["User-Agent"] = keepAlive;
+	// ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
+	// ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
+	ret["Authorization"] = authorization;
+	ret["Content-Language"] = mapToStr(contentLanguage, ',');
+	ret["Content-Length"] = std::to_string(contentLength);
+	ret["Content-Location"] = contentLocation;
+	ret["Content-Type"] = contentType;
+	ret["Date"] = date;
+	ret["Host"] = host;
+	ret["Referer"] = referer;
+	ret["User-Agent"] = userAgent;
+	ret["User-Agent"] = keepAlive;
 
-    return (ret);
+	return (ret);
 }
 
 
@@ -104,14 +104,14 @@ void Request::parseUriQueries() {
     int i = 0;
     std::string tmp = uri;
 
-    while (tmp[i] && tmp[i] != '?')
-        i++;
-    if (tmp[i] == '?') {
-        uriQueries = uri.substr(i + 1, tmp.size());
-        uri = tmp.substr(0, i);
-    }
-    if (uriQueries.size() > 1024 && client != nullptr)
-        client->res.setErrorParameters(Response::ERROR, REQUEST_URI_TOO_LONG_414);
+	while (tmp[i] && tmp[i] != '?')
+		i++;
+	if (tmp[i] == '?') {
+		uriQueries = uri.substr(i + 1, tmp.size());
+		uri = tmp.substr(0, i);
+	}
+	if (uriQueries.size() > 1024 && client != nullptr)
+		client->res.setErrorParameters(Response::ERROR, REQUEST_URI_TOO_LONG_414);
 }
 
 
@@ -123,8 +123,6 @@ void Request::parseUriQueries() {
 */
 
 void Request::assignLocation(std::vector<Location*> vecLocs) {
-
-    Location * root;
 
     for (std::size_t i = 0; i < vecLocs.size(); i++) {
         if (vecLocs[i]->uri == uri) {
@@ -151,6 +149,37 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 }
 
+void    Request::handleAutoIndex(void)
+{
+	DIR			*dir = opendir((file + uri).c_str());
+	int			fd = open("autoindex.html", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+	std::string	line;
+	std::string	htmlPage;
+
+	htmlPage = "<!DOCTYPE html>\n \
+	<html>\n \
+	<head><title>Index of " + file + "</title></head>\n \
+	<body bgcolor=\"white\">\n \
+	<h1>Index of " + file + "</h1>\n \
+	<hr><pre>\n";
+	write (fd, htmlPage.c_str(), htmlPage.size());
+	if (dir != NULL)
+	{
+		struct dirent *ent;
+		while ((ent = readdir(dir)) != NULL)
+		{
+			line = "<a href=\"" + std::string(ent->d_name) + "/\">" + std::string(ent->d_name) + "/</a>\n";
+			write(fd, line.c_str(), line.size());
+		}
+		closedir(dir);
+	}
+	htmlPage = "\t</pre><hr>\n \
+	</body>\n \
+	</html>";
+	write(fd, htmlPage.c_str(), htmlPage.size());
+	file = "autoindex.html";
+}
+
 /*
 ** We assign location
 ** If location doesn't end with '/', we add it
@@ -161,32 +190,31 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 void Request::parseFile(std::vector<Location*> locations)
 {
-    std::string tmpFile;
-    int         i;
-    struct stat info;
-   
-    assignLocation(locations);
+	std::string tmpFile;
+	int         i;
+	struct stat info;
 
-    if (reqLocation)
-    {
-        isolateFileName = file;
-        i = reqLocation->root.size() - 1;
-        if (reqLocation->root[i] == '/')
-            file = reqLocation->root + file;
-        else
-            file = reqLocation->root + "/" + file;
-        resource = file;
-        if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
-            // TODO WHEN PARSER READY
-            // if (reqLocation->autoindex == 1 && method == "GET")
-            //     handleAutoIndex();
-            // else {
-                file = file + reqLocation->index;
-            // }
-        }
-        LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
-        
-    }
+	assignLocation(locations);
+
+	if (reqLocation)
+	{
+		isolateFileName = file;
+		i = reqLocation->root.size() - 1;
+		if (reqLocation->root[i] == '/')
+			file = reqLocation->root + file;
+		else
+			file = reqLocation->root + "/" + file;
+	   resource = file;
+		if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
+			// TODO WHEN PARSER READY
+			if (reqLocation->autoindex == true && method == "GET")
+				handleAutoIndex();
+			else
+				file = file + reqLocation->index;
+		}
+		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
+		
+	}
 
 }
 
@@ -196,12 +224,12 @@ void Request::parseFile(std::vector<Location*> locations)
 
 void Request::fillHeader(std::string const key, std::string const value)
 {
-    if (key == "Content-Language" || key == "Transfer-Encoding")
-        fillMultiValHeaders(key, value);
-    else if (key == "Accept-Charset" || key == "Accept-Language")
-        fillMultiWeightValHeaders(key, value);
-    else
-        fillUniqueValHeaders(key, value);
+	if (key == "Content-Language" || key == "Transfer-Encoding")
+		fillMultiValHeaders(key, value);
+	else if (key == "Accept-Charset" || key == "Accept-Language")
+		fillMultiWeightValHeaders(key, value);
+	else
+		fillUniqueValHeaders(key, value);
 }
 
 /*
@@ -212,15 +240,15 @@ void Request::fillHeader(std::string const key, std::string const value)
 
 void Request::fillMultiValHeaders(std::string const key, std::string const value)
 {
-    std::vector<std::string> multiValues = ft::split(value, ',');
+	std::vector<std::string> multiValues = ft::split(value, ',');
 
-    for (size_t count = 0; count < multiValues.size(); count++)
-    {
-        if (key == "Content-Language")
-            contentLanguage[count] = multiValues[count];
-        else if (key == "Transfer-Encoding")
-            transferEncoding[count] = multiValues[count];
-    }
+	for (size_t count = 0; count < multiValues.size(); count++)
+	{
+		if (key == "Content-Language")
+			contentLanguage[count] = multiValues[count];
+		else if (key == "Transfer-Encoding")
+			transferEncoding[count] = multiValues[count];
+	}
 }
 
 /*
@@ -258,14 +286,14 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
 
 void Request::fillUniqueValHeaders(std::string const key, std::string const value)  {
 
-    if (key == "Keep-Alive") keepAlive = value;
-    else if (key == "Content-Length") contentLength = std::stoi(value);
-    else if (key == "Content-Type" || key == "Content-type") contentType = value;
-    else if (key == "Authorization") authorization = value;
-    else if (key == "Date") date = value;
-    else if (key == "Host") host = value;
-    else if (key == "Referer") referer = value;
-    else if (key == "User-Agent") userAgent = value;
+	if (key == "Keep-Alive") keepAlive = value;
+	else if (key == "Content-Length") contentLength = std::stoi(value);
+	else if (key == "Content-Type" || key == "Content-type") contentType = value;
+	else if (key == "Authorization") authorization = value;
+	else if (key == "Date") date = value;
+	else if (key == "Host") host = value;
+	else if (key == "Referer") referer = value;
+	else if (key == "User-Agent") userAgent = value;
 
 }
 
@@ -360,21 +388,21 @@ void Request::parseChunkedBody() {
 
 void Request::parseSingleBody() {
 
-    size_t      size;
-    char        *newBodyRead = client->buf;
+	size_t      size;
+	char        *newBodyRead = client->buf;
 
-    _reqBody.append(newBodyRead);
-    /* We check if body is fully received by comparing its length with the Content-Length header value */
-    /* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
-    size = _reqBody.length();
-    _currentParsedReqBodyLength = size;
-    memset(newBodyRead, 0, BUFMAX + 1);
-    if (size >= contentLength) {
-        client->recvStatus = Client::COMPLETE;
-        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
-         + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
-    } else
-        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not fully received yet"));
+	_reqBody.append(newBodyRead);
+	/* We check if body is fully received by comparing its length with the Content-Length header value */
+	/* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
+	size = _reqBody.length();
+	_currentParsedReqBodyLength = size;
+	memset(newBodyRead, 0, BUFMAX + 1);
+	if (size >= (size_t)contentLength) {
+		client->recvStatus = Client::COMPLETE;
+		LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
+		 + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(size)));
+	} else
+		LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body not fully received yet"));
 
 }
 
@@ -387,19 +415,19 @@ void Request::parseSingleBody() {
 
 void Request::checkBody() {
 
-    size_t bodyOffset;
+	size_t bodyOffset;
 
-    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
-        client->recvStatus = Client::BODY;
-        if (transferEncoding[0] == "chunked") {
-            LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
-        } else LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
-        _reqBody = std::string(client->buf);
-        bodyOffset = _reqBody.find("\r\n\r\n");
-        _reqBody.erase(0, bodyOffset + 4);
-        memset(client->buf, 0, BUFMAX + 1);
-    } else
-        client->recvStatus = Client::COMPLETE;
+	if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
+		client->recvStatus = Client::BODY;
+		if (transferEncoding[0] == "chunked") {
+			LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
+		} else LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
+		_reqBody = std::string(client->buf);
+		bodyOffset = _reqBody.find("\r\n\r\n");
+		_reqBody.erase(0, bodyOffset + 4);
+		memset(client->buf, 0, BUFMAX + 1);
+	} else
+		client->recvStatus = Client::COMPLETE;
 }
 
 /*
@@ -428,51 +456,51 @@ void Request::parse(std::vector<Location*> locations) {
 /* **************************************************** */
 
 std::string const Request::logInfo(void) {
-    std::string ret;
-    ret = "Request | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri;
-    return (ret);
+	std::string ret;
+	ret = "Request | From Client with Socket : " + std::to_string(client->acceptFd) + " | Method : " + method + " | URI : " + uri;
+	return (ret);
 }
 
 void Request::showReq(void) {
-    std::string indent("    > ");
-    std::cout << std::endl << std::endl;
-    std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
-    std::cout << std::endl << std::endl;
-    std::cout << "    ~ Global \n\n";
-    std::cout << indent << "Method : " << method << std::endl;
-    std::cout << indent << "URI : " << uri << std::endl;
-    std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
-    std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
-    showFullHeadersReq();
-    std::cout << std::endl;
-    std::cout << GREEN << "    ------------------------------- END" << END;
-    std::cout << std::endl << std::endl;
+	std::string indent("    > ");
+	std::cout << std::endl << std::endl;
+	std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
+	std::cout << std::endl << std::endl;
+	std::cout << "    ~ Global \n\n";
+	std::cout << indent << "Method : " << method << std::endl;
+	std::cout << indent << "URI : " << uri << std::endl;
+	std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
+	std::cout << indent << "Location Assigned : uri = " << reqLocation->uri << " and root = " << reqLocation->root << std::endl;
+	showFullHeadersReq();
+	std::cout << std::endl;
+	std::cout << GREEN << "    ------------------------------- END" << END;
+	std::cout << std::endl << std::endl;
 }
 
 void Request::showFullHeadersReq(void) {
 
-    std::string indent("    > ");
-    std::cout << std::endl;
-    std::cout << "    ~ Details";
-    std::cout << std::endl << std::endl;
-    utils::displayHeaderMultiMap(acceptCharset, (indent + "Accept-Charset"));
-    utils::displayHeaderMultiMap(acceptLanguage, (indent + "Accept-Language"));
-    utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
-    utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
+	std::string indent("    > ");
+	std::cout << std::endl;
+	std::cout << "    ~ Details";
+	std::cout << std::endl << std::endl;
+	utils::displayHeaderMultiMap(acceptCharset, (indent + "Accept-Charset"));
+	utils::displayHeaderMultiMap(acceptLanguage, (indent + "Accept-Language"));
+	utils::displayHeaderMap(contentLanguage, (indent + "Content-Language"));
+	utils::displayHeaderMap(transferEncoding, (indent + "Transfer-Encoding"));
 
-    if (!uriQueries.empty())        std::cout << indent << "Queries : " << uriQueries << std::endl;
-    if (!authorization.empty())     std::cout << indent << "Authorization : " << authorization << std::endl;
-    if (!contentLocation.empty())   std::cout << indent << "Content-Location : " << contentLocation << std::endl;
-    if (!contentType.empty())       std::cout << indent << "Content-Type : " << contentType << std::endl;
-    if (!date.empty())              std::cout << indent << "Date : " << date << std::endl;
-    if (!host.empty())              std::cout << indent << "Host : " << host << std::endl;
-    if (!referer.empty())           std::cout << indent << "Referer : " << referer << std::endl;
-    if (!userAgent.empty())         std::cout << indent << "User-Agent : " << userAgent << std::endl;
-    if (!keepAlive.empty())         std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
-    
-    std::cout << std::endl;
-    std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
-    std::cout << indent << "_currentParsedReqBodyLength = " << std::to_string(_currentParsedReqBodyLength) << std::endl;
-    std::cout << indent << "Body : " << _reqBody << std::endl;
+	if (!uriQueries.empty())        std::cout << indent << "Queries : " << uriQueries << std::endl;
+	if (!authorization.empty())     std::cout << indent << "Authorization : " << authorization << std::endl;
+	if (!contentLocation.empty())   std::cout << indent << "Content-Location : " << contentLocation << std::endl;
+	if (!contentType.empty())       std::cout << indent << "Content-Type : " << contentType << std::endl;
+	if (!date.empty())              std::cout << indent << "Date : " << date << std::endl;
+	if (!host.empty())              std::cout << indent << "Host : " << host << std::endl;
+	if (!referer.empty())           std::cout << indent << "Referer : " << referer << std::endl;
+	if (!userAgent.empty())         std::cout << indent << "User-Agent : " << userAgent << std::endl;
+	if (!keepAlive.empty())         std::cout << indent << "Keep-Alive : " << keepAlive << std::endl;
+	
+	std::cout << std::endl;
+	std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
+	std::cout << indent << "_currentParsedReqBodyLength = " << std::to_string(_currentParsedReqBodyLength) << std::endl;
+	std::cout << indent << "Body : " << _reqBody << std::endl;
 
 }

@@ -34,7 +34,6 @@ void Response::reset() {
     _resFile.clear();
     _cgiOutputBody.clear();
     contentLength = -1;
-    _errorFileName.clear();
     _methodFctPtr = nullptr;
     _didCGIPassed = false;
 
@@ -48,9 +47,8 @@ void Response::setErrorParameters(int sendStatus, int code) {
 
     _sendStatus = sendStatus;
     _statusCode = code;
-    _errorFileName = "./www/errors/error.html";
-    _resFile = "./www/errors/error.html";
-    
+    _errorFileName = resClient->server->error + "/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
+    _resFile =  resClient->server->error + "/error.html";;
 }
 
 void Response::replaceErrorCode(const Server *server) {
@@ -127,7 +125,7 @@ void Response::versionControl(Request *req) {
 void Response::resourceControl(Request * req) {
     
     struct stat fileStat;
-    int retStat = 0;
+    int retStat = -1;
 
     if (req->method == "DELETE") {
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
@@ -251,7 +249,6 @@ void Response::setBody(const Server *server) {
     if (_sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false;
-
 }
 
 void Response::setBodyHeaders(void)

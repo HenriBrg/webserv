@@ -41,7 +41,7 @@ class Server {
 
         /* Constructors */
 
-        Server(std::string name, int port, std::string error);
+        Server(int port, std::string name, std::string error);
         virtual ~Server();
 
         /* Members variables */
@@ -102,6 +102,7 @@ class Location
 		std::string		php;
 		std::string		ext;
 		int				max_body;
+        bool            autoindex;
 
 		// Pour la phase de développement pré-parsing, on utilisera ces locations :
 
@@ -116,7 +117,8 @@ class Location
 				std::string _auth, \
 				std::string _cgi, \
 				std::string _phpcgi, \
-				std::string _ext)
+				std::string _ext, \
+                bool        _autoindex)
 		{
 			uri = _uri;
 			root = _root;
@@ -127,6 +129,7 @@ class Location
 			cgi = _cgi;
 			php = _phpcgi;
 			ext = _ext;
+            autoindex = _autoindex;
 		};
 
 		private:
