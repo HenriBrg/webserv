@@ -22,9 +22,7 @@ int init(int ac, char **av) {
 	}
     gConfig.servers = webconf.getServers();
     signal(SIGINT, handleCTRLC);
-
-    if (SILENTLOGS == 1)
-        std::cout << "\n     ----- Webserv is running in silent mode ----- \n" << std::endl;
+    if (SILENTLOGS == 1) std::cout << "\n     ----- Webserv is running in silent mode ----- \n" << std::endl;
     return (0);
 }
 
