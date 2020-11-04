@@ -3,9 +3,8 @@ Actualisée au 04/11/2020 :
     AUTRES :
     
     - Testeur 42
+
     - Delete fonction interdites
     - Quid de Content-Location ?
     - Est-ce qu'on utilise bien toutes les fonctions autorisées par le sujet (sinon, on a peut être zap qqchose)
-    - À voir ensemble :
-        - Response::control
-        - grep -rin TODO  srcs/*.cpp
+     - grep -rin TODO  srcs/*.cpp
