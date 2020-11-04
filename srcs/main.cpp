@@ -19,6 +19,7 @@ int init(int ac, char **av) {
 		webconf.parseConf();
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
+		exit(1);
 	}
 	gConfig.servers = webconf.getServers();
 	signal(SIGINT, handleCTRLC);

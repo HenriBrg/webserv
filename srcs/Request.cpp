@@ -151,7 +151,12 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 void    Request::handleAutoIndex(void)
 {
-	DIR			*dir = opendir((file + uri).c_str());
+	DIR			*dir = opendir((file).c_str());
+
+	if (mkdir("autoindex", S_IRWXU) == -1 && errno != EEXIST)
+		return ;
+	chdir("autoindex");
+
 	int			fd = open("autoindex.html", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	std::string	line;
 	std::string	htmlPage;
@@ -168,7 +173,7 @@ void    Request::handleAutoIndex(void)
 		struct dirent *ent;
 		while ((ent = readdir(dir)) != NULL)
 		{
-			line = "<a href=\"" + std::string(ent->d_name) + "/\">" + std::string(ent->d_name) + "/</a>\n";
+			line = std::string(ent->d_name) + "\n";
 			write(fd, line.c_str(), line.size());
 		}
 		closedir(dir);
@@ -177,7 +182,8 @@ void    Request::handleAutoIndex(void)
 	</body>\n \
 	</html>";
 	write(fd, htmlPage.c_str(), htmlPage.size());
-	file = "autoindex.html";
+	chdir("../");
+	file = "autoindex/autoindex.html";
 }
 
 /*
@@ -206,16 +212,13 @@ void Request::parseFile(std::vector<Location*> locations)
 			file = reqLocation->root + "/" + file;
 	   resource = file;
 		if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
-			// TODO WHEN PARSER READY
 			if (reqLocation->autoindex == true && method == "GET")
 				handleAutoIndex();
 			else
 				file = file + reqLocation->index;
 		}
 		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
-		
 	}
-
 }
 
 /*
