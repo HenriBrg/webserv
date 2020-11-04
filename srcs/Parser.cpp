@@ -47,13 +47,13 @@ void	Conf::openFile(void)
 
 void	Conf::parseLocation(Server *serv, std::string locs)
 {
-	int			max_body, j, beg, end;
+	int			max_body = -1, beg, end;
+	bool		autoindex = false;
 	std::string	uri, root, index, methods, auth, cgi, phpcgi, ext;
 	std::string	location;
 	std::vector<std::string>	locBlock;
 	std::vector<std::string>	line;
 
-	// std::cout << locs << std::endl << std::endl;
 	while ((beg = locs.find("{") != std::string::npos))
 	{
 		// locBlock = ft::split(locs, '\n');
@@ -77,9 +77,8 @@ void	Conf::parseLocation(Server *serv, std::string locs)
 		// 	throw(Conf::errorSyntaxException("parameter auth must be present max once."));
 		// std::cout << "deb: " << location << " :fin" << std::endl << std::endl;
 		locBlock = ft::split(location, '\n');
-		for (int i = 0; i < locBlock.size(); i++)
+		for (size_t i = 0; i < locBlock.size(); i++)
 		{
-			// std::cout << locBlock[i] << std::endl;
 			line = ft::splitWhtSp(locBlock[i]);
 			if (!line.empty())
 			{
@@ -144,14 +143,32 @@ void	Conf::parseLocation(Server *serv, std::string locs)
 						throw(Conf::errorSyntaxException("max_body syntax."));
 					max_body = std::stoi(line[1]);
 				}
+				if (line[0] == "autoindex")
+				{
+					if (line.size() != 2 || (line[1] != "on" && line[1] != "off"))
+						throw(Conf::errorSyntaxException("autoindex syntax."));
+					if (line[1] == "on")
+						autoindex = true;
+				}
 			}
 			line.clear();
 		}
 		locBlock.clear();
-		Location *loc = new Location(uri, root, index, methods, max_body, auth, cgi, phpcgi, ext);
+		Location *loc = new Location(uri, root, index, methods, max_body, auth, cgi, phpcgi, ext, autoindex);
 		serv->locations.push_back(loc);
 		locs.erase(0, end + 1);
-		// std::cout << locs << std::endl << std::endl;
+		NOCLASSLOGPRINT(INFO, ("Conf::parseLocation() | uri: " + uri + " | root: " + root + " | index: " + index + " | methods: " + methods + " | max_body: " + std::to_string(max_body) + " | auth: " + auth + " | cgi: " + cgi + " | php: " + phpcgi + " | ext: " + ext + " | autoindex: " + std::to_string(autoindex)));
+		uri.clear();
+		root.clear();
+		index.clear();
+		methods.clear();
+		auth.clear();
+		auth.clear();
+		cgi.clear();
+		phpcgi.clear();
+		ext.clear();
+		max_body = -1;
+		autoindex = false;
 	}
 }
 
@@ -202,7 +219,7 @@ void	Conf::parseServerBlock(std::string block)
 		}
 		else if (line[0] == "error")
 		{
-			DIR *dir;
+			DIR *dir = NULL;
 			if (line.size() != 2 || !(dir = opendir(line[1].c_str())))
 			{
 				closedir(dir);
@@ -219,11 +236,12 @@ void	Conf::parseServerBlock(std::string block)
 	servParams = block.substr(idx, block.size() - idx - 1);
 	if (serverName == "")
 		serverName = "webserv" + std::to_string(nameNb++);
-	Server *serv = new Server(serverName, port, error);
+	Server *serv = new Server(port, serverName, error);
 	serverBlock = ft::split(servParams, '\n');
 	// std::cout << servParams << std::endl << std::endl;
 	// for (int i = 0; i < nbLoc; i++)
 	// 	parseLocation(serv, serverBlock);
+	NOCLASSLOGPRINT(INFO, ("Conf::parseServerBlock() : FOR SERVER PORT " + std::to_string(port)));
 	parseLocation(serv, servParams);
 	try
 	{
@@ -234,9 +252,10 @@ void	Conf::parseServerBlock(std::string block)
         std::cerr << e.what() << std::endl;
     }
 	_servers.push_back(serv);
-	for (int i = 0; i < _servers.size() - 1; i++)
+	for (size_t i = 0; i < _servers.size() - 1; i++)
 		if (_servers[i]->port == _servers[_servers.size() - 1]->port)
 			throw(Conf::errorSyntaxException("each server must have a different port."));
+	NOCLASSLOGPRINT(INFO, ("Server::parseServerBlock() : SERVER CREATED PORT(" + std::to_string(port) + "), NAME(" + serverName + "), ERROR_PATH(" + error + ")"));
 }
 
 size_t	Conf::findServer(std::vector<std::string> confTmp)
@@ -296,7 +315,7 @@ void	Conf::parseConf(void)
 		else
 			confTmp[i].erase(0, j);
 	}
-	for (int i = 0; i < confTmp.size(); i++)
+	for (size_t i = 0; i < confTmp.size(); i++)
 	{
 		j = 0;
 		while (confTmp[i][j])
@@ -328,12 +347,16 @@ void	Conf::parseConf(void)
 	// 		std::cout << _servers[i]->locations[j]->max_body << std::endl;
 	// 		std::cout << _servers[i]->locations[j]->auth << std::endl;
 	// 		std::cout << _servers[i]->locations[j]->cgi << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->phpcgi << std::endl;
+	// 		std::cout << _servers[i]->locations[j]->php << std::endl;
 	// 		std::cout << _servers[i]->locations[j]->ext << std::endl;
 	// 	}
 	// 	std::cout << std::endl;
 	// }
 }
+
+/* **************************************************** */
+/*                     EXCEPTIONS     		            */
+/* **************************************************** */
 
 std::vector<Server*>	Conf::getServers(void)
 {
