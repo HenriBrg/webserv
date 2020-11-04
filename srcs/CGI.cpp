@@ -231,7 +231,8 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
     pos = buffer.find("\r\n\r\n") + 4;
     if (pos == std::string::npos) return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
     //_resBody = buffer.substr(pos);
-    // _resBody = &(buffer.substr(pos)[0]);
+    _resBody = &(buffer.substr(pos)[0]);
+    
     _resFile.clear();
 
 }

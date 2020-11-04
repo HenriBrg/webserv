@@ -298,7 +298,7 @@ void Response::setBody(const Server *server) {
     // if (!(_resFile.empty() && !_resBody.empty())) 
     //     NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
 
-    if (!(_resFile.empty()))
+    if (resClient->req.method != "POST" && _didCGIPassed == false && !(_resFile.empty()))
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -330,8 +330,8 @@ void Response::setBody(const Server *server) {
         }
         else
             LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
-        
     }
+   
     if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false;
@@ -351,11 +351,8 @@ void Response::setBodyHeaders(void)
 	}
 	if (resClient->req.method == "GET" && contentLength == -1)
 		contentLength = 0;
+    // if (_resBody && strlen(_resBody) >= 0)
 
-	// if (resClient->req.method == "HEAD") {
-	// 	contentLength = _resBody.size();
-	// 	_resBody.clear();
-	// }
 }
 
 void Response::format(void) {
@@ -436,5 +433,5 @@ void Response::showFullHeadersRes(void) {
     
     int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
-	std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
+	// std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
 }
