@@ -124,7 +124,7 @@ void Response::putReq(Request * req)
 }
 
 void Response::patchReq(Request * req) {
-
+    (void)req;
 }
 
 void Response::deleteReq(Request * req)

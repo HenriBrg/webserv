@@ -11,6 +11,7 @@ Config::Config() {
 }
 
 void handleCTRLC(int s) {
+    (void)s;
     write(1, "\b\b", 2);
     exit(EXIT_FAILURE);
 }

@@ -1,7 +1,7 @@
 #include "../inc/Webserv.hpp"
 
-Server::Server(std::string name, int port, std::string error): name(name), port(port), error(error) {
-    port = -1;
+Server::Server(int port, std::string name, std::string error): port(port), name(name), error(error) {
+    // port = -1;
     sockFd = -1;
     bzero(&addr, sizeof(addr));
 }
@@ -129,11 +129,12 @@ void Server::acceptNewClient(void) {
     int addrSize = sizeof(clientAddr);
 
     bzero(&clientAddr, addrSize);
+    LOGPRINT(INFO, this, ("Server::acceptNewClient : accept() " + std::string(strerror(errno))));
     if ((acceptFd = accept(sockFd, (struct sockaddr *)&clientAddr, (socklen_t*)&addrSize)) == -1) {
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept() failed : " + std::string(strerror(errno))));
         return ;
     }
-    Client *newClient = new Client(this, acceptFd, clientAddr);
+    Client *newClient = new Client(acceptFd, this, clientAddr);
     newClient->req.client = newClient;
     clients.push_back(newClient);
 
@@ -155,7 +156,6 @@ void Server::acceptNewClient(void) {
 void Server::readClientRequest(Client *c) {
 
     int ret = -1;
-    int error;
 
     c->resetTimeOut();
     c->req.client = c;
@@ -188,7 +188,7 @@ void Server::readClientRequest(Client *c) {
             else if (c->req.contentLength > 0)
                 c->req.parseSingleBody();
             else LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Anormal body"));
-            if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > c->req.reqLocation->max_body) {
+            if (c->req.reqLocation->max_body != -1 && c->req._reqBody.size() > (size_t)c->req.reqLocation->max_body) {
                 LOGPRINT(REQERROR, c, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(c->req.reqLocation->max_body)));
                 c->recvStatus = Client::ERROR;
                 c->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
@@ -219,7 +219,7 @@ void Server::writeClientResponse(Client *c) {
     }
     if (sendClientResponse(c) == EXIT_FAILURE)
         c->res._sendStatus = Response::DONE;
-    if (c->res._bytesSent == c->res.formatedResponse.size()) {
+    if (c->res._bytesSent == (int)c->res.formatedResponse.size()) {
         LOGPRINT(INFO, c, ("Server::writeClientResponse() : send() complete ! --> Bytes to send : " + std::to_string(c->res.formatedResponse.size()) + ", bytes effectively sent : " + std::to_string(c->res._bytesSent)));
         LOGPRINT(INFO, &c->res, "Response DONE");
         c->res._sendStatus = Response::DONE;
@@ -264,7 +264,7 @@ int Server::sendClientResponse(Client *c)
     if (c->res._sendStatus == Response::SENDING)
     {
         bytesToSend = c->res.formatedResponse.size();
-        while (bytesSent < c->res.formatedResponse.size())
+        while (bytesSent < (int)c->res.formatedResponse.size())
         {
             retSend = send(c->acceptFd, c->res.formatedResponse.c_str(), bytesToSend, 0);
             if (retSend == -1)

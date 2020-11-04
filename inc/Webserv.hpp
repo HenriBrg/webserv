@@ -35,9 +35,6 @@
 # include <algorithm>
 # include <iterator>
 
-# include <sys/types.h>
-# include <dirent.h>
-
 # include "Config.hpp"
 # include "Parser.hpp"
 # include "Client.hpp"
