@@ -151,7 +151,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 
 void    Request::handleAutoIndex(void)
 {
-	DIR			*dir = opendir((file + uri).c_str());
+	DIR			*dir = opendir(file.c_str());
 	int			fd = open("autoindex.html", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	std::string	line;
 	std::string	htmlPage;
@@ -206,11 +206,15 @@ void Request::parseFile(std::vector<Location*> locations)
 			file = reqLocation->root + "/" + file;
 	   resource = file;
 		if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
-			// TODO WHEN PARSER READY
 			if (reqLocation->autoindex == true && method == "GET")
 				handleAutoIndex();
-			else
-				file = file + reqLocation->index;
+			else {
+				i = file.size() - 1;
+				if (file[i] == '/')
+					file = file + reqLocation->index;
+				else
+					file = file + "/" + reqLocation->index;
+			}
 		}
 		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
 		

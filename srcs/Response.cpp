@@ -155,16 +155,30 @@ void Response::reqHeadersControl(Request * req) {
 
 void Response::control(Request * req, Server * serv) {
     
-    // if (_sendStatus != Response::ERROR)
-        versionControl(req);
-    // if (_sendStatus != Response::ERROR)
-        reqHeadersControl(req);
-    // if (_sendStatus != Response::ERROR)
-        resourceControl(req);
-    // if (_sendStatus != Response::ERROR)
-        methodControl(req, serv);
-    // if (_sendStatus != Response::ERROR)
-        authControl(req);
+    int _statusCodeBackup;
+
+    _statusCodeBackup = _statusCode;
+    versionControl(req);
+    if (_statusCode != _statusCodeBackup)
+        NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  versionControl() - _statusCode is now : " + std::to_string(_statusCode))
+    _statusCodeBackup = _statusCode;
+    reqHeadersControl(req);
+    if (_statusCode != _statusCodeBackup)
+        NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  reqHeadersControl() - _statusCode is now : " + std::to_string(_statusCode))
+    _statusCodeBackup = _statusCode;
+    resourceControl(req);
+    if (_statusCode != _statusCodeBackup)
+        NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  resourceControl() - _statusCode is now : " + std::to_string(_statusCode))
+    _statusCodeBackup = _statusCode;
+    methodControl(req, serv);
+    if (_statusCode != _statusCodeBackup)
+        NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  methodControl(req, () - _statusCode is now : " + std::to_string(_statusCode))
+    _statusCodeBackup = _statusCode;
+    authControl(req);
+    if (_statusCode != _statusCodeBackup)
+        NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  authControl() - _statusCode is now : " + std::to_string(_statusCode))
+
+    // TODO : J'ai commenté ça car dans le cas où il y a plusieurs erreurs, authentification > methode > resource > ... mais à confirmer
     
 }
 

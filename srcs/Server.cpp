@@ -235,13 +235,13 @@ void Server::writeClientResponse(Client *c) {
 
 void Server::setClientResponse(Client *c)
 {
-    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Request Control"));
+    LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : L238 - Control"));
     c->res.control(&c->req, this); /* Control (+set) method & authorization */
-    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Calling " + c->req.method + " Handler"));
+    LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : Calling " + c->req.method + " Handler"));
     c->res.callMethod(&c->req); /* Use requested method */
-    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set and Format Header"));
+    LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : Set and Format Header"));
     c->res.setHeaders(&c->req); /* Set headers */
-    NOCLASSLOGPRINT(INFO, ("Server::setClientResponse() : Set Body and Body Headers"));
+    LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : Set Body and Body Headers"));
     c->res.setBody(c->server); /* Set body */
     c->res.setBodyHeaders(); /* Set body headers to actual value (cleared in setHeaders()) */
     c->res.format(); /* Format response */
