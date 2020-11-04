@@ -262,8 +262,8 @@ int Server::sendClientResponse(Client *c)
     int bytesSent(0);
     int bytesToSend(0);
 
-    if (c->res.formatedResponse.size() > 500000)
-        usleep(10000);
+    // if (c->res.formatedResponse.size() > 500000)
+    //     usleep(10000);
     if (c->res._sendStatus == Response::SENDING)
     {
         bytesToSend = c->res.formatedResponse.size();
@@ -277,9 +277,11 @@ int Server::sendClientResponse(Client *c)
             }
             bytesSent += retSend;
             bytesToSend -= retSend;
+            NOCLASSLOGPRINT(INFO, ("Cumulated bytes sent : " + std::to_string(bytesSent)));
         }
         c->res._bytesSent += bytesSent;
     }
+
     return (EXIT_SUCCESS);
 }
 
