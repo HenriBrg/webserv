@@ -37,6 +37,10 @@ endif
 
 # COMPILATION
 
+# make run SILENTLOGS=1
+# make test SILENTLOGS=1
+# make re SILENTLOGS=1
+
 all: $(NAME)
 
 run: all

@@ -202,7 +202,7 @@ void Server::readClientRequest(Client *c) {
         if (c->recvStatus == Client::ERROR) {
             c->recvStatus = Client::COMPLETE;
             c->res.setErrorParameters(Response::ERROR, (c->res._statusCode == -1 ? BAD_REQUEST_400 : c->res._statusCode));
-            LOGPRINT(LOGERROR, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
+            LOGPRINT(INFO, c, ("Server::readClientRequest() : Client Request Error. We will directly respond to him with 400 BAD REQUEST"));
             FD_SET(c->acceptFd, &gConfig.writeSetBackup);
         }
     }
@@ -214,9 +214,10 @@ void Server::writeClientResponse(Client *c) {
         setClientResponse(c);
     if (c->res._sendStatus == Response::ERROR) {
         /* We might pass directly here (without passing through resDispatch() if parsing client request raised an error */
-        LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
+        LOGPRINT(RESERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
         setClientResponse(c);
     }
+
     if (sendClientResponse(c) == EXIT_FAILURE)
         c->res._sendStatus = Response::DONE;
     if (c->res._bytesSent == (int)c->res.formatedResponse.size()) {
@@ -261,6 +262,8 @@ int Server::sendClientResponse(Client *c)
     int bytesSent(0);
     int bytesToSend(0);
 
+    if (c->res.formatedResponse.size() > 500000)
+        usleep(10000);
     if (c->res._sendStatus == Response::SENDING)
     {
         bytesToSend = c->res.formatedResponse.size();

@@ -195,7 +195,6 @@ void Request::parseFile(std::vector<Location*> locations)
 	struct stat info;
 
 	assignLocation(locations);
-
 	if (reqLocation)
 	{
 		isolateFileName = file;
@@ -210,14 +209,11 @@ void Request::parseFile(std::vector<Location*> locations)
 				handleAutoIndex();
 			else {
 				i = file.size() - 1;
-				if (file[i] == '/')
-					file = file + reqLocation->index;
-				else
-					file = file + "/" + reqLocation->index;
+				if (file[i] == '/') file = file + reqLocation->index;
+				else file = file + "/" + reqLocation->index;
 			}
 		}
 		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assignedd : " + file));
-		
 	}
 
 }
@@ -226,8 +222,8 @@ void Request::parseFile(std::vector<Location*> locations)
 ** Functions for filling headers value(s) into corresponding variables
 */
 
-void Request::fillHeader(std::string const key, std::string const value)
-{
+void Request::fillHeader(std::string const key, std::string const value) {
+	
 	if (key == "Content-Language" || key == "Transfer-Encoding")
 		fillMultiValHeaders(key, value);
 	else if (key == "Accept-Charset" || key == "Accept-Language")
@@ -390,14 +386,15 @@ void Request::parseChunkedBody() {
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End chunked body parsing"));
 }
 
+/* We check if body is fully received by comparing its length with the Content-Length header value */
+/* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
+
 void Request::parseSingleBody() {
 
 	size_t      size;
 	char        *newBodyRead = client->buf;
 
 	_reqBody.append(newBodyRead);
-	/* We check if body is fully received by comparing its length with the Content-Length header value */
-	/* If parsing is perfect, size == contentLength, but for now, we keep a safety with >= */
 	size = _reqBody.length();
 	_currentParsedReqBodyLength = size;
 	memset(newBodyRead, 0, BUFMAX + 1);
@@ -466,6 +463,8 @@ std::string const Request::logInfo(void) {
 }
 
 void Request::showReq(void) {
+
+	
 	std::string indent("    > ");
 	std::cout << std::endl << std::endl;
 	std::cout << GREEN << "    REQUEST RECEIVED ----------------" << END;
@@ -505,6 +504,10 @@ void Request::showFullHeadersReq(void) {
 	std::cout << std::endl;
 	std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
 	std::cout << indent << "_currentParsedReqBodyLength = " << std::to_string(_currentParsedReqBodyLength) << std::endl;
-	std::cout << indent << "Body : " << _reqBody << std::endl;
+	
+	int x =  _reqBody.size();
+    std::cout << indent << "_reqBody Size : " << std::to_string(x) << std::endl;
+	std::cout << indent << "_reqBody content : " << ( x < 500 ? _reqBody : "_reqBody too big") << std::endl;
+
 
 }

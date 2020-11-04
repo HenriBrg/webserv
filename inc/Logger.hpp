@@ -42,9 +42,10 @@
 # define INFO 1
 # define LOGERROR 2
 # define REQERROR 3
-# define DEBUG 4
-# define DISCONNECT 5
-# define SELECT 6
+# define RESERROR 4
+# define DEBUG 5
+# define DISCONNECT 6
+# define SELECT 7
 
 # define LOGPRINT(PURPOSE, X, MESSAGE) Logger::print(PURPOSE, X, MESSAGE);
 # define NOCLASSLOGPRINT(PURPOSE, MESSAGE) Logger::noClassLogPrint(PURPOSE, MESSAGE);
@@ -74,7 +75,10 @@ class Logger {
                     std::cout << RED << " [ERROR] " << END << str << std::endl;
                     break ;
                 case REQERROR:
-                    std::cout << ORANGE << " [REQ ERROR] " << END << str << std::endl;
+                    std::cout << ORANGE << " [REQERR] " << END << str << std::endl;
+                    break ;
+                 case RESERROR:
+                    std::cout << ORANGE << " [RESERR] " << END << str << std::endl;
                     break ;
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
@@ -107,6 +111,13 @@ class Logger {
                     break ;
                 case SELECT:
                      std::cout << " " << BCKYELLOW << BOLD << BLACK << message  << END << BOLD_OFF << END  << std::endl;
+                     break ;
+                case REQERROR:
+                    std::cout << ORANGE << " [REQERR] " << END << message << std::endl;
+                    break ;
+                case RESERROR:
+                    std::cout << ORANGE << " [RESERR] " << END << message << std::endl;
+                    break ;
                 default:
                     break ;
             }

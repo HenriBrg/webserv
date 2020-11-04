@@ -334,7 +334,8 @@ void Response::showRes(void) {
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
-    showFullHeadersRes();    
+	 if (SILENTLOGS == 0)
+        showFullHeadersRes();    
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
@@ -361,7 +362,10 @@ void Response::showFullHeadersRes(void) {
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
-    std::cout << indent << "Body Size : " << std::to_string(_resBody.size()) << std::endl;
-    // std::cout << indent << "Body : " << _resBody << std::endl;
+    
+    int x =  _resBody.size();
+    std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
+	std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
+
 
 }

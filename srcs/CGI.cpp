@@ -160,8 +160,6 @@ void Response::execCGI(Request * req) {
         dup2(tubes[SIDE_OUT], STDIN);   // Pour POST uniquement de façon à ce que le CGI récupère l'informations dans son STDIN, mais requis pour GET même s'il y a pas de body (autrement le cgi_tester freeze apparement)
         dup2(tmpFd, STDOUT);            // On veut que la sortie du CGI soit dirigée vers le fichier CGI_OUTPUT_TMPFILE
         ret = execve(executable.c_str(), args, env);
-        if (ret == -1)
-            NOCLASSLOGPRINT(LOGERROR, ("Request::execCGI() : execve() returned -1. Error = " + std::string(strerror(errno))));
         exit(ret);
     } else {
         if (req->method == "POST") {
@@ -245,23 +243,3 @@ int Response::getCGIType(Request * req) {
     else
         return (NO_CGI);
 }
-
-
-// server {
-
-// 	listen 	8888
-	
-// 	server_name testYoupi
-// 	error   	www/errors
-
-// 	location / {
-// 		index       index.html                
-//         max_body    100                    
-//         method      GET,POST,PUT,PATCH,DELETE
-//         root        ./www             
-//         cgi         ./www/cgi-bin/cgi_test.pl
-//         php         /usr/local/bin/php-cgi 
-//         ext         .bla
-// 	}
-
-// }
