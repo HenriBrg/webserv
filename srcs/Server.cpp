@@ -133,10 +133,14 @@ void Server::acceptNewClient(void) {
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept() failed : " + std::string(strerror(errno))));
         return ;
     }
+    std::cout << GREEN << "CHECK1\n" << END;
     Client *newClient = new Client(acceptFd, this, clientAddr);
+    std::cout << GREEN << "CHECK1.1\n" << END;
     newClient->req.client = newClient;
+    std::cout << GREEN << "CHECK1.2\n" << END;
     clients.push_back(newClient);
 
+    std::cout << GREEN << "CHECK2\n" << END;
 
     if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
@@ -148,7 +152,7 @@ void Server::acceptNewClient(void) {
     }
     else
         gConfig._availableConnections--;
-
+    std::cout << GREEN << "CHECK3\n" << END;
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
@@ -172,8 +176,10 @@ void Server::readClientRequest(Client *c) {
     {
         c->isConnected = false;
         if (recvRet == 0)
+        {
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
-        if (recvRet == false)
+        }
+        else if (recvCheck == false)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
     }

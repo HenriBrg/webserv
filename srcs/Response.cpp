@@ -1,10 +1,10 @@
 # include "../inc/Webserv.hpp"
 
-Response::Response(void) {
+Response::Response(void) : _resBody(nullptr) {
 	reset();
 }
 
-Response::Response(Client *c)  {
+Response::Response(Client *c) : _resBody(nullptr) {
 	reset();
 	resClient = c;
 }
@@ -33,6 +33,11 @@ void Response::reset() {
     _bytesSent = 0;
     _sendStatus = Response::PREPARE;
 
+    if (_resBody)
+        std::cout << RED << "HAS BODY" << std::endl;
+    std::cout << RED << "AVANT FREE\n" << END;
+    if (_resBody)
+        free(_resBody);
     _resBody = nullptr;
 
     _resFile.clear();
