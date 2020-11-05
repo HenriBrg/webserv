@@ -55,7 +55,7 @@ class Server {
         struct sockaddr_in          addr;
         std::vector<Client*>        clients;
         std::vector<Location*>      locations;
-        std::map<std::string, ptr> methodsTab;
+        std::map<std::string, ptr>  methodsTab;
         std::map<int, std::string> _errorStatus;
 
         /* Members Methods */

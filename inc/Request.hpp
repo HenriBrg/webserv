@@ -40,7 +40,6 @@ class Request {
         void    reset(void);
         void	readline(std::string & b, std::string & line);
         int     parseRequestLine();
-        void    handleAutoIndex();
         void    parseFile(std::vector<Location*> locations);
         void    parseQuery();
         void    parseUriQueries();

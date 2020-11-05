@@ -285,6 +285,32 @@ void Response::setHeaders(Request * req) {
 	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
+void    Response::handleAutoIndex(void)
+{
+	DIR			*dir = opendir((resClient->req.file).c_str());
+	std::string	htmlPage;
+
+	htmlPage = "<!DOCTYPE html>\n \
+	<html>\n \
+	<head><title>Index of " + resClient->req.file + "</title></head>\n \
+	<body bgcolor=\"white\">\n \
+	<h1>Index of " + resClient->req.file + "</h1>\n \
+	<hr><pre>\n";
+	if (dir != NULL)
+	{
+		struct dirent *ent;
+		while ((ent = readdir(dir)) != NULL)
+			htmlPage += std::string(ent->d_name) + "\n";
+		closedir(dir);
+	}
+	htmlPage += "\t</pre><hr>\n \
+	</body>\n \
+	</html>";
+    _resBody = strdup(htmlPage.c_str());
+    contentType[0] = "text/html";
+    contentLength = strlen(_resBody);
+}
+
 /*
 **  Function to fullfit body (bytes array) with file content
 **  1. Allocate char* of file size
@@ -309,7 +335,9 @@ void Response::setBody(const Server *server) {
 
         if (responseUtils::setupBytesArray(this) == -1)
             return ;
-        if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
+        if (resClient->req.reqLocation->autoindex == true)
+            handleAutoIndex();
+        else if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)
             {
@@ -325,15 +353,14 @@ void Response::setBody(const Server *server) {
                 LOGPRINT(INFO, this, ("Response::setBody() : read() body file returned 0 | Bytes copied = " + std::to_string(saveOffset)));
             contentLength = saveOffset;
             close(fileFd);
-			struct stat autoStat;
-			if (stat("autoindex/autoindex.html", &autoStat) == 0)
-				unlink("autoindex/autoindex.html");
-			rmdir("autoindex");
+			// struct stat autoStat;
+			// if (stat("autoindex/autoindex.html", &autoStat) == 0)
+				// unlink("autoindex/autoindex.html");
+			// rmdir("autoindex");
         }
         else
             LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
     }
-   
     if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
     _didCGIPassed = false;
