@@ -133,7 +133,7 @@ void Response::putReq(Request * req)
                 _resFile = req->file; // On 201 reponse client waits for newly created ressource
             }
             else
-                _statusCode = NO_CONTENT_204;
+                _statusCode = OK_200;
             close(fileFd);
             return ;
         }

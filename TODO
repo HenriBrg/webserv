@@ -8,3 +8,4 @@ Actualisée au 04/11/2020 :
     - Est-ce qu'on utilise bien toutes les fonctions autorisées par le sujet (sinon, on a peut être zap qqchose)
      - grep -rin TODO  srcs/*.cpp
      - LOG sur tous les read write recv send qui retourne -1 ou 0
+     - SEGFAULT sur lancement enchainé du tester sur un meme webserv

@@ -31,7 +31,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
-            "args": [],
+            "args": ["conf/default.conf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
