@@ -18,7 +18,6 @@ void Request::reset(void) {
 
     //client = nullptr // segfaut as on response 
     reqLocation = nullptr;
-    reqBuf.clear();
     _reqBody.clear();
 
     _currentParsedReqBodyLength = -1;
@@ -91,7 +90,7 @@ int Request::parseRequestLine() {
     std::string                 line;
     std::vector<std::string>    tab;
 
-    ft::getLine(reqBuf, line);
+    ft::getLine(_reqBody, line);
     utils::deleteCarriageReturn(line);
     tab = ft::split(line, ' ');
     if (tab.size() != 3)
@@ -320,8 +319,8 @@ void Request::parseHeaders() {
     std::string  key;
     std::string  value;
 
-    while (!reqBuf.empty()) {
-        ft::getLine(reqBuf, line);
+    while (!_reqBody.empty()) {
+        ft::getLine(_reqBody, line);
         pos = line.find(":");
         if (pos == std::string::npos)
             return ;
@@ -388,12 +387,12 @@ void Request::parseChunkedBody() {
     std::string tmp;
 
     tmp.clear();
-    // _reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
         separator = _reqBody.find("\r\n", _optiChunkOffset);
         if (separator == std::string::npos) {
             client->recvStatus = Client::ERROR;
+            client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
             LOGPRINT(LOGERROR, this, ("Request::parseChunkedBody() : no <CR><LF> in chunk - invalid request - disconnecting client"));
             break ;
         }
@@ -406,7 +405,11 @@ void Request::parseChunkedBody() {
         }
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
+            // (int)_reqBody.size() < chunkLineBytesSize
             if (separator == std::string::npos) {
+                // No \r\n\r\n at the end of the chunk
+                // client->recvStatus = Client::COMPLETE;
+
                 LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
                 client->recvStatus = Client::ERROR;
                 client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
@@ -448,7 +451,7 @@ void Request::parseSingleBody() {
     if (bodySize == contentLength)
     {
         client->recvStatus = Client::COMPLETE;
-        LOGPRINT(OK, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
+        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
          + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(bodySize)));
     }
     else // Do something about it ?
@@ -474,7 +477,7 @@ void Request::checkBody()
         } else {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         }
-        _reqBody = reqBuf;
+        // _reqBody = _reqBody;
         // if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
         //     _reqBody.erase(0, bodyOffset + 4);
     }
@@ -500,7 +503,6 @@ void Request::parse(std::vector<Location*> locations) {
     // LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
     checkBody();
     // LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
-    reqBuf.clear(); 
 }
 
 /* **************************************************** */

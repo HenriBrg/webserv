@@ -166,7 +166,8 @@ void Server::readClientRequest(Client *c) {
     while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
     {
         recvBuffer[recvRet] = '\0';
-        c->req.reqBuf.append(recvBuffer);
+        c->req._reqBody.append(recvBuffer);
+        // Modification potentiellement sensible ici
         recvCheck = true;
     }
 
@@ -183,17 +184,17 @@ void Server::readClientRequest(Client *c) {
     }
     else
     {
-        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req.reqBuf.size()) + " bytes"));
+        LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req._reqBody.size()) + " bytes"));
         if (c->recvStatus == Client::HEADER)
         {
-            if (strstr(c->req.reqBuf.c_str(), "\r\n\r\n") != NULL)
+            if (strstr(c->req._reqBody.c_str(), "\r\n\r\n") != NULL)
             {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 c->req.parse(locations);
             }
             else
             {
-                LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers - End of connection"));
+                LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers"));
                 return ;
             }
         }
