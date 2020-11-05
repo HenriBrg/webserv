@@ -206,6 +206,7 @@ void Response::reqHeadersControl(Request * req) {
 /*
 **  Dispatching function for controlling request
 */
+
 void Response::control(Request * req, Server * serv) {
     
     int _statusCodeBackup;
@@ -231,14 +232,12 @@ void Response::control(Request * req, Server * serv) {
     if (_statusCode != _statusCodeBackup)
         NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  authControl() - _statusCode is now : " + std::to_string(_statusCode))
 
-    // TODO : J'ai commenté ça car dans le cas où il y a plusieurs erreurs, authentification > methode > resource > ... mais à confirmer
-    
 }
-
 
 /*
 **  Call for corresponding method function set in methodControl()
 */
+
 void Response::callMethod(Request * req) {
 	if (_sendStatus != Response::ERROR)
 		(this->*_methodFctPtr)(req);
@@ -248,6 +247,7 @@ void Response::callMethod(Request * req) {
 /*
 **  SET ALL HEADERS TODO
 */
+
 void Response::setHeaders(Request * req) {
 
 	/* 1) Status Line */
@@ -291,6 +291,7 @@ void Response::setHeaders(Request * req) {
 **  2. Read file to retreive bytes
 **  3. If error html page then contextualize body with corresponding error status
 */
+
 void Response::setBody(const Server *server) {
 
     if (_didCGIPassed == true) {
@@ -343,17 +344,15 @@ void Response::setBody(const Server *server) {
 /*
 **  Set body headers values
 */
-void Response::setBodyHeaders(void)
-{
-	if (_resBody) {
+
+void Response::setBodyHeaders(void) {
+	
+    if (_resBody) {
 		if (contentType[0].empty() && !_resFile.empty())
 			contentType[0] = responseUtils::getContentType(_resFile);
 		if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
 			lastModified = ft::getLastModifDate(_resFile);
 	}
-	// if (resClient->req.method == "GET" && contentLength == -1)
-	// 	contentLength = 0;
-    // if (_resBody && strlen(_resBody) >= 0)
 
 }
 
@@ -377,8 +376,9 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
     responseUtils::headerFormat(formatedResponse, "Host", server);
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-    // QUID de www-authenticate ?
+    // TODO : QUID de www-authenticate ?
     formatedResponse.append("\r\n");
+
 }
 
 /* **************************************************** */
@@ -404,7 +404,7 @@ void Response::showRes(void) {
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
-	 if (SILENTLOGS == 0)
+	if (SILENTLOGS == 0)
         showFullHeadersRes();    
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
@@ -432,7 +432,6 @@ void Response::showFullHeadersRes(void) {
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
-    
     int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
 	// std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
