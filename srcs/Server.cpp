@@ -133,14 +133,10 @@ void Server::acceptNewClient(void) {
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept() failed : " + std::string(strerror(errno))));
         return ;
     }
-    std::cout << GREEN << "CHECK1\n" << END;
     Client *newClient = new Client(acceptFd, this, clientAddr);
-    std::cout << GREEN << "CHECK1.1\n" << END;
     newClient->req.client = newClient;
-    std::cout << GREEN << "CHECK1.2\n" << END;
     clients.push_back(newClient);
 
-    std::cout << GREEN << "CHECK2\n" << END;
 
     if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
@@ -152,7 +148,6 @@ void Server::acceptNewClient(void) {
     }
     else
         gConfig._availableConnections--;
-    std::cout << GREEN << "CHECK3\n" << END;
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
@@ -235,6 +230,7 @@ void Server::writeClientResponse(Client *c) {
 
 }
 
+
 void Server::setClientResponse(Client *c)
 {
     LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : L238 - Control"));
@@ -251,11 +247,6 @@ void Server::setClientResponse(Client *c)
     c->res.showRes();
 }
 
-/*
-** std::cout << RED << "============================================" << END << std::endl;
-** std::cout << c->res.formatedResponse << std::endl;
-** std::cout << RED << "============================================" << END << std::endl;
-*/
 
 int Server::sendClientResponse(Client *c)
 {

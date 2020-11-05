@@ -34,9 +34,6 @@ void Response::reset() {
     _sendStatus = Response::PREPARE;
 
     if (_resBody)
-        std::cout << RED << "HAS BODY" << std::endl;
-    std::cout << RED << "AVANT FREE\n" << END;
-    if (_resBody)
         free(_resBody);
     _resBody = nullptr;
 
