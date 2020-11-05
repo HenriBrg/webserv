@@ -311,6 +311,8 @@ def POST_TESTS(testNum = 0):
     index += 1
    
     # ------- POST CHUNKED - 200/201 - NO CGI
+
+    # Note that if a message is received with both a Transfer-Encoding header field and a Content-Length header field, the latter MUST be ignored.
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
