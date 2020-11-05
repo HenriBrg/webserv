@@ -1,10 +1,10 @@
 # include "../inc/Webserv.hpp"
 
-Response::Response(void) {
+Response::Response(void) : _resBody(nullptr) {
 	reset();
 }
 
-Response::Response(Client *c)  {
+Response::Response(Client *c) : _resBody(nullptr) {
 	reset();
 	resClient = c;
 }
@@ -33,6 +33,8 @@ void Response::reset() {
     _bytesSent = 0;
     _sendStatus = Response::PREPARE;
 
+    if (_resBody)
+        free(_resBody);
     _resBody = nullptr;
 
     _resFile.clear();
@@ -298,7 +300,7 @@ void Response::setBody(const Server *server) {
     // if (!(_resFile.empty() && !_resBody.empty())) 
     //     NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
 
-    if (resClient->req.method != "POST" && _didCGIPassed == false && !(_resFile.empty()))
+    if (!(_resBody) && !(_resFile.empty())) //resClient->req.method != "POST" && _didCGIPassed == false
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -349,8 +351,8 @@ void Response::setBodyHeaders(void)
 		if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
 			lastModified = ft::getLastModifDate(_resFile);
 	}
-	if (resClient->req.method == "GET" && contentLength == -1)
-		contentLength = 0;
+	// if (resClient->req.method == "GET" && contentLength == -1)
+	// 	contentLength = 0;
     // if (_resBody && strlen(_resBody) >= 0)
 
 }

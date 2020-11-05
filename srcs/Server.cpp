@@ -148,7 +148,6 @@ void Server::acceptNewClient(void) {
     }
     else
         gConfig._availableConnections--;
-
     LOGPRINT(INFO, newClient, "Server::acceptNewClient() - New client !");
 }
 
@@ -172,8 +171,10 @@ void Server::readClientRequest(Client *c) {
     {
         c->isConnected = false;
         if (recvRet == 0)
+        {
             LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
-        if (recvRet == false)
+        }
+        else if (recvCheck == false)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
     }
@@ -229,6 +230,7 @@ void Server::writeClientResponse(Client *c) {
 
 }
 
+
 void Server::setClientResponse(Client *c)
 {
     LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : L238 - Control"));
@@ -245,11 +247,6 @@ void Server::setClientResponse(Client *c)
     c->res.showRes();
 }
 
-/*
-** std::cout << RED << "============================================" << END << std::endl;
-** std::cout << c->res.formatedResponse << std::endl;
-** std::cout << RED << "============================================" << END << std::endl;
-*/
 
 int Server::sendClientResponse(Client *c)
 {

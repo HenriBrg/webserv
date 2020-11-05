@@ -292,39 +292,39 @@ def POST_TESTS(testNum = 0):
     # ------- POST - 200/2001 - NO CGI
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        if os.path.exists("../www/newFile"): os.remove("../www/newFile")
         payload = "Hello ! I am a new file"
         r = requests.post('http://localhost:7777/newFile', data=payload, headers={})
-        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file", "www/newFile")
+        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file", "../www/newFile")
     index += 1
     if (testNum == 0 or index == int(testNum)):
         payload = ". I have been updated !"
         r = requests.post('http://localhost:7777/newFile', data=payload, headers={})
-        assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file. I have been updated !", "www/newFile")
+        assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file. I have been updated !", "../www/newFile")
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        if os.path.exists("../www/newFile"): os.remove("../www/newFile")
         payload = {'hello': 'world'}
         hd = {"Content-Type": "application/json"}
         r = requests.post('http://localhost:7777/newFile',  data=json.dumps(payload), headers=hd)
-        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "{\"hello\": \"world\"}", "www/newFile")
+        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "{\"hello\": \"world\"}", "../www/newFile")
     index += 1
    
     # ------- POST CHUNKED - 200/201 - NO CGI
 
     # Note that if a message is received with both a Transfer-Encoding header field and a Content-Length header field, the latter MUST be ignored.
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
-        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        if os.path.exists("../www/newFile"): os.remove("../www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
         hd = {'Transfer-Encoding': 'chunked'}
         r = requests.post("http://localhost:7777/newFile", data=payload, headers=hd)
-        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789", "www/newFile")
+        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789", "../www/newFile")
     index += 1
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
         hd = {'Transfer-Encoding': 'chunked'}
         r = requests.post("http://localhost:7777/newFile", data=payload, headers=hd)
-        assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789abcdefghijklmnopqrst0123456789", "www/newFile")
+        assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789abcdefghijklmnopqrst0123456789", "../www/newFile")
 
     # ------- POST - 200/2001 - 42 CGI
     index += 1
@@ -348,7 +348,7 @@ def POST_TESTS(testNum = 0):
 
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        if os.path.exists("../www/newFile"): os.remove("../www/newFile")
         hd = { "Content-Type": "text/plain" }
         body = "abcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyzabcdefghijklmnopqrstuvwyz"
         r = requests.post("http://localhost:7777/newFile", body, headers=hd)
