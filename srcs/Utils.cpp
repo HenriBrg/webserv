@@ -331,10 +331,21 @@ namespace responseUtils
 		"application/x-rar-compressed", "application/rtf", "application/x-sh", "image/svg+xml", "application/x-shockwave-flash", "application/x-tar", "image/tiff", "image/tiff", "application/typescript", "font/ttf", "application/vnd.visio", "audio/x-wav", "audio/webm", "video/webm", "image/webp", "font/woff", "font/woff2", "application/xhtml+xml", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		"application/xml", "application/vnd.mozilla.xul+xml", "application/zip", "video/3gpp", "video/3gpp2", "application/x-7z-compressed"};
 		
+		std::string lang[5] = {"fr", "en", "it", "de", "es"};
+	
 		tmp.clear();
-		while (file[i] != 0 && file[i] != '.')
+		tmp = file;
+		while (j < 5)
+		{
+			if (tmp.compare(tmp.size() - 2, 2, lang[j]) == 0)
+				tmp = file.substr(0, file.size() - 3);
+			j++;
+		}
+		i = tmp.size() - 1;
+		while (tmp[i] != 0 && tmp[i] != '.')
 			i--;
-		tmp = file.substr(i + 1, file.size());
+		tmp = tmp.substr(i + 1, tmp.size());
+		j = 0;
 		while (j < 67)
 		{
 			if (ext[j] == tmp)

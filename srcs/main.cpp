@@ -11,7 +11,20 @@ int init(int ac, char **av) {
 		return (-1);
 	} else {
 		if (ac == 1) configuration = DEFAULT_CONF_PATH;
-		else configuration = av[1];
+		else {
+			struct stat statbuf;
+			if (stat(av[1], &statbuf) == 0) {
+				configuration = av[1];
+				if (configuration.compare(configuration.size() - 5, 5, ".conf") != 0) {
+					std::cout << "Error: file must be of type .conf" << std::endl;
+					return (-1);
+				}
+			}
+			else {
+				std::cout << "Error: could not find configuration file" << std::endl;
+				return (-1);
+			}
+		}
 	}
 
 	Conf webconf(&configuration[0]);
