@@ -133,6 +133,10 @@ void Server::acceptNewClient(void) {
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : accept() failed : " + std::string(strerror(errno))));
         return ;
     }
+
+    if (fcntl(acceptFd, F_SETFL, O_NONBLOCK) == -1)
+        throw ServerException("Server::start : fcntl()", std::string(strerror(errno)));
+
     Client *newClient = new Client(acceptFd, this, clientAddr);
     newClient->req.client = newClient;
     clients.push_back(newClient);
@@ -162,6 +166,7 @@ void Server::readClientRequest(Client *c) {
     c->resetTimeOut();
     while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
     {
+        std::cout << "RET = " << recvRet << std::endl;
         recvBuffer[recvRet] = '\0';
         c->req.reqBuf.append(recvBuffer);
         recvCheck = true;
