@@ -165,7 +165,6 @@ void Server::readClientRequest(Client *c) {
     c->resetTimeOut();
     while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
     {
-        std::cout << "RET = " << recvRet << std::endl;
         recvBuffer[recvRet] = '\0';
         c->req.reqBuf.append(recvBuffer);
         recvCheck = true;
@@ -176,7 +175,7 @@ void Server::readClientRequest(Client *c) {
         c->isConnected = false;
         if (recvRet == 0)
         {
-            LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection. Its initial request was : " + c->req.uri));
+            LOGPRINT(DISCONNECT, c, ("Server::readClientRequest : recv() returned 0 : The client (port " + std::to_string(c->port) + ") has closed its connection"));
         }
         else if (recvCheck == false)
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));

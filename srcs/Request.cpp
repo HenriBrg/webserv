@@ -474,7 +474,7 @@ void Request::checkBody()
         } else {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         }
-        _reqBody.append(reqBuf);
+        _reqBody = reqBuf;
         // if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
         //     _reqBody.erase(0, bodyOffset + 4);
     }

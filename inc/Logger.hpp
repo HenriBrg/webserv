@@ -76,18 +76,20 @@ class Logger {
                     std::cout << RED << " [ERROR] " << END << str << std::endl;
                     break ;
                 case REQERROR:
-                    std::cout << ORANGE << " [REQERR] " << END << str << std::endl;
+                    std::cout << ORANGE << " [RQERR] " << END << str << std::endl;
                     break ;
                  case RESERROR:
-                    std::cout << ORANGE << " [RESERR] " << END << str << std::endl;
+                    std::cout << ORANGE << " [RSERR] " << END << str << std::endl;
                     break ;
                 case DEBUG:
                     std::cout << BLUE << " [DEBUG] " << END  << str << std::endl;
                     break ;
                 case DISCONNECT:
                     std::cout << MAGENTA << " [CLOSE] " << END  << str << std::endl;
+                    break ;
                 case OK:
-                    std::cout << GREEN << " [OK] " << END  << str << std::endl;
+                    std::cout << GREEN << " [BYE]   " << END  << str << std::endl;
+                    break ;
                 default:
                     break ;
             }
@@ -116,10 +118,10 @@ class Logger {
                      std::cout << " " << BCKYELLOW << BOLD << BLACK << message  << END << BOLD_OFF << END  << std::endl;
                      break ;
                 case REQERROR:
-                    std::cout << ORANGE << " [REQERR] " << END << message << std::endl;
+                    std::cout << ORANGE << " [RQERR] " << END << message << std::endl;
                     break ;
                 case RESERROR:
-                    std::cout << ORANGE << " [RESERR] " << END << message << std::endl;
+                    std::cout << ORANGE << " [RSERR] " << END << message << std::endl;
                     break ;
                 default:
                     break ;
