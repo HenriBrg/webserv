@@ -141,7 +141,6 @@ void Server::acceptNewClient(void) {
     newClient->req.client = newClient;
     clients.push_back(newClient);
 
-
     if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
         newClient->res.setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
@@ -199,8 +198,8 @@ void Server::readClientRequest(Client *c) {
                 return ;
             }
         }
-
-        c->req.parseBody();
+        if (c->recvStatus == Client::BODY)
+            c->req.parseBody();
 
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));

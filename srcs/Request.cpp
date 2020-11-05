@@ -92,6 +92,7 @@ int Request::parseRequestLine() {
     std::vector<std::string>    tab;
 
     ft::getLine(reqBuf, line);
+    utils::deleteCarriageReturn(line);
     tab = ft::split(line, ' ');
     if (tab.size() != 3)
         return (-1);
@@ -308,6 +309,10 @@ void Request::fillUniqueValHeaders(std::string const key, std::string const valu
 
 }
 
+/*
+**  Le passage à getLine erase progressivement chaque ligne de header
+*/
+
 void Request::parseHeaders() {
 
     std::size_t  pos;
@@ -383,13 +388,13 @@ void Request::parseChunkedBody() {
     std::string tmp;
 
     tmp.clear();
-    //_reqBody.append(client->buf);
+    // _reqBody.append(client->buf);
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
     while (42) {
         separator = _reqBody.find("\r\n", _optiChunkOffset);
         if (separator == std::string::npos) {
             client->recvStatus = Client::ERROR;
-            LOGPRINT(LOGERROR, this, ("Request::parseSingleBody() : no <CR><LF> in chunk - invalid request - disconnecting client"));
+            LOGPRINT(LOGERROR, this, ("Request::parseChunkedBody() : no <CR><LF> in chunk - invalid request - disconnecting client"));
             break ;
         }
         if (chunkLineBytesSize == -1) {
@@ -459,43 +464,23 @@ void Request::parseSingleBody() {
 */
 void Request::checkBody()
 {
-    size_t bodyOffset;
+    // size_t bodyOffset;
 
     if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked"))
     {
         client->recvStatus = Client::BODY;
-        if (transferEncoding[0] == "chunked")
-        {
+        if (transferEncoding[0] == "chunked") {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
-        }
-        else // Erreur sur le else si pas de {}
-        {
+        } else {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         }
         _reqBody.append(reqBuf);
-        if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
-            _reqBody.erase(0, bodyOffset + 1);
+        // if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
+        //     _reqBody.erase(0, bodyOffset + 4);
     }
     else
         client->recvStatus = Client::COMPLETE;
 }
-
-//SAVE 
-// void Request::checkBody() {
-
-// 	size_t bodyOffset;
-
-// 	if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
-// 		client->recvStatus = Client::BODY;
-// 		if (transferEncoding[0] == "chunked") {
-// 			LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
-// 		} else LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
-// 		_reqBody = std::string(client->buf);
-// 		bodyOffset = _reqBody.find("\r\n\r\n");
-// 		_reqBody.erase(0, bodyOffset + 4);
-// 		memset(client->buf, 0, BUFMAX + 1);
-// 	} else
-// 		client->recvStatus = Client::COMPLETE;
 
 /*
 **  We parse the headers request in 5 steps
