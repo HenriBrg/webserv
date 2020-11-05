@@ -15,6 +15,10 @@
 # python3 runTests.py GET 7 -v
 # python3 test/runTests.py TESTER42
 
+# ---------------------------------------------------------------------------
+# ---------------------------- 1. CHECKS ------------------------------------
+# ---------------------------------------------------------------------------
+
 import os
 import sys
 import json
@@ -25,15 +29,19 @@ from sys import platform
 
 global verbose
 verbose = 0
+
 if (len(sys.argv) == 4 and sys.argv[3] == '-v'):
     verbose = 1
-
 if (os.system('lsof -c webserv > /dev/null') != 0):
     print("Webserv is not running")
     exit()
 if (os.system('type php-cgi > /dev/null') != 0):
     print("The executable php-cgi is required to run theses tests.\nBe sure that the php-cgi path inside the configuration file is correct")
     exit()
+
+# ---------------------------------------------------------------------------
+# ----------------------------- 2. CORE -------------------------------------
+# ---------------------------------------------------------------------------
 
 class assertTypes:     
     BODY_CONTAIN_ASSERT = 1
@@ -58,12 +66,7 @@ def printHdReqRes(r):
         print(indent + resKey + ": " + r.headers[resKey])
     print()
 
-# ------ ASSERTS FUNCTIONS ------
-
-# r.request.body
-# r.request.headers
-# res.headers
-# res.text
+# ------------------------ ASSERT FUNCTIONS  -------------------------------
 
 def bodyContain(r, str):
     if (str in r.text): return True
@@ -74,44 +77,32 @@ def fileContain(r, strLookingFor, path):
     if (strLookingFor == file): return True
     else: return False
 
-# print(r.headers["Content-Length"])
-# print(resKey + " == " + wantKey)
-# print(hdValTab[idB])
-# print(r.headers[resKey])
 def resHeadersKeyVal(r, hdKeyTab = [], hdValTab = []):
     validated = 0
     for idA, resKey in enumerate(r.headers):
         for idB, wantKey in enumerate(hdKeyTab):
             if (resKey == wantKey):
-                # print(resKey + " == " + wantKey)
-                # print(r.headers[resKey] + " == " + hdValTab[idB])
                 if (r.headers[resKey] == hdValTab[idB]):
                     validated += 1
     if (validated == len(hdKeyTab)):
         return True
     return False
 
-
 def moreAsserts(r, assertLevel, *args):
     indexArgsUsed = 0
     ret = False
-   
     if (assertTypes.BODY_CONTAIN_ASSERT in assertLevel and bodyContain(r, args[0][indexArgsUsed]) == True):
         ret = True
         indexArgsUsed += 1
-   
     if (assertTypes.FILE_CONTAIN_ASSERT in assertLevel and fileContain(r, args[0][indexArgsUsed], args[0][indexArgsUsed + 1]) == True):
         ret = True
         indexArgsUsed += 2
-   
     if (assertTypes.RES_HD_CONTAIN_ASSERT in assertLevel and resHeadersKeyVal(r, args[0][indexArgsUsed], args[0][indexArgsUsed + 1]) == True):
         ret = True
         indexArgsUsed += 2
-
     return ret
 
 def assertResponse(r, code, index, assertLevel = [], *args):
-
     ret = False
     if (len(assertLevel)): ret = moreAsserts(r, assertLevel, args)
     else: ret = True
@@ -125,14 +116,12 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     else: url += str(r.request.url)[16:]
     url = str(url).ljust(80, ' ')
     print(url + "   =   " + info)
-    
     if verbose == 1:
         printHdReqRes(r)
 
 def run(sys):
 
     print("\n       Platform = " + platform)
-
     if (len(sys.argv) == 1):
         GET_TESTS()
         POST_TESTS()
@@ -140,25 +129,19 @@ def run(sys):
         DELETE_TESTS
         HEAD_TESTS
     elif (len(sys.argv) == 2):
-        if (len(sys.argv) == 2 and sys.argv[1] == "TESTER42"):
-            TESTS_42()
-        elif (sys.argv[1] == "GET"):      GET_TESTS()
+        if (sys.argv[1] == "GET"):      GET_TESTS()
         elif (sys.argv[1] == "HEAD"):   HEAD_TESTS()
         elif (sys.argv[1] == "POST"):   POST_TESTS()
         elif (sys.argv[1] == "PUT"):    PUT_TESTS()
         elif (sys.argv[1] == "DELETE"): DELETE_TESTS()
     elif (len(sys.argv) >= 3):
-        if (sys.argv[1] == "TESTER42"):
-            TESTS_42(sys.argv[2])
-        elif (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
+        if (sys.argv[1] == "GET"):      GET_TESTS(sys.argv[2])
         elif (sys.argv[1] == "HEAD"):   HEAD_TESTS(sys.argv[2])
         elif (sys.argv[1] == "POST"):   POST_TESTS(sys.argv[2])
         elif (sys.argv[1] == "PUT"):    PUT_TESTS(sys.argv[2])
         elif (sys.argv[1] == "DELETE"): DELETE_TESTS(sys.argv[2])
     print()
     
-
-
 # -----------------------------------------------------------------------------
 # ------------------------------------ GET ------------------------------------
 # -----------------------------------------------------------------------------
@@ -167,6 +150,17 @@ def GET_TESTS(testNum = 0):
 
     index = 0
     print("\n     ~ GET REQUESTS ------------------------> \n")
+
+
+    #  r = requests.get("http://localhost:7777") is turned in HTTP
+    # request by Python, into this :
+
+    # GET / HTTP/1.1
+    # Host: localhost:7777
+    # User-Agent: python-requests/2.24.0
+    # Accept-Encoding: gzip, deflate
+    # Accept: */*
+    # Connection: keep-alive
     
     # ------- GET : 200 (without CGI)
     index += 1
@@ -216,11 +210,10 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/php/info.php")
         assertResponse(r, 200, index)
 
-    # ------- GET : Authentification (root:pass = cm9vdDpwYXNz)
-
+    # ------- GET : Authentification
+    # Auth : root:pass = cm9vdDpwYXNz (base64)
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        # hd = {"Authorization": "Basic cm9vdDpwYXNz"} --> Test without the Authorization header
         r = requests.get("http://localhost:7777/auth", headers={})
         assertResponse(r, 401, index)
     index += 1
@@ -244,10 +237,7 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/auth", headers=hd)
         assertResponse(r, 401, index)
 
-
-
     # ------- GET : Negotiation
-
     index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {"Accept-Language": "fr"}
@@ -264,17 +254,14 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/nego", headers=hd)
         assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "NO_LANGUAGE_NEGOTIATED")
 
-    # ------- GET : 400
+    # ------- GET : 40X
     
-    # ---> Working but Python doesn't sendd the HOST header if it is empty or full of space
-    # ---> Test with CURL
     index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {"Host": ''}
         r = requests.get("http://localhost:7777/", headers=hd)
         assertResponse(r, 400, index)
 
-    # ------- GET : 404
     index += 1
     if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/inexisting")
@@ -284,27 +271,24 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/...")
         assertResponse(r, 404, index)
         
-    #  ------- GET - 414 - REQUEST_URI_TOO_LONG_414 (> 1024)
+    # ------- GET : 41X
+    
     index += 1
     if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/?queries=zyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcba")
         assertResponse(r, 414, index)
 
 
-    # TO TEST : AUTOINDEX
-
 # -----------------------------------------------------------------------------
 # ----------------------------------- POST ------------------------------------
+# ------------- WARNING : POST Tests are dependant each other -----------------
 # -----------------------------------------------------------------------------
-
-# ATTENTION : Run indépendament des autres les POST peut faire KO le suivant
 
 def POST_TESTS(testNum = 0):
 
     index = 0
-
     print("\n     ~ POST REQUESTS -----------------------> \n")
-
+    
     # ------- POST - 200/2001 - NO CGI
     index += 1
     if (testNum == 0 or index == int(testNum)):
@@ -325,6 +309,7 @@ def POST_TESTS(testNum = 0):
         r = requests.post('http://localhost:7777/newFile',  data=json.dumps(payload), headers=hd)
         assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "{\"hello\": \"world\"}", "www/newFile")
     index += 1
+   
     # ------- POST CHUNKED - 200/201 - NO CGI
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
@@ -338,7 +323,6 @@ def POST_TESTS(testNum = 0):
         hd = {'Transfer-Encoding': 'chunked'}
         r = requests.post("http://localhost:7777/newFile", data=payload, headers=hd)
         assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "abcdefghijklmnopqrst0123456789abcdefghijklmnopqrst0123456789", "www/newFile")
-
 
     # ------- POST - 200/2001 - 42 CGI
     index += 1
@@ -404,94 +388,6 @@ def PUT_TESTS(testNum = 0):
 def DELETE_TESTS(testNum = 0):
     print("\n     ~ DELETE REQUESTS -----------------------> \n")
 
-
-# -----------------------------------------------------------------------------
-# ------------------------------------ 42 -------------------------------------
-# -----------------------------------------------------------------------------
-
-def TESTS_42(testNum = 0):
-
-    index = 0
-    print("\n     ~ 42 TESTS ------------------------> \n")
-    
-    # ------- STAGE 1
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/")
-        assertResponse(r, 200, index)
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        payload = ""
-        r = requests.post("http://localhost:8888/", data=payload)
-        assertResponse(r, 405, index)
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.head("http://localhost:8888/")
-        assertResponse(r, 405, index)
-    index += 1
-    # Should return ./youpi.bad_extension
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory")
-        assertResponse(r, 200, index)
-    index += 1
-    # Should return ./youpi.bla
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/youpi.bla")
-        assertResponse(r, 200, index)
-    index += 1
-    # Should return Error
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/oulalala")
-        assertResponse(r, 404, index)
-    index += 1
-
-    # Error in parse file / location
-
-    # Should return youpi.bad_extension
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/nop")
-        assertResponse(r, 200, index)
-    index += 1
-    # Should return youpi.bad_extension
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/nop/")
-        assertResponse(r, 200, index)
-    index += 1
-    # Should return other.pouic
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/nop/other.pouic")
-        assertResponse(r, 200, index)
-    index += 1
-    # Should return Error 404
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/nop/other.pouac")
-        assertResponse(r, 404, index)
-    index += 1
-    # Should return Error 404
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/Yeah")
-        assertResponse(r, 404, index)
-    index += 1
-    # --> Simple GET
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:8888/directory/Yeah/not_happy.bad_extension")
-        assertResponse(r, 200, index)
-
-    # -----> PUT TESTS <-----
-    # File should exist after with a size of 1000
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
-        payload = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        r = requests.put("http://localhost:8888/put_test/file_should_exist_after", data=payload)
-        assertResponse(r, 201, index)
-    # File should exist after with a size of 10 000 000 (for now 1 000 000)
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
-        payload = "A" * 500000
-        r = requests.put("http://localhost:8888/put_test/file_should_exist_after", data=payload)
-        assertResponse(r, 201, index)
 
 # -----------------------------------------------------------------------------
 # ----------------------------------- MAIN ------------------------------------
