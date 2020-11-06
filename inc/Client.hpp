@@ -34,8 +34,7 @@ class Client {
 
     public:
 
-
-        // Etat de réception de la requête
+        /* Etat de réception de la requête */
         enum {
             HEADER,
             BODY,
@@ -45,7 +44,7 @@ class Client {
             CGI            
         };
 
-        // The client might disconnect while we're handle its request
+        /* The client might disconnect while we're handle its request */
         bool        isConnected;
         bool        _isAccepted;
         int         recvStatus;

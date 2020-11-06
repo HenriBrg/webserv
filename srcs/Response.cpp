@@ -206,6 +206,7 @@ void Response::reqHeadersControl(Request * req) {
 /*
 **  Dispatching function for controlling request
 */
+
 void Response::control(Request * req, Server * serv) {
     
     int _statusCodeBackup;
@@ -231,14 +232,12 @@ void Response::control(Request * req, Server * serv) {
     if (_statusCode != _statusCodeBackup)
         NOCLASSLOGPRINT(LOGERROR, "An error has been detected in  authControl() - _statusCode is now : " + std::to_string(_statusCode))
 
-    // TODO : J'ai commenté ça car dans le cas où il y a plusieurs erreurs, authentification > methode > resource > ... mais à confirmer
-    
 }
-
 
 /*
 **  Call for corresponding method function set in methodControl()
 */
+
 void Response::callMethod(Request * req) {
 	if (_sendStatus != Response::ERROR)
 		(this->*_methodFctPtr)(req);
@@ -248,6 +247,7 @@ void Response::callMethod(Request * req) {
 /*
 **  SET ALL HEADERS TODO
 */
+
 void Response::setHeaders(Request * req) {
 
 	/* 1) Status Line */
@@ -267,11 +267,12 @@ void Response::setHeaders(Request * req) {
 	/* TODO BELOW ! */
 	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
 	/* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
-	/* if (_isLanguageNegociated) */
-	/*     contentLanguage = _resFile. // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? */
-	contentLanguage.clear();
-	if (req->method == "PUT") contentLocation[0] = req->file;
-	else contentLocation.clear();
+	if (_isLanguageNegociated)
+	     contentLanguage[0] = _resFile; // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
+	else contentLanguage.clear();
+	
+    // if (req->method == "PUT") contentLocation[0] = req->file;
+	// else contentLocation.clear();
 	if (_statusCode == CREATED_201) location = req->uri;
 	else location.clear();
 	transfertEncoding.clear();
@@ -280,7 +281,10 @@ void Response::setHeaders(Request * req) {
 		contentType.clear();
 	/* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
 	if (_resFile.empty() && !(_resBody)) // ---> à voir
-		contentLength = -1; // --> Updated in setBodyHeaders
+		contentLength = -1;
+    
+    
+
 	/* On set également ce header lors de l'authentification */
 	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
@@ -311,22 +315,32 @@ void    Response::handleAutoIndex(void)
     contentLength = strlen(_resBody);
 }
 
+void Response::intoChunk() {
+
+}
+
 /*
 **  Function to fullfit body (bytes array) with file content
 **  1. Allocate char* of file size
 **  2. Read file to retreive bytes
 **  3. If error html page then contextualize body with corresponding error status
 */
+
 void Response::setBody(const Server *server) {
 
     if (_didCGIPassed == true) {
         NOCLASSLOGPRINT(INFO, "Response::setBody() : _didCGIPassed == true - The body of response is now the cgi output stored in the variable _resBody ");
     } else NOCLASSLOGPRINT(INFO, ("Response::setBody() : _didCGIPassed == false - The body of response is the file _resFile, its path is : " + _resFile));
 
-    // if (!(_resFile.empty() && !_resBody.empty())) 
-    //     NOCLASSLOGPRINT(LOGERROR, "Response::setBody() : Error : we should have either _resFile or _resBody empty, if both are none empty, it's anormal");
 
-    if (!(_resBody) && !(_resFile.empty())) //resClient->req.method != "POST" && _didCGIPassed == false
+    if ((_statusCode == OK_200 || _statusCode == CREATED_201) && resClient->req.method == "POST" && _didCGIPassed == true) {
+        LOGPRINT(INFO, this, "Response::setBody() : POST && _didCGIPassed == true - We enchunk the body");
+        intoChunk();
+        NOCLASSLOGPRINT(INFO, "Response::setBody() : Enchunking done");
+        return ;
+    }
+
+    if (_statusCode != CREATED_201 && !(_resBody) && !(_resFile.empty()))
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -359,24 +373,40 @@ void Response::setBody(const Server *server) {
     }
     if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
-    _didCGIPassed = false;
 }
 
 
 /*
 **  Set body headers values
 */
-void Response::setBodyHeaders(void)
-{
-	if (_resBody) {
+
+void Response::setBodyHeaders(void) {
+
+
+    if (_resBody) {
+        
 		if (contentType[0].empty() && !_resFile.empty())
 			contentType[0] = responseUtils::getContentType(_resFile);
 		if (resClient->req.method == "GET" || resClient->req.method == "HEAD")
 			lastModified = ft::getLastModifDate(_resFile);
 	}
-	// if (resClient->req.method == "GET" && contentLength == -1)
-	// 	contentLength = 0;
-    // if (_resBody && strlen(_resBody) >= 0)
+
+    /*
+    **   The purpose here is to cut the reponse body in case of PUT since it is useless to send back the full updated (200) created (201)
+    **   resource to the client (https://httpstatuses.com/201 - RFC7231)
+    */
+
+    if ((_statusCode == OK_200 || _statusCode == CREATED_201) && resClient->req.method == "PUT")
+		    contentLength = 0;
+    else if ((_statusCode == OK_200 || _statusCode == CREATED_201) && resClient->req.method == "POST") {
+        /*
+        if (_didCGIPassed) {
+            transfertEncoding[0] = "chunked"; --> TO ADD when chunk res done
+            contentLength = -1;
+        }
+        else */ 
+        contentLength = strlen(_resBody);
+    }
 
 }
 
@@ -400,8 +430,9 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
     responseUtils::headerFormat(formatedResponse, "Host", server);
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-    // QUID de www-authenticate ?
+    // TODO : QUID de www-authenticate ?
     formatedResponse.append("\r\n");
+
 }
 
 /* **************************************************** */
@@ -427,7 +458,7 @@ void Response::showRes(void) {
     std::cout << indent << "HTTP Version : " << httpVersion << std::endl;
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
-	 if (SILENTLOGS == 0)
+	if (SILENTLOGS == 0)
         showFullHeadersRes();    
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
@@ -455,7 +486,6 @@ void Response::showFullHeadersRes(void) {
     std::cout << indent << "Content-Length : " << std::to_string(contentLength) << std::endl;
     if (!_errorFileName.empty())    std::cout << indent << "_errorFileName : " << _errorFileName << std::endl;
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
-    
     int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
 	// std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;

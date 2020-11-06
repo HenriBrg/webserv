@@ -2,6 +2,7 @@
 # 04/11/2020
 # Reproduction of the "official" tester given in the project page (named "tester" or "ubuntu_tester")
 # Thanks Wireshark
+# For info, it seems that the tester only call uppercase on its input and return it
 
 # ---------------------------------------------------------------------------
 # ---------------------------- 1. CHECKS ------------------------------------
@@ -10,6 +11,7 @@
 import os
 import sys
 import json
+import math
 import requests
 
 from requests.auth import HTTPBasicAuth
@@ -107,7 +109,7 @@ def run(sys):
     print("\n       Platform = " + platform)
     if (len(sys.argv) == 1):
         TESTS_42()
-    elif (len(sys.argv) == 2):
+    elif (len(sys.argv) >= 2):
             TESTS_42(sys.argv[1])
     print()
     
@@ -369,7 +371,16 @@ def TESTS_42(testNum = 0):
         r = requests.get("http://localhost:8888/directory/Yeah/not_happy.bad_extension", headers=hd)
         assertResponse(r, 200, index)
 
-# ----------------------------------------------------------------------------- #14 - STAGE 1
+
+# -----------------------------------------------------------------------------
+
+# ---------------------------- ! DISCLAIMER ! ---------------------------------
+
+# Frow now on, the body sent by tester is randomly sent (or maybe ramdomly received
+# by our server, idk well TCP) so it is mandatory to have a chunk parser which doesn't
+# block or return error if he chunk is'nt proper at first
+
+# ----------------------------------------------------------------------------- #14 - STAGE 1 -  1.000 BYTES
 
     # PUT /put_test/file_should_exist_after HTTP/1.1
     # Host: localhost:8080
@@ -377,20 +388,36 @@ def TESTS_42(testNum = 0):
     # Transfer-Encoding: chunked
     # Accepted-Encoding: gzip
 
+    # The last \n seems to be send in another request ... idk why, may be to trool.
+    # It may raise an error of invalid request
+
+    # 1000 =    3e8 en HEX
 
     # File should exist after with a size of 1000
+    # Response Code must be set to 201
+    # Content-Length to 0
+    # Content-Type to text/plain
+
     index += 1
     if (testNum == 0 or index == int(testNum)):
         if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
-        payload = "3e8\r\n" # == 1000
+        payload = "3e8\r\n"
         payload += "e" * 1000
         payload += "\r\n"
         payload += "0\r\n\r\n"
-        # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Transfer-Encoding": "chunked"
+        }
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
         assertResponse(r, 201, index)
     
-# ----------------------------------------------------------------------------- #15 - STAGE 2
+# ----------------------------------------------------------------------------- #15 - STAGE 1 - 10.000.000 BYTES
+
+
+
 
     # PUT /put_test/file_should_exist_after HTTP/1.1
     # Host: localhost:8080
@@ -398,28 +425,44 @@ def TESTS_42(testNum = 0):
     # Transfer-Encoding: chunked
     # Accepted-Encoding: gzip
 
-    # 32768 =    32 768 en HEX
+    # 32768 =     8 000 en HEX
     # 186A0 =   100 000 en HEX
     # F4240 = 1 000 000 en HEX
 
     # In this test, body is sent by chunk of 32 768 bytes or 8000 in hexa
-    # File should exist after with a size of 10 000 000
+    # File should STILL BE THERE but this time with a size of 10 000 000 bytes
+    
+    # Response Code must be 200
+    # Content-Length to 0
 
     index += 1
     if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
-        
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Transfer-Encoding": "chunked"
+        }
         # TODO : Loop
-        payload = "8000\r\n"
-        payload += "z" * 32768
+        i = 10000000 // 32768
+        i = math.floor(i)
+        mod = 10000000 % 32768 # == 5760 (dec) or 1680 (hex)
+        payload = ""
+        for x in range(0, i):
+            payload += "8000\r\n"
+            payload += "z" * 32768
+            payload += "\r\n"
+        payload += "1680"
         payload += "\r\n"
-
+        payload += "z" * mod
+        payload += "\r\n"
         payload += "0\r\n\r\n"
+
         # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
-        assertResponse(r, 201, index)
-    
-# ----------------------------------------------------------------------------- #16 - STAGE 2
+        assertResponse(r, 200, index)
+
+# ----------------------------------------------------------------------------- #16 - STAGE 1  - 100.000.000 BYTES
 
     # POST /directoru/youpi.bla HTTP/1.1
     # Host: localhost:8080
@@ -436,19 +479,45 @@ def TESTS_42(testNum = 0):
     # In this test too, body is sent by chunk of 32 768 bytes or 8000 in hexa
     # File should exist after with a size of 100 000 000
 
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
-        
-        # TODO : Loop
-        payload = "8000\r\n"
-        payload += "n" * 32768
-        payload += "\r\n"
+    # Response Code must be 200
 
+        index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Transfer-Encoding": "chunked"
+        }
+        # TODO : Loop
+        i = 100000000 // 32768
+        i = math.floor(i)
+        mod = 100000000 % 32768 # == 5760 (dec) or 1680 (hex)
+        payload = ""
+        for x in range(0, i):
+            payload += "8000\r\n"
+            payload += "n" * 32768
+            payload += "\r\n"
+        payload += "1680"
+        payload += "\r\n"
+        payload += "n" * mod
+        payload += "\r\n"
         payload += "0\r\n\r\n"
+
         # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
-        assertResponse(r, 201, index)
+        assertResponse(r, 200, index)
+
+
+# ----------------------------------------------------------------------------- #17 - STAGE 2
+
+
+
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------

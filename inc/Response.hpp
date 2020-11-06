@@ -99,6 +99,7 @@ class Response {
         void    setBody(const Server *server);
         void    setBodyHeaders(void);
         void    format(void);
+        void    intoChunk();
 
         /* CONTROL */
         void    versionControl(Request *req);

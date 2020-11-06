@@ -4,9 +4,7 @@ Request::Request(void) {
 	reset();
 }
 
-Request::Request(Client * c) 
-: client(c) 
-{
+Request::Request(Client * c): client(c) {
     reset();
 }
 
@@ -16,9 +14,7 @@ Request::~Request() {
 
 void Request::reset(void) {
 
-    //client = nullptr // segfaut as on response 
     reqLocation = nullptr;
-    reqBuf.clear();
     _reqBody.clear();
 
     _currentParsedReqBodyLength = -1;
@@ -48,6 +44,7 @@ void Request::reset(void) {
     transferEncoding.clear();
     keepAlive.clear();
 
+
 }
 
 std::string mapToStr(std::map<int, std::string> map, char sep) {
@@ -69,6 +66,7 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	
 	std::map<std::string, std::string> ret;
 
+    // TODO ?
 	// ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
 	// ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
 	ret["Authorization"] = authorization;
@@ -91,7 +89,7 @@ int Request::parseRequestLine() {
     std::string                 line;
     std::vector<std::string>    tab;
 
-    ft::getLine(reqBuf, line);
+    ft::getLine(_reqBody, line);
     utils::deleteCarriageReturn(line);
     tab = ft::split(line, ' ');
     if (tab.size() != 3)
@@ -102,9 +100,9 @@ int Request::parseRequestLine() {
     return (0);
 }
 
-// The request line holds the location AND the params : http://www.domain.com/index.html?name1=value1
-// We differenciate the storage of uri : http://www.domain.com/index.html
-// and the storage of the query : ?name1=value1
+/* The request line holds the location AND the params : http://www.domain.com/index.html?name1=value1 */
+/* We differenciate the storage of uri : http://www.domain.com/index.html */
+/* and the storage of the query : ?name1=value1 */
 
 void Request::parseUriQueries() {
 
@@ -281,8 +279,8 @@ void Request::parseHeaders() {
     std::string  key;
     std::string  value;
 
-    while (!reqBuf.empty()) {
-        ft::getLine(reqBuf, line);
+    while (!_reqBody.empty()) {
+        ft::getLine(_reqBody, line);
         pos = line.find(":");
         if (pos == std::string::npos)
             return ;
@@ -308,14 +306,13 @@ void Request::parseHeaders() {
 ** Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
 ** Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
 ** Response chunked : https://www.codeproject.com/articles/648526/all-about-http-chunked-responses
-*/
-
-/*
-**  Choix du parsing selon les headers recus et leurs valeurs 
+**  
+** Choix du parsing selon les headers recus et leurs valeurs 
 **  1. Vérification présence d'un body
 **  2. Appel de la fonction correspondante si chunked ou pas
 **  3. Vérification taille du body ne dépasse pas la taille max défini dans le fichier de config
 */
+
 void Request::parseBody()
 {
     if (client->recvStatus == Client::BODY)
@@ -336,12 +333,11 @@ void Request::parseBody()
 }
 
 
-// Really good article
-// https://en.wikipedia.org/wiki/Chunked_transfer_encoding
-// Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"
-// Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2
-
-// TODO : response chunked : https://www.codeproject.com/articles/648526/all-about-http-chunked-responses
+/* Really good article */
+/* https://en.wikipedia.org/wiki/Chunked_transfer_encoding */
+/* Example Body = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n" */
+/* Image illustration : https://doc.micrium.com/download/attachments/15714590/chunk_transfer.png?version=1&modificationDate=1424901030000&api=v2 */
+/* Data which arrive here never contain header, at this point, _resBody contain everything after \r\n\r\n of the headers */
 
 void Request::parseChunkedBody() {
 
@@ -349,15 +345,11 @@ void Request::parseChunkedBody() {
     std::string tmp;
 
     tmp.clear();
-    // _reqBody.append(client->buf);
-    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Starting chunked body parsing"));
+    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Start Chunked Body Parsing"));
     while (42) {
         separator = _reqBody.find("\r\n", _optiChunkOffset);
-        if (separator == std::string::npos) {
-            client->recvStatus = Client::ERROR;
-            LOGPRINT(LOGERROR, this, ("Request::parseChunkedBody() : no <CR><LF> in chunk - invalid request - disconnecting client"));
+        if (separator == std::string::npos)
             break ;
-        }
         if (chunkLineBytesSize == -1) {
             tmp = _reqBody.substr(_optiChunkOffset, separator - _optiChunkOffset);
             chunkLineBytesSize = utils::strHexaToDecimal(tmp);
@@ -365,14 +357,11 @@ void Request::parseChunkedBody() {
             _reqBody.erase(_optiChunkOffset, tmp.size() + 2);
             tmp.clear();
         }
+        /* Note that chunkLineBytesSize is the hexa value for the chunk size */
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
-            if (separator == std::string::npos) {
-                LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
-                client->recvStatus = Client::ERROR;
-                client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+            if (separator == std::string::npos)
                 break ;
-            }
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;
@@ -382,18 +371,12 @@ void Request::parseChunkedBody() {
             /* Delete the last "\r\n" which indicate the end */
             if (separator != std::string::npos)
                 _reqBody.erase(separator, 2);
-            else {
-                LOGPRINT(INFO, this, ("Request::parseChunkedBody() : invalid chunked request"));
-                client->recvStatus = Client::ERROR;
-                client->res.setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-                break ;
-            }
+            else break ;
             client->recvStatus = Client::COMPLETE;
             break ;
         }
     }
-    //memset(client->buf, 0, BUFMAX + 1);
-    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End chunked body parsing"));
+    LOGPRINT(INFO, this, ("Request::parseChunkedBody() : End Chunked Body Parsing"));
 }
 
 /*
@@ -409,7 +392,7 @@ void Request::parseSingleBody() {
     if (bodySize == contentLength)
     {
         client->recvStatus = Client::COMPLETE;
-        LOGPRINT(OK, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
+        LOGPRINT(INFO, this, ("Request::parseSingleBody() : Body is fully received ! Header Content-Length = " \
          + std::to_string(contentLength) + " should be equal to Body length, which is : " + std::to_string(bodySize)));
     }
     else // Do something about it ?
@@ -423,24 +406,19 @@ void Request::parseSingleBody() {
 **  2. Si oui, on récupère toute la requête après le \r\n\r\n
 **  3. Sinon, la requête est considérée comme complètement reçue / parsée.
 */
-void Request::checkBody()
-{
-    // size_t bodyOffset;
 
-    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked"))
-    {
+void Request::checkBody() {
+   
+    if (contentLength > 0 || (transferEncoding.size() && transferEncoding[0] == "chunked")) {
         client->recvStatus = Client::BODY;
         if (transferEncoding[0] == "chunked") {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body sent in chunks"));
         } else {
             LOGPRINT(INFO, this, ("Request::checkBody() : Body Content-Length = " + std::to_string(contentLength)));
         }
-        _reqBody.append(reqBuf);
-        // if ((bodyOffset = _reqBody.find("\r\n\r\n")) != std::string::npos)
-        //     _reqBody.erase(0, bodyOffset + 4);
-    }
-    else
+    } else
         client->recvStatus = Client::COMPLETE;
+
 }
 
 /*
@@ -461,7 +439,6 @@ void Request::parse(std::vector<Location*> locations) {
     // LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
     checkBody();
     // LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
-    reqBuf.clear(); 
 }
 
 /* **************************************************** */
