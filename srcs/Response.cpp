@@ -353,10 +353,6 @@ void Response::setBody(const Server *server) {
                 LOGPRINT(INFO, this, ("Response::setBody() : read() body file returned 0 | Bytes copied = " + std::to_string(saveOffset)));
             contentLength = saveOffset;
             close(fileFd);
-			// struct stat autoStat;
-			// if (stat("autoindex/autoindex.html", &autoStat) == 0)
-				// unlink("autoindex/autoindex.html");
-			// rmdir("autoindex");
         }
         else
             LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
