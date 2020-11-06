@@ -180,7 +180,6 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     } else if (req->method == "PUT" || req->method == "POST") {
-        std::cout << RED << "RESSOURCE = " << req->resource << std::endl;
         if (req->method == "PUT" && req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
         // if (req->method == "POST" && req->isolateFileName.empty()) {
