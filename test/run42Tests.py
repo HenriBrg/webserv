@@ -92,15 +92,26 @@ def assertResponse(r, code, index, assertLevel = [], *args):
     if (len(assertLevel)): ret = moreAsserts(r, assertLevel, args)
     else: ret = True
     if (ret and r.status_code == code):
-        info = bcolors.OKGREEN + "OK" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason
+        info = bcolors.OKGREEN + "OK" + bcolors.ENDC + " - " + str(r.status_code)
     else:
-        info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " " + r.raw.reason + " - Should have been received : " + str(code)
+        info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " - Should have been received : " + str(code)
     url = "           • #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
     if (len(r.request.url) > 60):
         url += r.request.url[16:60] + " [..." + str(len(r.request.url)) + "]"
     else: url += str(r.request.url)[16:]
     url = str(url).ljust(80, ' ')
-    print(url + "   =   " + info)
+    
+    bodyInfo = "REQ | RES BODY = "
+    if r.request.body:
+        bodyInfo += (str(len(r.request.body)) + " | ")
+    else:
+        bodyInfo += "Empty | "
+  
+    if r.text:
+        bodyInfo += str(len(r.text))
+    else:
+        bodyInfo += "Empty"
+    print(url + "   =   " + info + "    ==>    " + bodyInfo)
     if verbose == 1:
         printHdReqRes(r)
 
