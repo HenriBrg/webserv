@@ -118,6 +118,11 @@ class Request {
         // The optional qvalue represents an acceptable quality level for non preferred languages
         std::multimap<float, std::string, std::greater<float> > 	acceptLanguage;
 
+
+        /* Accept-encoding */
+        std::multimap<float, std::string, std::greater<float> > 	acceptEncoding;
+
+
         // Authorization : credentials
         // Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l
         // Used by the client to supply its credential (username/password) to access protected resources.
@@ -183,6 +188,9 @@ class Request {
         // Keep-Alive permet au navigateur du visiteur de télécharger tout le contenu (comme JavaScript, CSS, images, vidéos, etc.) via une connexion TCP persistante au lieu de faire des demandes différentes pour chaque fichier
         // The Connection header needs to be set to "keep-alive" for this header to have any meaning.
 		std::string	keepAlive; 
+
+        /* Other headers */
+        std::map<std::string, std::string> otherHeaders;
 
         // Chunked : Data is sent in a series of chunks.
         // The Content-Length header is omitted in this case and at the beginning of each chunk you need to add the length of the current chunk

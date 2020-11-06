@@ -44,6 +44,9 @@ void Request::reset(void) {
     transferEncoding.clear();
     keepAlive.clear();
 
+    otherHeaders.clear();
+    acceptEncoding.clear();
+
 
 }
 
@@ -79,6 +82,11 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	ret["Referer"] = referer;
 	ret["User-Agent"] = userAgent;
 	ret["User-Agent"] = keepAlive;
+
+    std::map<std::string, std::string>::iterator it(otherHeaders.begin());
+    std::map<std::string, std::string>::iterator ite(otherHeaders.end());
+    for (; it != ite; it++)
+        ret[(*it).first] = (*it).second;
 
 	return (ret);
 }
@@ -197,7 +205,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
 	
 	if (key == "Content-Language" || key == "Transfer-Encoding")
 		fillMultiValHeaders(key, value);
-	else if (key == "Accept-Charset" || key == "Accept-Language")
+	else if (key == "Accept-Charset" || key == "Accept-Language" ||  key == "Accept-Encoding")
 		fillMultiWeightValHeaders(key, value);
 	else
 		fillUniqueValHeaders(key, value);
@@ -242,6 +250,8 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
                 acceptCharset.insert(std::make_pair(1.0, multiValues[count]));
             else if (key == "Accept-Language")
                 acceptLanguage.insert(std::make_pair(1.0, multiValues[count]));
+            else if (key == "Accept-Encoding")
+                acceptEncoding.insert(std::make_pair(1.0, multiValues[count]));
         }
         else {
             /* If weight then key is specified weight */
@@ -251,6 +261,8 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
                 acceptCharset.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
             else if (key == "Accept-Language")
                 acceptLanguage.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
+            else if (key == "Accept-Encoding")
+                acceptEncoding.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
         }
     }
 }
@@ -265,7 +277,7 @@ void Request::fillUniqueValHeaders(std::string const key, std::string const valu
 	else if (key == "Host") host = value;
 	else if (key == "Referer") referer = value;
 	else if (key == "User-Agent") userAgent = value;
-
+    else otherHeaders[key] = value;
 }
 
 /*

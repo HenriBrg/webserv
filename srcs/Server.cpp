@@ -205,6 +205,10 @@ void Server::readClientRequest(Client *c) {
     }
     else
     {
+        // std::cout << RED << "=======================================\n" << END;
+        // std::cout << c->req._reqBody << std::endl;
+        // std::cout << RED << "=======================================\n" << END;
+
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req._reqBody.size()) + " bytes"));
         if (c->recvStatus == Client::HEADER)
         {
@@ -267,6 +271,7 @@ void Server::setClientResponse(Client *c)
     LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : Set Body and Body Headers"));
     c->res.setBody(c->server); /* Set body */
     c->res.setBodyHeaders(); /* Set body headers to actual value (cleared in setHeaders()) */
+
     c->res.format(); /* Format response */
     c->res._sendStatus = Response::SENDING;
     c->res.showRes();
@@ -288,12 +293,15 @@ int Server::sendClientResponse(Client *c)
             retSendingBytes = sendBytes(c, c->res._resBody, c->res.contentLength);
             if (retSendingBytes == EXIT_FAILURE) {
                 LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
+<<<<<<< HEAD
                 
                 // To test
                 // usleep(10000);
                 // c->res._sendStatus = Response::SENDING;
                 // return (0);
 
+=======
+>>>>>>> alex
             }
         }
     }
