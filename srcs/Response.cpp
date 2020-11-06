@@ -190,7 +190,7 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
     }
-    if (retStat == -1) NOCLASSLOGPRINT(REQERROR, ("Response::resourceControl() : Resource " + req->file + " not found"));
+    if (retStat == -1) NOCLASSLOGPRINT(INFO, ("Response::resourceControl() : Resource " + req->file + " not found - It might be an error or a request to create the resource"));
 
 }
 
