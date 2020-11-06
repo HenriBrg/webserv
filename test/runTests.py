@@ -49,6 +49,8 @@ class assertTypes:
     BODY_CONTAIN_ASSERT = 1
     FILE_CONTAIN_ASSERT = 2
     RES_HD_CONTAIN_ASSERT = 3
+    RESOURCE_SHOULD_EXIST_ASSERT = 4
+    RESOURCE_SHOULD_NOT_EXIST_ASSERT = 5
     
 class bcolors:
     HEADER = '\033[95m'
@@ -111,6 +113,12 @@ def resHeadersKeyVal(r, hdKeyTab = [], hdValTab = []):
         return True
     return False
 
+def resourceExist(r, resource):
+    if os.path.exists(resource):
+        return True
+    return False
+
+
 def moreAsserts(r, assertLevel, *args):
     indexArgsUsed = 0
     ret = False
@@ -123,6 +131,13 @@ def moreAsserts(r, assertLevel, *args):
     if (assertTypes.RES_HD_CONTAIN_ASSERT in assertLevel and resHeadersKeyVal(r, args[0][indexArgsUsed], args[0][indexArgsUsed + 1]) == True):
         ret = True
         indexArgsUsed += 2
+    if (assertTypes.RESOURCE_SHOULD_EXIST_ASSERT in assertLevel and resourceExist(r, args[0][indexArgsUsed]) == True):
+        ret = True
+        indexArgsUsed += 1
+    if (assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT in assertLevel and not resourceExist(r, args[0][indexArgsUsed]) == True):
+        ret = True
+        indexArgsUsed += 1
+
     return ret
 
 def assertResponse(r, code, index, assertLevel = [], *args):
@@ -415,26 +430,26 @@ def PUT_TESTS(testNum = 0):
         r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
         assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file", "www/newFile")
 
-    # ------- PUT - 204 NO CONTENT
+    # ------- PUT - 204 OK
     index += 1
     if (testNum == 0 or index == int(testNum)):
         payload = "Hello ! I am a modified file"
         r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
-        assertResponse(r, 204, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a modified file", "www/newFile")
+        assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a modified file", "www/newFile")
 
     # ------- PUT - 409 CONFLICT
     index += 1
     if (testNum == 0 or index == int(testNum)):
         payload = "Hello ! I am a new file"
         r = requests.put('http://localhost:7777/newFile/', data=payload, headers={})
-        assertResponse(r, 409, index)
+        assertResponse(r, 409, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./newFile/")
 
     # ------- PUT - 413
     index += 1
     if (testNum == 0 or index == int(testNum)):
         payload = "| test| " * 10000
         r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
-        assertResponse(r, 413, index)
+        assertResponse(r, 413, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./newFile")
 
 # -----------------------------------------------------------------------------
 # ---------------------------------- DELETE -----------------------------------
@@ -450,14 +465,14 @@ def DELETE_TESTS(testNum = 0):
     if (testNum == 0 or index == int(testNum)):
         if not os.path.exists("www/newFile"): createFile("www/newFile", "Delete test")
         r = requests.delete('http://localhost:7777/newFile', data="", headers={})
-        assertResponse(r, 204, index)
+        assertResponse(r, 204, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./newFile")
 
     # ------- PUT - 409 CONFLICT
     index += 1
     if (testNum == 0 or index == int(testNum)):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         r = requests.delete('http://localhost:7777/newFile', data="", headers={})
-        assertResponse(r, 409, index)
+        assertResponse(r, 409, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./newFile")
 
     # ------- PUT - 409 CONFLICT
     index += 1
@@ -470,21 +485,21 @@ def DELETE_TESTS(testNum = 0):
     if (testNum == 0 or index == int(testNum)):
         createDirectory("www/", "deleteTests", False, False)
         r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
-        assertResponse(r, 204, index)
+        assertResponse(r, 204, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./deleteTests/")
 
     # ------- PUT - 204 NO CONTENT
     index += 1
     if (testNum == 0 or index == int(testNum)):
         createDirectory("www/", "deleteTests", True, False)
         r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
-        assertResponse(r, 204, index)
+        assertResponse(r, 204, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./deleteTests/")
 
     # ------- PUT - 204 NO CONTENT
     index += 1
     if (testNum == 0 or index == int(testNum)):
         createDirectory("www/", "deleteTests", True, True)
         r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
-        assertResponse(r, 204, index)
+        assertResponse(r, 204, index, [assertTypes.RESOURCE_SHOULD_NOT_EXIST_ASSERT], "./deleteTests/")
 
     
 
