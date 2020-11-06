@@ -260,9 +260,15 @@ void Response::setHeaders(Request * req) {
 	/* 3) Error headers */
 	if (_sendStatus != Response::ERROR) {
 		allow.clear();
-		wwwAuthenticate.clear();
 		retryAfter = -1;
 	}
+
+    // Set wwwAuthenticate header if auth error
+	wwwAuthenticate.clear();
+    if (_statusCode == UNAUTHORIZED_401)
+        wwwAuthenticate.append("Basic realm=\"Access to the staging site\", charset=\"UTF-8\"");
+    
+
 	/* 4) Other headers */
 	/* TODO contentLanguage */
 	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
@@ -283,8 +289,6 @@ void Response::setHeaders(Request * req) {
 	if (_resFile.empty() && !(_resBody)) // ---> à voir
 		contentLength = -1;
 
-	/* On set également ce header lors de l'authentification */
-	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
 void    Response::handleAutoIndex(void)
@@ -432,7 +436,7 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
     responseUtils::headerFormat(formatedResponse, "Host", server);
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-    // TODO : QUID de www-authenticate ?
+    responseUtils::headerFormat(formatedResponse, "WWW-Authenticate", wwwAuthenticate);
     formatedResponse.append("\r\n");
 
 }
@@ -461,7 +465,7 @@ void Response::showRes(void) {
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
 	if (SILENTLOGS == 0)
-        showFullHeadersRes();    
+        showFullHeadersRes();
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
@@ -477,8 +481,8 @@ void Response::showFullHeadersRes(void) {
     std::cout << std::endl;
     utils::displayHeaderMap(contentLocation, (indent + "Content-Location"));
     utils::displayHeaderMap(contentType, (indent + "Content-Type"));
-    utils::displayHeaderMap(wwwAuthenticate, (indent + "WWW-Authenticate"));
     utils::displayHeaderMap(transfertEncoding, (indent + "Transfer-Encoding"));
+    if (!wwwAuthenticate.empty())  std::cout << indent << "WWW-Authenticate : " << wwwAuthenticate << std::endl;
     if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;

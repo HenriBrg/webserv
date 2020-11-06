@@ -208,7 +208,7 @@ class Response {
 
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/WWW-Authenticate
         // Use : 401 Unauthorized
-        std::map<int, std::string> wwwAuthenticate;
+        std::string wwwAuthenticate;
 
     private:
 
