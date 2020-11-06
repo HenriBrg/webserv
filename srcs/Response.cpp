@@ -67,6 +67,7 @@ void Response::setErrorParameters(int sendStatus, int code) {
 **  5. Fullfil new char* with post-tag chars
 **  6. Free _resBody and attribuate new char* to it
 */
+
 void Response::replaceErrorCode(const Server *server)
 {
     int index(0);
@@ -133,6 +134,7 @@ void Response::authControl(Request * req) {
 **  3. If no one match then error 405
 **  4. Else attribuate corresponding method function
 */
+
 void Response::methodControl(Request * req, Server * serv)
 {
     std::vector<std::string>    allowedMethods;
@@ -155,6 +157,7 @@ void Response::methodControl(Request * req, Server * serv)
 **  2. Verify HTTP 
 **  3. Verify http version
 */
+
 void Response::versionControl(Request *req)
 {
     if (req->httpVersion.size() < 8
@@ -171,6 +174,7 @@ void Response::versionControl(Request *req)
 **  2. If PUT || POST -> verify if resource is a directory (if true then error)
 **  3. Else verify if file exists
 */
+
 void Response::resourceControl(Request * req)
 {
     struct stat fileStat;
@@ -182,10 +186,6 @@ void Response::resourceControl(Request * req)
     } else if (req->method == "PUT" || req->method == "POST") {
         if (req->method == "PUT" && req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
-        // if (req->method == "POST" && req->isolateFileName.empty()) {
-        //     LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
-        //     setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-        // }
     } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
@@ -201,7 +201,6 @@ void Response::reqHeadersControl(Request * req) {
 		return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
 	}
 }
-
 
 /*
 **  Dispatching function for controlling request
@@ -266,8 +265,7 @@ void Response::setHeaders(Request * req) {
     // Set wwwAuthenticate header if auth error
 	wwwAuthenticate.clear();
     if (_statusCode == UNAUTHORIZED_401)
-        wwwAuthenticate.append("Basic realm=\"Access to the staging site\", charset=\"UTF-8\"");
-    
+        wwwAuthenticate.append("Basic realm=\"Access to the staging site\", charset=\"UTF-8\""); // TODO : c'est pas juste "Basic" ? le reste c'était à titre d'example dans l'article je crois
 
 	/* 4) Other headers */
 	/* TODO contentLanguage */
@@ -302,8 +300,7 @@ void    Response::handleAutoIndex(void)
 	<body bgcolor=\"white\">\n \
 	<h1>Index of " + resClient->req.file + "</h1>\n \
 	<hr><pre>\n";
-	if (dir != NULL)
-	{
+	if (dir != NULL) {
 		struct dirent *ent;
 		while ((ent = readdir(dir)) != NULL)
 			htmlPage += std::string(ent->d_name) + "\n";
@@ -494,5 +491,5 @@ void Response::showFullHeadersRes(void) {
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
     int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
-	// std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
+	/* std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl; */
 }

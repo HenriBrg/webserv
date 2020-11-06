@@ -1,7 +1,6 @@
 #include "../inc/Webserv.hpp"
 
 Server::Server(int port, std::string name, std::string error): port(port), name(name), error(error) {
-    // port = -1;
     sockFd = -1;
     bzero(&addr, sizeof(addr));
 }
@@ -134,14 +133,11 @@ void Server::acceptNewClient(void) {
         return ;
     }
 
-    // ------------ ------------ ------------
     if (fcntl(acceptFd, F_SETFL, O_NONBLOCK) == -1)
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : fcntl() failed : " + std::string(strerror(errno))));
     int x = 1;
     if (setsockopt(acceptFd, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(x)) == -1)
         LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : setsockopt() failed : " + std::string(strerror(errno))));
-    // ------------ ------------ ------------
-
 
     Client *newClient = new Client(acceptFd, this, clientAddr);
     newClient->req.client = newClient;
@@ -162,13 +158,9 @@ void Server::acceptNewClient(void) {
 
 void Server::readClientRequest(Client *c) {
 
-    //    int ret = -1;
     char recvBuffer[BUFMAX];
     int recvRet(-1);
-    //int error;
     bool recvCheck(false);
-
-
 
     memset((void*)recvBuffer, 0, BUFMAX);
     c->resetTimeOut();
@@ -203,22 +195,18 @@ void Server::readClientRequest(Client *c) {
             LOGPRINT(LOGERROR, c, ("Server::readClientRequest : recv() returned -1 : Error : " + std::string(strerror(errno))));
         return ;
     }
-    else
-    {
+    else {
+
         // std::cout << RED << "=======================================\n" << END;
         // std::cout << c->req._reqBody << std::endl;
         // std::cout << RED << "=======================================\n" << END;
-
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req._reqBody.size()) + " bytes"));
-        if (c->recvStatus == Client::HEADER)
-        {
-            if (strstr(c->req._reqBody.c_str(), "\r\n\r\n") != NULL)
-            {
+        if (c->recvStatus == Client::HEADER) {
+            if (strstr(c->req._reqBody.c_str(), "\r\n\r\n") != NULL) {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Found closing pattern <CR><LF><CR><LF>"));
                 c->req.parse(locations);
             }
-            else
-            {
+            else {
                 LOGPRINT(INFO, c, ("Server::readClientRequest() : Invalid request format, pattern <CR><LF><CR><LF> not found in headers"));
                 return ;
             }
@@ -242,17 +230,13 @@ void Server::readClientRequest(Client *c) {
 
 void Server::writeClientResponse(Client *c) {
 
-    if (c->res._sendStatus == Response::PREPARE || c->res._sendStatus == Response::ERROR)
-    {
+    if (c->res._sendStatus == Response::PREPARE || c->res._sendStatus == Response::ERROR) {
         if (c->res._sendStatus == Response::ERROR)
             LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : sendStatus = ERROR - Code = " + std::to_string(c->res._statusCode)));
         setClientResponse(c);
     }
-
     sendClientResponse(c);
-
-    if (c->res._sendStatus == Response::DONE)
-    {
+    if (c->res._sendStatus == Response::DONE) {
         FD_CLR(c->acceptFd, &gConfig.writeSetBackup);
         c->reset();
     }
@@ -271,25 +255,20 @@ void Server::setClientResponse(Client *c)
     LOGPRINT(INFO, &c->res, ("Server::setClientResponse() : Set Body and Body Headers"));
     c->res.setBody(c->server); /* Set body */
     c->res.setBodyHeaders(); /* Set body headers to actual value (cleared in setHeaders()) */
-
     c->res.format(); /* Format response */
     c->res._sendStatus = Response::SENDING;
     c->res.showRes();
 }
 
 
-int Server::sendClientResponse(Client *c)
-{
+int Server::sendClientResponse(Client *c) {
 
     int retSendingBytes;
 
-    if (c->res._sendStatus == Response::SENDING)
-    {
+    if (c->res._sendStatus == Response::SENDING) {
         if (sendBytes(c, &(c->res.formatedResponse[0]), c->res.formatedResponse.size()) == EXIT_FAILURE)
             LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() headers failed"));
-
-        if (c->res._resBody)
-        {
+        if (c->res._resBody) {
             retSendingBytes = sendBytes(c, c->res._resBody, c->res.contentLength);
             if (retSendingBytes == EXIT_FAILURE) {
                 LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
@@ -306,8 +285,7 @@ int Server::sendBytes(Client *c, char *toSend, long bytesToSend)
     long bytesSent(0);
     long totalBytes = bytesToSend;
 
-    while (bytesSent < totalBytes)
-    {
+    while (bytesSent < totalBytes) {
         retSend = send(c->acceptFd, toSend, bytesToSend, 0);
         if (retSend == -1)
         {
@@ -319,9 +297,7 @@ int Server::sendBytes(Client *c, char *toSend, long bytesToSend)
         bytesToSend -= retSend;
         NOCLASSLOGPRINT(INFO, ("Cumulated bytes sent : " + std::to_string(bytesSent)));
     }
-    if (bytesToSend != 0)
-    {
-        
+    if (bytesToSend != 0) {
         LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() not complete --> Bytes sent : "
         + std::to_string(bytesSent) + " (total = " + std::to_string(totalBytes) + ")"));
         return (EXIT_FAILURE);
@@ -339,10 +315,10 @@ void Server::handleClientRequest(Client *c) {
         writeClientResponse(c);
     else LOGPRINT(INFO, c, ("Server::handleClientRequest() : Client socket isn't writable"));
     checkTimeOutClient(c);
+
 }
 
-void Server::checkTimeOutClient(Client *c)
-{
+void Server::checkTimeOutClient(Client *c) {
     if (c->_lastRequest && (ft::getTime() - c->_lastRequest) > 1000)
         c->isConnected = false;
 }

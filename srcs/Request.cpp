@@ -43,10 +43,8 @@ void Request::reset(void) {
     uriQueries.clear();
     transferEncoding.clear();
     keepAlive.clear();
-
     otherHeaders.clear();
     acceptEncoding.clear();
-
 
 }
 
@@ -69,7 +67,7 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	
 	std::map<std::string, std::string> ret;
 
-    // TODO ?
+    // TODO 
 	// ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
 	// ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
 	ret["Authorization"] = authorization;
