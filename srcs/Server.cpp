@@ -275,6 +275,9 @@ void Server::setClientResponse(Client *c)
 
 int Server::sendClientResponse(Client *c)
 {
+
+    int retSendingBytes;
+
     if (c->res._sendStatus == Response::SENDING)
     {
         if (sendBytes(c, &(c->res.formatedResponse[0]), c->res.formatedResponse.size()) == EXIT_FAILURE)
@@ -282,8 +285,15 @@ int Server::sendClientResponse(Client *c)
 
         if (c->res._resBody)
         {
-            if (sendBytes(c, c->res._resBody, c->res.contentLength) == EXIT_FAILURE)
+            retSendingBytes = sendBytes(c, c->res._resBody, c->res.contentLength);
+            if (retSendingBytes == EXIT_FAILURE) {
                 LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
+                
+                // To test
+                // c->res._sendStatus = Response::SENDING;
+                // return (0);
+
+            }
         }
     }
     c->res._sendStatus = Response::DONE;
@@ -307,11 +317,11 @@ int Server::sendBytes(Client *c, char *toSend, long bytesToSend)
     }
     if (bytesToSend != 0)
     {
+        
         LOGPRINT(LOGERROR, c, ("Server::writeClientResponse() : send() not complete --> Bytes sent : "
         + std::to_string(bytesSent) + " (total = " + std::to_string(totalBytes) + ")"));
         return (EXIT_FAILURE);
     }
-
     return (EXIT_SUCCESS);
 }
 

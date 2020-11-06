@@ -507,6 +507,8 @@ def TESTS_42(testNum = 0):
         # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
         assertResponse(r, 200, index)
+        
+        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
 
 
 # ----------------------------------------------------------------------------- #17 - STAGE 2

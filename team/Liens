@@ -13,6 +13,8 @@ Réseau / Serveur / Client / Select / Sockets :
     http://www.kegel.com/c10k.html
     https://beej.us/guide/bgnet/pdf/bgnet_a4_c_1.pdf --> PARTIAL SEND()
 
+    https://www.ibm.com/support/pages/why-does-send-return-eagain-ewouldblock -> très bon
+
 
 HTTP / Headers / Body / Methods :
 
