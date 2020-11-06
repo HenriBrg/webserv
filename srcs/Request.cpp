@@ -337,6 +337,12 @@ void Request::parseBody()
             LOGPRINT(LOGERROR, client, ("Server::readClientRequest() : Anormal body"));
         if (reqLocation->max_body != -1 && (int)_reqBody.size() > reqLocation->max_body)
         {
+            std::cout << ORANGE << "_reqBody.size() = " << _reqBody.size() << std::endl;
+            std::cout << " reqLocation->max_body = " <<  reqLocation->max_body << END << std::endl;
+            std::cout << RED << "===================================\n" << END;
+            std::cout << _reqBody << std::endl;
+            std::cout << RED << "===================================\n" << END;
+
             LOGPRINT(REQERROR, client, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(reqLocation->max_body)));
             client->recvStatus = Client::ERROR;
             client->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);

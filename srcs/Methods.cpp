@@ -68,10 +68,10 @@ void Response::postReq(Request * req) {
         LOGPRINT(INFO, this, ("Response::postReq() : POST - CGI has been performed !"));
     } else if (req->cgiType == NO_CGI) {
         
-         if (req->isolateFileName.empty()) {
-            LOGPRINT(INFO, this, ("Response::postReq() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
-            return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-        }
+        //  if (req->isolateFileName.empty()) {
+        //     LOGPRINT(INFO, this, ("Response::postReq() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
+        //     return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+        // }
 
         if (stat(req->file.c_str(), &buffer) == -1) {
             action = CREATE;

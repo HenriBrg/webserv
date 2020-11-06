@@ -180,12 +180,13 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     } else if (req->method == "PUT" || req->method == "POST") {
-        if (req->resource.back() == '/')
+        std::cout << RED << "RESSOURCE = " << req->resource << std::endl;
+        if (req->method == "PUT" && req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
-        if (req->method == "POST" && req->isolateFileName.empty()) {
-            LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
-            setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-        }
+        // if (req->method == "POST" && req->isolateFileName.empty()) {
+        //     LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
+        //     setErrorParameters(Response::ERROR, BAD_REQUEST_400);
+        // }
     } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
