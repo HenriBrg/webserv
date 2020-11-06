@@ -7,3 +7,11 @@ Actualisée au 06/11/2020 :
     - grep -rin TODO  srcs/*.cpp
     - LOG sur tous les read write recv send qui retourne -1 ou 0
     - QUID de www-authenticate ?
+
+
+Idées de correctifs :
+
+- Réponse chunked
+- Répondre direct avec le fichier d'output du CGI plutôt que de le bufferisé dans le cas de requête sur le CGI trop grosse
+
+

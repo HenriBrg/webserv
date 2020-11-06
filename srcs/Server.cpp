@@ -290,6 +290,7 @@ int Server::sendClientResponse(Client *c)
                 LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
                 
                 // To test
+                // usleep(10000);
                 // c->res._sendStatus = Response::SENDING;
                 // return (0);
 
