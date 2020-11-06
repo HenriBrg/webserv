@@ -95,7 +95,6 @@ class Logger {
             }
         }
 
-        // Fonction requise car impossible de passer NULL à un paramètre définit par template
         static void noClassLogPrint(int type, std::string const & message) {
 
             if (SILENTLOGS == 1)

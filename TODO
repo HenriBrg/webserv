@@ -1,11 +1,9 @@
-Actualisée au 04/11/2020 :
+Actualisée au 06/11/2020 :
 
-    AUTRES :
-    
     - Testeur 42
     - Delete fonction interdites
     - Quid de Content-Location ?
     - Est-ce qu'on utilise bien toutes les fonctions autorisées par le sujet (sinon, on a peut être zap qqchose)
-     - grep -rin TODO  srcs/*.cpp
-     - LOG sur tous les read write recv send qui retourne -1 ou 0
-     - SEGFAULT sur lancement enchainé du tester sur un meme webserv
+    - grep -rin TODO  srcs/*.cpp
+    - LOG sur tous les read write recv send qui retourne -1 ou 0
+    - QUID de www-authenticate ?

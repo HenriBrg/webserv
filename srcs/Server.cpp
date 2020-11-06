@@ -134,8 +134,14 @@ void Server::acceptNewClient(void) {
         return ;
     }
 
+    // ------------ ------------ ------------
     if (fcntl(acceptFd, F_SETFL, O_NONBLOCK) == -1)
-        throw ServerException("Server::start : fcntl()", std::string(strerror(errno)));
+        LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : fcntl() failed : " + std::string(strerror(errno))));
+    int x = 1;
+    if (setsockopt(acceptFd, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(x)) == -1)
+        LOGPRINT(LOGERROR, this, ("Server::acceptNewClient : setsockopt() failed : " + std::string(strerror(errno))));
+    // ------------ ------------ ------------
+
 
     Client *newClient = new Client(acceptFd, this, clientAddr);
     newClient->req.client = newClient;
@@ -162,14 +168,29 @@ void Server::readClientRequest(Client *c) {
     //int error;
     bool recvCheck(false);
 
+
+
+    memset((void*)recvBuffer, 0, BUFMAX);
     c->resetTimeOut();
     while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
     {
         recvBuffer[recvRet] = '\0';
-        c->req._reqBody.append(recvBuffer);
-        // Modification potentiellement sensible ici
+        c->req._reqBody.append(recvBuffer); /* J'ai remplacé _reqBuff par _reqBody */
         recvCheck = true;
     }
+
+    // À conserver
+
+    // int i = 0;
+    // std::cout << RED << " ==================== REQBODY HEXA :" << END << std::endl;
+    // std::string::iterator it = c->req._reqBody.begin();
+    // for (; it < c->req._reqBody.end(); it++) {
+    //     i++;
+    //     std::cout << std::hex << (int) *it;
+    //     if (i > 500)
+    //         break ;
+    // }
+    // std::cout <<  std::endl << RED << " ====================" << END << std::endl;
 
     if (!(recvCheck) || recvRet == 0)
     {
@@ -262,7 +283,7 @@ int Server::sendClientResponse(Client *c)
         if (c->res._resBody)
         {
             if (sendBytes(c, c->res._resBody, c->res.contentLength) == EXIT_FAILURE)
-                LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() body failed"));
+                LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
         }
     }
     c->res._sendStatus = Response::DONE;

@@ -91,23 +91,22 @@ void Response::postReq(Request * req) {
 
         str = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
 
-        std::cout << RED << "====================================\n" << END;
-        std::cout << str << std::endl;
-        std::cout << contentLength << std::endl;
-        if (_resBody)
-            std::cout << _resBody;
-        std::cout << RED << "====================================\n" << END;
+        // std::cout << RED << "====================================\n" << END;
+        // std::cout << str << std::endl;
+        // std::cout << contentLength << std::endl;
+        // if (_resBody)
+        //     std::cout << _resBody;
+        // std::cout << RED << "====================================\n" << END;
 
         _resBody = responseUtils::setBodyNoFile(str, str.size(), contentLength);
 
-        std::cout << GREEN << "====================================\n" << END;
-        //std::cout << _resBody << std::endl;
-        std::cout << contentLength << std::endl;
-        if (_resBody)
-            std::cout << _resBody << std::endl;
-        std::cout << GREEN << "====================================\n" << END;
+        // std::cout << GREEN << "====================================\n" << END;
+        // //std::cout << _resBody << std::endl;
+        // std::cout << contentLength << std::endl;
+        // if (_resBody)
+        //     std::cout << _resBody << std::endl;
+        // std::cout << GREEN << "====================================\n" << END;
 
-        // _resBody = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
     } 
@@ -129,8 +128,9 @@ void Response::putReq(Request * req)
             LOGPRINT(INFO, req, ("Response::putReq() : write() body in " + req->file + " DONE"));
             if (isCreated)
             {
+                /* On 201 reponse client waits for newly created ressource */
                 _statusCode = CREATED_201;
-                _resFile = req->file; // On 201 reponse client waits for newly created ressource
+                _resFile = req->file;
             }
             else
                 _statusCode = OK_200;

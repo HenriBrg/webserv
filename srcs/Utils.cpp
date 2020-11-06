@@ -214,6 +214,7 @@ namespace ft {
 
 namespace utils
 {
+
 	void strTabFree(char ** strTab) {
 		
 		int i = -1;
