@@ -293,15 +293,6 @@ int Server::sendClientResponse(Client *c)
             retSendingBytes = sendBytes(c, c->res._resBody, c->res.contentLength);
             if (retSendingBytes == EXIT_FAILURE) {
                 LOGPRINT(LOGERROR, c, ("Server::sendClientResponse() : send() _resBody has failed - Error : " + std::string(strerror(errno))));
-<<<<<<< HEAD
-                
-                // To test
-                // usleep(10000);
-                // c->res._sendStatus = Response::SENDING;
-                // return (0);
-
-=======
->>>>>>> alex
             }
         }
     }
