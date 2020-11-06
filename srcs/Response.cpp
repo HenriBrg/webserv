@@ -268,8 +268,8 @@ void Response::setHeaders(Request * req) {
 	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
 	/* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
 	if (_isLanguageNegociated)
-	     contentLanguage[0] = _resFile; // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
-	else contentLanguage.clear();
+	     contentLocation[0] = _resFile; // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
+	else contentLocation.clear();
 	
     // if (req->method == "PUT") contentLocation[0] = req->file;
 	// else contentLocation.clear();
