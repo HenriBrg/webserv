@@ -264,15 +264,15 @@ void Response::setHeaders(Request * req) {
 		retryAfter = -1;
 	}
 	/* 4) Other headers */
-	/* TODO BELOW ! */
+	/* TODO contentLanguage */
 	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
 	/* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
-	if (_isLanguageNegociated)
-	     contentLocation[0] = _resFile; // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ?
+	
+    // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? --> à voir ensemble
+    if (_isLanguageNegociated == true)
+	     contentLocation[0] = _resFile;
 	else contentLocation.clear();
 	
-    // if (req->method == "PUT") contentLocation[0] = req->file;
-	// else contentLocation.clear();
 	if (_statusCode == CREATED_201) location = req->uri;
 	else location.clear();
 	transfertEncoding.clear();
@@ -282,8 +282,6 @@ void Response::setHeaders(Request * req) {
 	/* lastModified.clear(); // Is here the right place to call ? --> moved into methods.cpp */
 	if (_resFile.empty() && !(_resBody)) // ---> à voir
 		contentLength = -1;
-    
-    
 
 	/* On set également ce header lors de l'authentification */
 	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
@@ -315,6 +313,12 @@ void    Response::handleAutoIndex(void)
     contentLength = strlen(_resBody);
 }
 
+/*
+** Fonction en cours
+** Que le body soit chunked ou pas, send() va fail ... à la limite faut call send() chunk par chunk, ou faire des plus petit call de send()
+** Idéalement : open, lire par 32 768 ou moins, le chunké et le send
+*/
+
 void Response::intoChunk() {
 
 }
@@ -340,7 +344,7 @@ void Response::setBody(const Server *server) {
         return ;
     }
 
-    if (_statusCode != CREATED_201 && !(_resBody) && !(_resFile.empty()))
+    if (!(_resBody) && !(_resFile.empty()))
     {
         char fileBuf[4096];
         int fileFd(0);
@@ -391,10 +395,8 @@ void Response::setBodyHeaders(void) {
 			lastModified = ft::getLastModifDate(_resFile);
 	}
 
-    /*
-    **   The purpose here is to cut the reponse body in case of PUT since it is useless to send back the full updated (200) created (201)
-    **   resource to the client (https://httpstatuses.com/201 - RFC7231)
-    */
+    /*   The purpose here is to cut the reponse body in case of PUT since it is useless to send back the full updated (200) created (201)
+    **   resource to the client (https://httpstatuses.com/201 - RFC7231) */
 
     if ((_statusCode == OK_200 || _statusCode == CREATED_201) && resClient->req.method == "PUT")
 		    contentLength = 0;
