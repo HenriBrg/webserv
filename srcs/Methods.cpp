@@ -91,6 +91,7 @@ void Response::postReq(Request * req) {
 
         str = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
 
+<<<<<<< HEAD
         // std::cout << RED << "====================================\n" << END;
         // std::cout << str << std::endl;
         // std::cout << contentLength << std::endl;
@@ -107,6 +108,10 @@ void Response::postReq(Request * req) {
         //     std::cout << _resBody << std::endl;
         // std::cout << GREEN << "====================================\n" << END;
 
+=======
+        _resBody = responseUtils::setBodyNoFile(str, str.size(), contentLength);
+
+>>>>>>> alex
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
     } 
@@ -159,6 +164,7 @@ void Response::deleteReq(Request * req)
         deleteDir(req->resource);
     else
         unlink(req->file.c_str());
+    _statusCode = NO_CONTENT_204;
     
 }
 

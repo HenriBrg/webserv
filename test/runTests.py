@@ -23,6 +23,8 @@ import os
 import sys
 import json
 import requests
+import shutil 
+from pathlib import Path
 
 from requests.auth import HTTPBasicAuth
 from sys import platform
@@ -65,6 +67,27 @@ def printHdReqRes(r):
     for idB, resKey in enumerate(r.headers):
         print(indent + resKey + ": " + r.headers[resKey])
     print()
+
+# ------------------------ ANNEXES FUNCTIONS  -------------------------------
+
+def createFile(path, content):
+    file = open(path, 'w')
+    file.write(content)
+    file.close()
+
+def createDirectory(path, dirName, withFiles, withSubDir):
+    if os.path.exists(path + dirName + "/"): shutil.rmtree("www/deleteTests/")
+    os.mkdir(path + dirName)
+    if (withFiles):
+        createFile(path + dirName + "/file1", "test delete")
+        createFile(path + dirName + "/file2", "test delete")
+    if (withSubDir):
+        os.mkdir(path + dirName + "/subDir1/")
+        createFile(path + dirName + "/subDir1/file1", "test delete")
+        createFile(path + dirName + "/subDir1/file2", "test delete")
+        os.mkdir(path + dirName + "/subDir2/")
+        createFile(path + dirName + "/subDir2/file1", "test delete")
+        createFile(path + dirName + "/subDir2/file2", "test delete")
 
 # ------------------------ ASSERT FUNCTIONS  -------------------------------
 
@@ -125,8 +148,8 @@ def run(sys):
     if (len(sys.argv) == 1):
         GET_TESTS()
         POST_TESTS()
-        PUT_TESTS
-        DELETE_TESTS
+        PUT_TESTS()
+        DELETE_TESTS()
         HEAD_TESTS
     elif (len(sys.argv) == 2):
         if (sys.argv[1] == "GET"):      GET_TESTS()
@@ -380,15 +403,90 @@ def HEAD_TESTS(testNum = 0):
 # -----------------------------------------------------------------------------
 
 def PUT_TESTS(testNum = 0):
+
+    index = 0
     print("\n     ~ PUT REQUESTS -----------------------> \n")
 
+    # ------- PUT - 201 CREATED
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        payload = "Hello ! I am a new file"
+        r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
+        assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file", "www/newFile")
+
+    # ------- PUT - 204 NO CONTENT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        payload = "Hello ! I am a modified file"
+        r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
+        assertResponse(r, 204, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a modified file", "www/newFile")
+
+    # ------- PUT - 409 CONFLICT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        payload = "Hello ! I am a new file"
+        r = requests.put('http://localhost:7777/newFile/', data=payload, headers={})
+        assertResponse(r, 409, index)
+
+    # ------- PUT - 413
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        payload = "| test| " * 10000
+        r = requests.put('http://localhost:7777/newFile', data=payload, headers={})
+        assertResponse(r, 413, index)
 
 # -----------------------------------------------------------------------------
 # ---------------------------------- DELETE -----------------------------------
 # -----------------------------------------------------------------------------
 
 def DELETE_TESTS(testNum = 0):
+
+    index = 0
     print("\n     ~ DELETE REQUESTS -----------------------> \n")
+
+    # ------- PUT - 204 NO CONTENT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        if not os.path.exists("www/newFile"): createFile("www/newFile", "Delete test")
+        r = requests.delete('http://localhost:7777/newFile', data="", headers={})
+        assertResponse(r, 204, index)
+
+    # ------- PUT - 409 CONFLICT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        if os.path.exists("www/newFile"): os.remove("www/newFile")
+        r = requests.delete('http://localhost:7777/newFile', data="", headers={})
+        assertResponse(r, 409, index)
+
+    # ------- PUT - 409 CONFLICT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.delete('http://localhost:7777/deleteError/', data="", headers={})
+        assertResponse(r, 409, index)
+
+    # ------- PUT - 204 NO CONTENT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        createDirectory("www/", "deleteTests", False, False)
+        r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
+        assertResponse(r, 204, index)
+
+    # ------- PUT - 204 NO CONTENT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        createDirectory("www/", "deleteTests", True, False)
+        r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
+        assertResponse(r, 204, index)
+
+    # ------- PUT - 204 NO CONTENT
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        createDirectory("www/", "deleteTests", True, True)
+        r = requests.delete('http://localhost:7777/deleteTests/', data="", headers={})
+        assertResponse(r, 204, index)
+
+    
 
 
 # -----------------------------------------------------------------------------
