@@ -256,5 +256,4 @@ int Response::getCGIType(Request * req) {
         return (PHP_CGI);
     else
         return (NO_CGI);
-
 }

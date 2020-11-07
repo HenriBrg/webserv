@@ -56,26 +56,26 @@ void	Conf::parseLocation(Server *serv, std::string locs)
 
 	while ((beg = locs.find("{") != std::string::npos))
 	{
-		// locBlock = ft::split(locs, '\n');
-		// line = ft::splitWhtSp(locBlock[0]);
-		// if (line.size() != 3 || line[0] != "location" || line[1][0] != '/' || line[2] != "{")
-		// 	throw(Conf::errorSyntaxException("location syntax."));
-		// uri = line[1];
-		// line.clear();
-		// locBlock.clear();
-		// beg = locs.find("{");
-		// std::cout << beg << std::endl;
 		end = locs.find("}");
 		location = locs.substr(beg, end + 1 - beg);
-		// if (ft::countElem(location, "\troot ") != 1)
-		// 	throw(Conf::errorSyntaxException("parameter root must be present once."));
-		// if (ft::countElem(location, "\tindex ") != 1)
-		// 	throw(Conf::errorSyntaxException("parameter index must be present once."));
-		// if (ft::countElem(location, "\tmethods ") != 1)
-		// 	throw(Conf::errorSyntaxException("parameter methods must be present once."));
-		// if (ft::countElem(location, "\tauth ") > 1)
-		// 	throw(Conf::errorSyntaxException("parameter auth must be present max once."));
-		// std::cout << "deb: " << location << " :fin" << std::endl << std::endl;
+		if (ft::countElem(location, "\troot ") != 1)
+			throw(Conf::errorSyntaxException("parameter root must be present once."));
+		if (ft::countElem(location, "\tindex ") > 1)
+			throw(Conf::errorSyntaxException("parameter index must be present max once."));
+		if (ft::countElem(location, "\tmethod ") != 1)
+			throw(Conf::errorSyntaxException("parameter method must be present once."));
+		if (ft::countElem(location, "\tauth ") > 1)
+			throw(Conf::errorSyntaxException("parameter auth must be present max once."));
+		if (ft::countElem(location, "\tmax_body ") > 1)
+			throw(Conf::errorSyntaxException("parameter max_body must be present max once."));
+		if (ft::countElem(location, "\tautoindex ") > 1)
+			throw(Conf::errorSyntaxException("parameter autoindex must be present max once."));
+		if (ft::countElem(location, "\tphp ") > 1)
+			throw(Conf::errorSyntaxException("parameter php must be present max once."));
+		if (ft::countElem(location, "\tcgi ") > 1)
+			throw(Conf::errorSyntaxException("parameter cgi must be present max once."));
+		if (ft::countElem(location, "\text ") > 1)
+			throw(Conf::errorSyntaxException("parameter ext must be present max once."));
 		locBlock = ft::split(location, '\n');
 		for (size_t i = 0; i < locBlock.size(); i++)
 		{
@@ -88,7 +88,7 @@ void	Conf::parseLocation(Server *serv, std::string locs)
 						throw(Conf::errorSyntaxException("location syntax."));
 					uri = line[1];
 				}
-				if (line[0] == "root")
+				else if (line[0] == "root")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("root syntax."));
@@ -101,55 +101,57 @@ void	Conf::parseLocation(Server *serv, std::string locs)
 					closedir(dir);
 					root = line[1];
 				}
-				if (line[0] == "index")
+				else if (line[0] == "index")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("index syntax."));
 					index = line[1];
 				}
-				if (line[0] == "method")
+				else if (line[0] == "method")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("method syntax."));
 					methods = line[1];
 				}
-				if (line[0] == "auth")
+				else if (line[0] == "auth")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("auth syntax."));
 					auth = line[1];
 				}
-				if (line[0] == "cgi")
+				else if (line[0] == "cgi")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("cgi syntax."));
 					cgi = line[1];
 				}
-				if (line[0] == "php")
+				else if (line[0] == "php")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("php syntax."));
 					phpcgi = line[1];
 				}
-				if (line[0] == "ext")
+				else if (line[0] == "ext")
 				{
 					if (line.size() != 2)
 						throw(Conf::errorSyntaxException("ext syntax."));
 					ext = line[1];
 				}
-				if (line[0] == "max_body")
+				else if (line[0] == "max_body")
 				{
 					if (line.size() != 2 || !ft::isNumber(line[1]))
 						throw(Conf::errorSyntaxException("max_body syntax."));
 					max_body = std::stoi(line[1]);
 				}
-				if (line[0] == "autoindex")
+				else if (line[0] == "autoindex")
 				{
 					if (line.size() != 2 || (line[1] != "on" && line[1] != "off"))
 						throw(Conf::errorSyntaxException("autoindex syntax."));
 					if (line[1] == "on")
 						autoindex = true;
 				}
+				else if (line[0] != "}")
+					throw(Conf::errorSyntaxException("unknown parameter."));
 			}
 			line.clear();
 		}
@@ -185,7 +187,6 @@ void	Conf::parseServerBlock(std::string block)
 	int			idx;
 	std::string	servParams;
 
-	// std::cout << block << std::endl;
 	if ((nbLoc = ft::countElem(block, "\tlocation ")) < 1)
 		throw (Conf::errorSyntaxException("parameter location must be present at least once."));
 	idx = block.find("\tlocation");
@@ -196,12 +197,9 @@ void	Conf::parseServerBlock(std::string block)
 		throw(Conf::errorSyntaxException("parameter server_name must be present max once."));
 	if (ft::countElem(servParams, "\terror ") != 1)
 		throw(Conf::errorSyntaxException("there must be one errors path."));
-	// std::cout << servParams << std::endl << std::endl;
-	
 	serverBlock = ft::split(servParams, '\n');
 	for (size_t i = 0; i < serverBlock.size(); i++)
 	{
-		// std::cout << serverBlock[i] << std::endl;
 		line = ft::splitWhtSp(serverBlock[i]);
 		if (line[0] == "listen")
 		{
@@ -238,9 +236,6 @@ void	Conf::parseServerBlock(std::string block)
 		serverName = "webserv" + std::to_string(nameNb++);
 	Server *serv = new Server(port, serverName, error);
 	serverBlock = ft::split(servParams, '\n');
-	// std::cout << servParams << std::endl << std::endl;
-	// for (int i = 0; i < nbLoc; i++)
-	// 	parseLocation(serv, serverBlock);
 	NOCLASSLOGPRINT(INFO, ("Conf::parseServerBlock() : FOR SERVER PORT " + std::to_string(port)));
 	parseLocation(serv, servParams);
 	try
@@ -324,7 +319,6 @@ void	Conf::parseConf(void)
 				confTmp[i][j] = ' ';
 			j++;
 		}
-		// std::cout << confTmp[i] << std::endl;
 	}
 	i = 0;
 	while (confTmp.size())
@@ -334,24 +328,6 @@ void	Conf::parseConf(void)
 		i = findServer(confTmp);
 		confTmp.erase(confTmp.begin(), confTmp.begin() + i);
 	}
-	// for (int i = 0; i < _servers.size(); i++)
-	// {
-	// 	std::cout << _servers[i]->name << " " << _servers[i]->port << " " << _servers[i]->error << std::endl;
-	// 	for (int j = 0; j < _servers[i]->locations.size(); j++)
-	// 	{
-	// 		std::cout << "\nlocation" << j << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->uri << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->root << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->index << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->methods << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->max_body << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->auth << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->cgi << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->php << std::endl;
-	// 		std::cout << _servers[i]->locations[j]->ext << std::endl;
-	// 	}
-	// 	std::cout << std::endl;
-	// }
 }
 
 /* **************************************************** */
