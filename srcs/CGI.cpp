@@ -205,7 +205,7 @@ void Response::handleCGIOutput(int cgiType) {
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
     }
     parseCGIOutput(cgiType, buffer);
-    remove(CGI_OUTPUT_TMPFILE);
+    unlink(CGI_OUTPUT_TMPFILE);
     buffer.clear();
     _cgiOutputBody.clear();
 

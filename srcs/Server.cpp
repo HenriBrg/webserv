@@ -48,10 +48,23 @@ int Server::start() {
     /* associé à n'importe quelle adresse IP de la machine locale (s'il en existe plusieurs).  */
     /* Dans les exemples on voit souvent inet_addr(127.0.0.1), c'est pour spécifier une adresse IP donnée à utiliser */
     /* Le socket peut être relié à un port libre quelconque en utilisant le numéro 0.  */
+    /* "Network byte order" always means big endian */
+    /* "Host byte order" depends on architecture of host. Depending on CPU, host byte order may be little endian or big endian */
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(LOCAL_IP);
-    addr.sin_port = htons(port);
+
+    int i = 0x00000001;
+    if (((char *)&i)[0] ) /* Little */
+    {    
+        addr.sin_port = ((__uint16_t) ((((port) >> 8) & 0xff) | (((port) & 0xff) << 8)));
+        std::cout << "LIT = reverse order" << std::endl;
+    }
+    else /* Big */
+    {    
+        addr.sin_port = static_cast<__uint16_t>(port);
+        std::cout << "BIG = ordered" << std::endl;
+    }
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
 
