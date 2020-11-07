@@ -104,11 +104,12 @@ class Location
 		int				max_body;
         bool            autoindex;
 
-		// Pour la phase de développement pré-parsing, on utilisera ces locations :
-
-		// Location *newLoc1 = new Location("/", "./www", "index.html", "GET");
-		// Location *newLoc2 = new Location("/", "./www", "page.html", "GET POST");
-
+        Location()
+        {
+            methods = "GET,POST,PUT,PATCH,DELETE";
+            max_body = -1;
+            autoindex = false;
+        };
 		Location(std::string _uri, \
 				std::string _root, \
 				std::string _index, \
@@ -133,7 +134,6 @@ class Location
 		};
 
 		private:
-			Location();
 };
 
 #endif
