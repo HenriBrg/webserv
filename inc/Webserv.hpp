@@ -1,12 +1,6 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-/*Forbidden !*/
-# include <fstream>
-# include <sstream>
-# include <cctype>
-/*************/
-
 # include <stdlib.h>
 # include <unistd.h>
 # include <sys/types.h>
