@@ -354,7 +354,7 @@ void Response::setBody(const Server *server) {
 
         if (responseUtils::setupBytesArray(this) == -1)
             return ;
-        if (resClient->req.reqLocation->autoindex == true)
+        if (resClient->req.reqLocation && resClient->req.reqLocation->autoindex == true)
             handleAutoIndex();
         else if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
@@ -376,6 +376,7 @@ void Response::setBody(const Server *server) {
         else
             LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
     }
+
     if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
 }
@@ -436,6 +437,17 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "WWW-Authenticate", wwwAuthenticate);
     formatedResponse.append("\r\n");
 
+}
+
+void Response::setRefusedClient(const Server *serv)
+{
+    setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
+	httpVersion = "HTTP/1.1";
+	reason = responseUtils::getReasonPhrase(_statusCode);
+	date = ft::getDate();
+	server = "webserv";
+    retryAfter = 10;
+    setBody(serv);
 }
 
 /* **************************************************** */

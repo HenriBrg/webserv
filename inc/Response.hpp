@@ -145,7 +145,7 @@ class Response {
 
 
         /* ERRORS */
-
+        void setRefusedClient(const Server *serv);
         void setErrorParameters(int sendStatus, int code);
         void replaceErrorCode(const Server *server);
         

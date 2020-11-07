@@ -145,9 +145,12 @@ void Server::acceptNewClient(void) {
 
     if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
     {
-        newClient->res.setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
-        newClient->res.retryAfter = 10;
-        writeClientResponse(newClient);
+        newClient->res.setRefusedClient(this);
+        sendClientResponse(newClient);
+        if (newClient->res._sendStatus == Response::DONE) {
+            FD_CLR(newClient->acceptFd, &gConfig.writeSetBackup);
+            newClient->reset();
+        }
         newClient->isConnected = false;
         newClient->_isAccepted = false;
     }
