@@ -1,11 +1,8 @@
 # Tester dedicated to the 42 project webserv.
-# 04/11/2020
-# Reproduction of the "official" tester given in the project page (named "tester" or "ubuntu_tester")
-# Thanks Wireshark. If you need the networks captures, feel free to ask. I have kept them
-# For info, it seems that the tester only call uppercase on its input and return it
+# 07/11/2020
 
 # ---------------------------------------------------------------------------
-# ---------------------------- 1. CHECKS ------------------------------------
+# ---------------------------- 1. LIBS --------------------------------------
 # ---------------------------------------------------------------------------
 
 import os
@@ -13,9 +10,12 @@ import sys
 import json
 import math
 import requests
-
-from requests.auth import HTTPBasicAuth
 from sys import platform
+from requests.auth import HTTPBasicAuth
+
+import time
+import random
+from threading import Thread
 
 global verbose
 verbose = 0
@@ -25,6 +25,8 @@ if (len(sys.argv) == 3 and sys.argv[2] == '-v'):
 if (os.system('lsof -c webserv > /dev/null') != 0):
     print("Webserv is not running")
     exit()
+
+
 
 # ---------------------------------------------------------------------------
 # ----------------------------- 2. CORE -------------------------------------
@@ -42,7 +44,7 @@ class bcolors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
-
+    
 def printHdReqRes(r):
     print()
     indent = "          Request >  "
@@ -96,15 +98,15 @@ def moreAsserts(r, assertLevel, *args):
 
     return ret
 
-def assertResponse(r, code, index, assertLevel = [], *args):
-    ret = False
-    if (len(assertLevel)): ret = moreAsserts(r, assertLevel, args)
-    else: ret = True
+def assertResponse(r, threadID, code, index, assertLevel = [], *args):
+    ret = True
+    # if (len(assertLevel)): ret = moreAsserts(r, assertLevel, args)
+    # else: ret = True
     if (ret and r.status_code == code):
         info = bcolors.OKGREEN + "OK" + bcolors.ENDC + " - " + str(r.status_code)
     else:
         info = bcolors.FAIL + "KO" + bcolors.ENDC + " - " + str(r.status_code) + " - Should have been received : " + str(code)
-    url = "           • #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
+    url = "           • TID : " + str(threadID) + " - #" + str(index).ljust(2, ' ') + " : " + str(r.request.method) + " "
     if (len(r.request.url) > 60):
         url += r.request.url[16:60] + " [..." + str(len(r.request.url)) + "]"
     else: url += str(r.request.url)[16:]
@@ -132,34 +134,107 @@ def run(sys):
     elif (len(sys.argv) >= 2):
             TESTS_42(sys.argv[1])
     print()
+
+# ---------------------------------------------------------------------------
+# ---------------------------- 3. TRHEADS -----------------------------------
+# ---------------------------------------------------------------------------
+
+class Client(Thread):
+	def __init__(self, threadID, method, uri, payloadSizeToSend, repeat):
+	    Thread.__init__(self)
+	    self.threadID = threadID
+	    self.method = method
+	    self.uri = uri
+	    self.payloadSizeToSend = payloadSizeToSend
+	    self.repeat = repeat
+
+	def run(self):
+        hd = {}
+        if (payloadSizeToSend != -1):
+            payload = "x" * payloadSizeToSend
+            payload += "0\r\n\r\n"
+        else:
+            payload = ""
+
+        if (self.method == "GET"):
+            hd = {
+                "Host": "localhost:8080",
+                "User-Agent": "Go-http-client/1.1",
+                "Accept-Encoding": "gzip"
+            }
+        elif (self.method == "PUT"):
+            hd = {
+                "Host": "localhost:8080",
+                "User-Agent": "Go-http-client/1.1",
+                "Accept-Encoding": "gzip"
+            }
+        elif (self.method == "POST"):
+            hd = {
+                "Host": "localhost:8080",
+                "User-Agent": "Go-http-client/1.1",
+                "Accept-Encoding": "gzip"
+            }
+
+        # À voir
+		# headers += {
+		# 	"Connection" : "Keep-Alive",
+		#   "Keep-Alive" : "timeout=10, max=10"
+		# }
+        
+        index = 1
+		max = repeat
+		for x in range(max):
+			try:
+                if (self.method == "GET"):
+				    r = requests.get(uri, headers=hd, payload=payload)
+                    assertResponse(r, 200, index)
+                    index += 1
+                elif (self.method == "PUT"):
+				    r = requests.put(uri, headers=hd, payload=payload)
+                    assertResponse(r, 200, index)
+                    index += 1
+                elif (self.method == "POST"):
+				    r = requests.post(uri, headers=hd, payload=payload)
+                    assertResponse(r, 200, index)
+                    index += 1
+			except:
+				print("An exception has been raised")
+
+
+# Pour informations :
+
+    # Les GET :
     
+        # GET / HTTP/1.1
+        # Host: localhost:8080
+        # User-Agent: Go-http-client/1.1
+        # Accept-Encoding: gzip
+
+    # Les PUT :
+
+    # Les POST :
+
+
 # -----------------------------------------------------------------------------
-# -------------------------------- 3. TESTS -----------------------------------
+# -------------------------------- 4. TESTS -----------------------------------
 # -----------------------------------------------------------------------------
 
 def TESTS_42(testNum = 0):
 
     index = 0
     print("\n     ~ 42 TESTS ------------------------> \n")
+    # -----------------------------------------------------------------------------> #1 - STAGE 1
 
-# -----------------------------------------------------------------------------> #1 - STAGE 1
-
-    # GET / HTTP/1.1
-    # Host: localhost:8080
-    # User-Agent: Go-http-client/1.1
-    # Accept-Encoding: gzip
-
-    index += 1
-    if (follow == True and testNum != 0 and index >= testNum):
-        chainUp = True
-    if (chainUp or testNum == 0 or index == int(testNum)):
-        hd = {
-            "Host": "localhost:8080",
-            "User-Agent": "Go-http-client/1.1",
-            "Accept-Encoding": "gzip"
-        }
-        r = requests.get("http://localhost:8888/", headers=hd)
-        assertResponse(r, 200, index)
+    # 1. Création
+    threads = []
+    name = "Thread n°"
+    for x in range(5):
+        threads.append(Client((name + str(x)), "GET", "http://localhost:8888", -1, 15))
+    # 2. Lancement
+    for x in threads:
+        x.start()
+    for x in threads:
+        x.join()
 
 
 run(sys)
