@@ -140,7 +140,16 @@ def run(sys):
 def TESTS_42(testNum = 0):
 
     index = 0
+    follow = False
+    chainUp = False
+
+    if (testNum != 0 and testNum.endswith('+')):
+        testNum = int(testNum[:-1])
+        follow = True
+
     print("\n     ~ 42 TESTS ------------------------> \n")
+
+
 
 # -----------------------------------------------------------------------------> #1 - STAGE 1
 
@@ -150,7 +159,9 @@ def TESTS_42(testNum = 0):
     # Accept-Encoding: gzip
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -169,7 +180,9 @@ def TESTS_42(testNum = 0):
     # Accepted-Encoding: gzip
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -189,7 +202,9 @@ def TESTS_42(testNum = 0):
     # User-Agent: Go-http-client/1.1
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1"
@@ -207,7 +222,9 @@ def TESTS_42(testNum = 0):
     # Should return ./youpi.bad_extension
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -225,7 +242,9 @@ def TESTS_42(testNum = 0):
 
     # Should return ./youpi.bad_extension
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -242,7 +261,9 @@ def TESTS_42(testNum = 0):
     # Accept-Encoding: gzip
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -261,7 +282,9 @@ def TESTS_42(testNum = 0):
     # Should return Error
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -281,7 +304,9 @@ def TESTS_42(testNum = 0):
     # Should return youpi.bad_extension
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -302,7 +327,9 @@ def TESTS_42(testNum = 0):
     # Should return youpi.bad_extension
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -321,7 +348,9 @@ def TESTS_42(testNum = 0):
     # Should return other.pouic
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -340,7 +369,9 @@ def TESTS_42(testNum = 0):
     # Should return Error 404
     
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -359,7 +390,9 @@ def TESTS_42(testNum = 0):
     # Should return Error 404
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -376,7 +409,9 @@ def TESTS_42(testNum = 0):
     # Accept-Encoding: gzip
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -404,7 +439,9 @@ def TESTS_42(testNum = 0):
     # Content-Type to text/plain
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
         payload = "3e8\r\n"
         payload += "e" * 1000
@@ -438,7 +475,9 @@ def TESTS_42(testNum = 0):
     # Content-Length to 0
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -485,7 +524,9 @@ def TESTS_42(testNum = 0):
     # Response Code must be 200
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -530,7 +571,9 @@ def TESTS_42(testNum = 0):
     # Response Code must be 200
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -576,7 +619,9 @@ def TESTS_42(testNum = 0):
     # Response Code must be 200
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -607,7 +652,9 @@ def TESTS_42(testNum = 0):
     # http://localhost:8080/post_body with a size of 0
 
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -626,7 +673,9 @@ def TESTS_42(testNum = 0):
 
     # http://localhost:8080/post_body with a size of 100
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -643,11 +692,44 @@ def TESTS_42(testNum = 0):
 # ----------------------------------------------------------------------------- #21 - STAGE 3 - Small POST (3)
     
     # http://localhost:8080/post_body with a size of 200
-    
+    index += 1
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked",
+        }
+        payload = "c8\r\n"
+        payload += "c" * 200
+        payload += "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/post_body", headers=hd, data=payload)
+        assertResponse(r, 413, index)
+
 # ----------------------------------------------------------------------------- #22 - STAGE 3 - Small POST (4)
     
     # http://localhost:8080/post_body with a size of 101
 
+    # http://localhost:8080/post_body with a size of 200
+    index += 1
+    if (follow == True and testNum != 0 and index >= testNum):
+        chainUp = True
+    if (chainUp or testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked",
+        }
+        payload = "65\r\n"
+        payload += "u" * 101
+        payload += "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/post_body", headers=hd, data=payload)
+        assertResponse(r, 413, index)
 
 
 
@@ -692,7 +774,7 @@ run(sys)
 #     }
     
 #     location /post_body {
-# 		methods 	POST
+# 		method   	POST
 # 		root 		./www/test42
 # 		index 		index.html
 # 		max_body 	100

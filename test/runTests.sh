@@ -21,13 +21,13 @@ echo
 # TEST n°1 : CURL
 
 if [ "$1" -eq 1 ]; then 
-    printf "  Test 1) Running 250 HEAD requests to http://localhost:7777\n"
+    printf "  Test 1) Running 250 GET requests to http://localhost:8888\n"
     i=0;
     while (($i < 250)) ;do
-        curl -s -I http://localhost:7777 > /dev/null;
+        curl -s http://localhost:8888 > /dev/null &
         i=$(($i+1));
     done
-    printf "  Test 1) ${GREEN}250 HEAD requests to http://localhost:7777 done${END}\n"
+    printf "  Test 1) ${GREEN}250 HEAD requests to http://localhost:8888 done${END}\n"
     echo
     exit
 fi
