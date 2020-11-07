@@ -146,8 +146,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
 		tmpUri = tmpUri.substr(0, i);               // tmpUri => partie droite URI
 		if (tmpUri == "")                           // Si racine
 			tmpUri = "/";
-        std::size_t x = 0;
-		for (; x < vecLocs.size(); ++x) {
+		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
 			if (vecLocs[x]->uri == tmpUri) {
 				file = uri.substr(i + 1, uri.size());
 				reqLocation = vecLocs[x];
