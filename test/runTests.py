@@ -316,6 +316,23 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/?queries=zyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcba")
         assertResponse(r, 414, index)
 
+    # ------- GET : AutoIndex
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/auto")
+        assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "index.html")
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/auto/index.html")
+        assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "Welcome to Webserv !")
+   
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/auto/xxx")
+        assertResponse(r, 404, index) # ---> Potentiellement à modifier
+
 
 # -----------------------------------------------------------------------------
 # ----------------------------------- POST ------------------------------------

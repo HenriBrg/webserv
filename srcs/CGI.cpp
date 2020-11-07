@@ -187,8 +187,17 @@ void Response::execCGI(Request * req) {
 
 void Response::handleCGIOutput(int cgiType) {
 
-    std::ifstream tmpFile(CGI_OUTPUT_TMPFILE);
-    std::string buffer((std::istreambuf_iterator<char>(tmpFile)), std::istreambuf_iterator<char>());
+    int cgiFdOutput = -1;
+    struct stat sb;
+    std::string buffer;
+
+    buffer.clear();
+    if ((cgiFdOutput = open(CGI_OUTPUT_TMPFILE, O_RDONLY)) == -1)
+        return NOCLASSLOGPRINT(LOGERROR, ("Response::handleCGIOutput() : Open() has failed while opening cgiFdOutput"));
+    fstat(cgiFdOutput, &sb);
+    buffer.resize(sb.st_size);
+    read(cgiFdOutput, const_cast<char*>(buffer.data()), sb.st_size);
+    close(cgiFdOutput);
 
     _cgiOutputBody = buffer;
     if (_cgiOutputBody.find("\r\n\r\n") == std::string::npos) {

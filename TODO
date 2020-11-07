@@ -2,9 +2,7 @@ Actualisée au 06/11/2020 :
 
     - Testeur VM
     - Delete fonction interdites
-    - grep -rin TODO  srcs/*.cpp
     - LOG sur tous les read write recv send qui retourne -1 ou 0
-
     - Test negotiate et test autoindex
     - review guideline correction
     - leaks 
