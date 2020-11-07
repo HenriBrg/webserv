@@ -67,9 +67,6 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	
 	std::map<std::string, std::string> ret;
 
-    // TODO 
-	// ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
-	// ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
 	ret["Authorization"] = authorization;
 	ret["Content-Language"] = mapToStr(contentLanguage, ',');
 	ret["Content-Length"] = std::to_string(contentLength);
@@ -333,14 +330,8 @@ void Request::parseBody()
             parseSingleBody();
         else
             LOGPRINT(LOGERROR, client, ("Server::readClientRequest() : Anormal body"));
-        if (reqLocation->max_body != -1 && (int)_reqBody.size() > reqLocation->max_body)
+        if (client->recvStatus == Client::COMPLETE && reqLocation->max_body != -1 && (int)_reqBody.size() > reqLocation->max_body)
         {
-            std::cout << ORANGE << "_reqBody.size() = " << _reqBody.size() << std::endl;
-            std::cout << " reqLocation->max_body = " <<  reqLocation->max_body << END << std::endl;
-            std::cout << RED << "===================================\n" << END;
-            std::cout << _reqBody << std::endl;
-            std::cout << RED << "===================================\n" << END;
-
             LOGPRINT(REQERROR, client, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(reqLocation->max_body)));
             client->recvStatus = Client::ERROR;
             client->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
@@ -363,13 +354,13 @@ inline bool endsWith(std::string & value, std::string & ending) {
 
 void Request::parseChunkedBody() {
 
-    std::string endPattern = "0\r\n\r\n";
-    size_t      separator = 0;
     std::string tmp;
+    size_t      separator = std::string::npos;
 
     tmp.clear();
     LOGPRINT(INFO, this, ("Request::parseChunkedBody() : Start Chunked Body Parsing"));
     while (42) {
+    
         separator = _reqBody.find("\r\n", _optiChunkOffset);
         if (separator == std::string::npos)
             break ;
@@ -391,7 +382,6 @@ void Request::parseChunkedBody() {
             // } else
             
             if (separator == std::string::npos) break ;
-            
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;

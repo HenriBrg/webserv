@@ -51,11 +51,9 @@ int Server::start() {
     /* Dans les exemples on voit souvent inet_addr(127.0.0.1), c'est pour spécifier une adresse IP donnée à utiliser */
     /* Le socket peut être relié à un port libre quelconque en utilisant le numéro 0.  */
 
-    /* TODO : forbidden functions */
-
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(port);              // --------------> Voir post Slack sel-melc 21/10/2020
+    addr.sin_port = htons(port);
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
 
@@ -143,7 +141,7 @@ void Server::acceptNewClient(void) {
     newClient->req.client = newClient;
     clients.push_back(newClient);
 
-    if (gConfig._availableConnections <= 0) // Todo: passer dans select ? 
+    if (gConfig._availableConnections <= 0)
     {
         newClient->res.setRefusedClient(this);
         sendClientResponse(newClient);
@@ -161,7 +159,7 @@ void Server::acceptNewClient(void) {
 
 void Server::readClientRequest(Client *c) {
 
-    char recvBuffer[BUFMAX];
+    char recvBuffer[BUFMAX + 1];
     int recvRet(-1);
     bool recvCheck(false);
 
@@ -170,22 +168,22 @@ void Server::readClientRequest(Client *c) {
     while ((recvRet = recv(c->acceptFd, recvBuffer, BUFMAX, 0)) > 0)
     {
         recvBuffer[recvRet] = '\0';
-        c->req._reqBody.append(recvBuffer); /* J'ai remplacé _reqBuff par _reqBody */
+        c->req._reqBody.append(recvBuffer);
         recvCheck = true;
     }
 
-    // À conserver
+    /* À conserver */
 
-    // int i = 0;
+    /* int i = 0; */
     // std::cout << RED << " ==================== REQBODY HEXA :" << END << std::endl;
-    // std::string::iterator it = c->req._reqBody.begin();
-    // for (; it < c->req._reqBody.end(); it++) {
-    //     i++;
-    //     std::cout << std::hex << (int) *it;
-    //     if (i > 500)
-    //         break ;
-    // }
-    // std::cout <<  std::endl << RED << " ====================" << END << std::endl;
+    /* std::string::iterator it = c->req._reqBody.begin(); */
+    /* for (; it < c->req._reqBody.end(); it++) { */
+    /*     i++; */
+    /*     std::cout << std::hex << (int) *it; */
+    /*     if (i > 500) */
+    /*         break ; */
+    /* } */
+    /* std::cout <<  std::endl << RED << " ====================" << END << std::endl; */
 
     if (!(recvCheck) || recvRet == 0)
     {
@@ -200,9 +198,6 @@ void Server::readClientRequest(Client *c) {
     }
     else {
 
-        // std::cout << RED << "=======================================\n" << END;
-        // std::cout << c->req._reqBody << std::endl;
-        // std::cout << RED << "=======================================\n" << END;
         LOGPRINT(INFO, c, ("Server::readClientRequest() : recv() has read " + std::to_string(c->req._reqBody.size()) + " bytes"));
         if (c->recvStatus == Client::HEADER) {
             if (strstr(c->req._reqBody.c_str(), "\r\n\r\n") != NULL) {
@@ -219,8 +214,9 @@ void Server::readClientRequest(Client *c) {
 
         if (c->recvStatus == Client::COMPLETE) {
             LOGPRINT(INFO, c, ("Server::readClientRequest() : Request is completely received, we now handle response"));
-            FD_SET(c->acceptFd, &gConfig.writeSetBackup); 
-            c->req.showReq();
+            FD_SET(c->acceptFd, &gConfig.writeSetBackup);
+            if (SILENTLOGS == 0)
+                c->req.showReq();
         }
         if (c->recvStatus == Client::ERROR) {
             c->recvStatus = Client::COMPLETE;
@@ -260,7 +256,8 @@ void Server::setClientResponse(Client *c)
     c->res.setBodyHeaders(); /* Set body headers to actual value (cleared in setHeaders()) */
     c->res.format(); /* Format response */
     c->res._sendStatus = Response::SENDING;
-    c->res.showRes();
+    if (SILENTLOGS == 0)
+        c->res.showRes();
 }
 
 

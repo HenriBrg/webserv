@@ -253,7 +253,7 @@ def GET_TESTS(testNum = 0):
     index += 1
     if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/auth", headers={})
-        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic realm=\"Access to the staging site\", charset=\"UTF-8\""])
+        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic"])
     index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {"Authorization": "Basic cm9vdDpwYXNz"}
@@ -263,7 +263,7 @@ def GET_TESTS(testNum = 0):
     if (testNum == 0 or index == int(testNum)):
         hd = {"Authorization": "Digest cm9vdDpwYXNz"} 
         r = requests.get("http://localhost:7777/auth", headers=hd)
-        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic realm=\"Access to the staging site\", charset=\"UTF-8\""])
+        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic"])
     index += 1
     if (testNum == 0 or index == int(testNum)):
         # hd = {"Authorization": "Basic cm9vdDpwYXNz"} 
@@ -273,7 +273,7 @@ def GET_TESTS(testNum = 0):
     if (testNum == 0 or index == int(testNum)):
         hd = {"Authorization": "Basic zagGFDSsdfjAC0"}
         r = requests.get("http://localhost:7777/auth", headers=hd)
-        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic realm=\"Access to the staging site\", charset=\"UTF-8\""])
+        assertResponse(r, 401, index, [assertTypes.RES_HD_CONTAIN_ASSERT], ["WWW-Authenticate"], ["Basic"])
 
     # ------- GET : Negotiation
     index += 1
