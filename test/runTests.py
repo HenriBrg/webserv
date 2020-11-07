@@ -6,6 +6,8 @@
 # valgrind --track-origins=yes --leak-check=full --log-file="output" --show-leak-kinds=all ./webserv conf/default.conf
 # leaks webserv --fullStacks --fullContent
 
+# wget http://download.joedog.org/siege/siege-latest.tar.gz - tar -xcvf
+
 # Score :
 # Official Tester : < 15 minutes (full logs)
 

@@ -54,6 +54,7 @@ int Server::start() {
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(LOCAL_IP);
 
+    /* https://code.woboq.org/userspace/glibc/bits/byteswap.h.html#30 */
     int i = 0x00000001;
     if (((char *)&i)[0] ) /* Little */
     {    
