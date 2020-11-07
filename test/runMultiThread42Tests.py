@@ -140,18 +140,18 @@ def run(sys):
 # ---------------------------------------------------------------------------
 
 class Client(Thread):
-	def __init__(self, threadID, method, uri, payloadSizeToSend, repeat):
-	    Thread.__init__(self)
-	    self.threadID = threadID
-	    self.method = method
-	    self.uri = uri
-	    self.payloadSizeToSend = payloadSizeToSend
-	    self.repeat = repeat
+    def __init__(self, threadID, method, uri, payloadSizeToSend, repeat):
+        Thread.__init__(self)
+        self.threadID = threadID
+        self.method = method
+        self.uri = uri
+        self.payloadSizeToSend = payloadSizeToSend
+        self.repeat = repeat
 
-	def run(self):
+    def run(self):
         hd = {}
-        if (payloadSizeToSend != -1):
-            payload = "x" * payloadSizeToSend
+        if (self.payloadSizeToSend != -1):
+            payload = "x" * self.payloadSizeToSend
             payload += "0\r\n\r\n"
         else:
             payload = ""
@@ -182,23 +182,53 @@ class Client(Thread):
 		# }
         
         index = 1
-		max = repeat
-		for x in range(max):
-			try:
+        max = self.repeat
+        for x in range(max):
+            try:
                 if (self.method == "GET"):
-				    r = requests.get(uri, headers=hd, payload=payload)
-                    assertResponse(r, 200, index)
+                    r = requests.get(self.uri, headers=hd, data=payload)
+                    assertResponse(r, self.threadID, 200, index)
                     index += 1
                 elif (self.method == "PUT"):
-				    r = requests.put(uri, headers=hd, payload=payload)
-                    assertResponse(r, 200, index)
+                    r = requests.put(self.uri, headers=hd, data=payload)
+                    assertResponse(r, self.threadID, 200, index)
                     index += 1
                 elif (self.method == "POST"):
-				    r = requests.post(uri, headers=hd, payload=payload)
-                    assertResponse(r, 200, index)
+                    r = requests.post(self.uri, headers=hd, data=payload)
+                    assertResponse(r, self.threadID, 200, index)
                     index += 1
-			except:
-				print("An exception has been raised")
+            except requests.exceptions.RequestException as e:
+                print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "RequestException : " + e)
+                index += 1
+            
+            # # https://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module
+            # except requests.exceptions.HTTPError as errh:
+            #     try:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + " : HTTP Error : " + errh)
+            #     except:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "Fail to detect the exception")
+            #     index += 1
+            # except requests.exceptions.ConnectionError as errc:
+            #     try:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + " : Connection Error : " + errc)
+            #     except:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "Fail to detect the exception")
+            #     index += 1
+            # except requests.exceptions.Timeout as errt:
+            #     try:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + " : Timeout Error : " + errt)
+            #     except:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "Fail to detect the exception")
+            #     index += 1
+            # except requests.exceptions.RequestException as err:
+            #     # You may need to refine this exception in specific sub-exception (see Requests package for that)
+            #     try:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + " : Something else : " + err)
+            #     except:
+            #         print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "Fail to detect the exception")
+            #     index += 1
+                
+                
 
 
 # Pour informations :
@@ -213,28 +243,53 @@ class Client(Thread):
     # Les PUT :
 
     # Les POST :
+    
+
+# Potentiellement utile : make re SILENTLOGS=1
 
 
-# -----------------------------------------------------------------------------
-# -------------------------------- 4. TESTS -----------------------------------
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------
+# -------------------------------- 4. TESTS ---------------------------------------
+# ---------------------------------------------------------------------------------
 
 def TESTS_42(testNum = 0):
 
     index = 0
     print("\n     ~ 42 TESTS ------------------------> \n")
-    # -----------------------------------------------------------------------------> #1 - STAGE 1
+   
+# --------------------------------------------------------------------------------> #1 - STAGE - 5 * 15
 
-    # 1. Création
-    threads = []
-    name = "Thread n°"
-    for x in range(5):
-        threads.append(Client((name + str(x)), "GET", "http://localhost:8888", -1, 15))
-    # 2. Lancement
-    for x in threads:
-        x.start()
-    for x in threads:
-        x.join()
+    # Test multiple workers(5) doing multiple times(15) : GET on /
+    
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        # 1. Création
+        threads = []
+        name = "Thread n°"
+        for x in range(5):
+            threads.append(Client((name + str(x + 1)), "GET", "http://localhost:8888", -1, 15))
+        # 2. Lancement
+        for x in threads:
+            x.start()
+        for x in threads:
+            x.join()
+
+# --------------------------------------------------------------------------------> #1 - STAGE - 20 * 5000
+
+    # Test multiple workers(20) doing multiple times(5000) : GET on /
+    
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        # 1. Création
+        threads = []
+        name = "Thread n°"
+        for x in range(20):
+            threads.append(Client((name + str(x + 1)), "GET", "http://localhost:8888", -1, 100))
+        # 2. Lancement
+        for x in threads:
+            x.start()
+        for x in threads:
+            x.join()
 
 
 run(sys)

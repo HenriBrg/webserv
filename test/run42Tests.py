@@ -456,11 +456,7 @@ def TESTS_42(testNum = 0):
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
         assertResponse(r, 201, index)
     
-<<<<<<< HEAD
-# ----------------------------------------------------------------------------- #15 - STAGE 1 - 10.000.000 BYTES
-=======
 # ----------------------------------------------------------------------------- #15 - STAGE 1 - PUT 10.000.000 BYTES
->>>>>>> master
 
     # PUT /put_test/file_should_exist_after HTTP/1.1
     # Host: localhost:8080
@@ -510,11 +506,7 @@ def TESTS_42(testNum = 0):
 
 # ----------------------------------------------------------------------------- #16 - STAGE 2 - POST 100.000.000 BYTES
 
-<<<<<<< HEAD
-    # PUT /put_test/file_should_exist_after HTTP/1.1
-=======
     # POST /directory/youpi.bla HTTP/1.1
->>>>>>> master
     # Host: localhost:8080
     # User-Agent: Go-http-client/1.1
     # Transfer-Encoding: chunked
@@ -531,13 +523,9 @@ def TESTS_42(testNum = 0):
     # Response Code must be 200
 
     index += 1
-<<<<<<< HEAD
-    if (testNum == 0 or index == int(testNum)):
-=======
     if (follow == True and testNum != 0 and index >= testNum):
         chainUp = True
     if (chainUp or testNum == 0 or index == int(testNum)):
->>>>>>> master
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
@@ -627,14 +615,12 @@ def TESTS_42(testNum = 0):
     # In this test too, body is sent by chunk of 32 768 bytes or 8000 in hexa
     # File should exist after with a size of 100 000 000
 
-<<<<<<< HEAD
     # POST /directoru/youpi.bla HTTP/1.1
     # Host: localhost:8080
     # User-Agent: Go-http-client/1.1
     # Transfer-Encoding: chunked
     # Content-Type: test/file
     # Accepted-Encoding: gzip
-=======
     # Response Code must be 200
 
     index += 1
@@ -665,7 +651,6 @@ def TESTS_42(testNum = 0):
         r = requests.post("http://localhost:8888/directory/youpi.bla", headers=hd, data=payload)
         assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "100000")
 
->>>>>>> master
 
 # ----------------------------------------------------------------------------- #19 - STAGE 3 - Small POST (1)
 
