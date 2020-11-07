@@ -293,6 +293,5 @@ def TESTS_42(testNum = 0):
 
     print("\n     ~ Exceptions raised during that test ------------------------> \n")
     # infoFail = bcolors.FAIL + "     KO" + bcolors.ENDC + " : " + str(testFailedCounter) + " requests have failed on GET / 20 * 5000"
-    # print(infoFail)
     
 run(sys)
