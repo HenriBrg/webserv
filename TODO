@@ -1,8 +1,9 @@
 Actualisée au 06/11/2020 :
 
     - Testeur VM
-    - Delete fonction interdites
     - LOG sur tous les read write recv send qui retourne -1 ou 0
-    - Test negotiate et test autoindex
+    - corriger negotiate et test autoindex et valider par test python (ils sont déjà là mais commentés)
     - review guideline correction
-    - leaks 
+    - leaks fd sur test delete ?
+    
+    - quid de ça ? Setup multiple servers with different host name (use somthing like: curl --resolve exemple.com:80:127.0.0.1 http://example.com/)

@@ -25,6 +25,8 @@
 # include "Response.hpp"
 # include "Request.hpp"
 
+# define LOCAL_IP "127.0.0.1"
+
 class Response;
 
 class Server {

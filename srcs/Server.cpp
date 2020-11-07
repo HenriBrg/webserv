@@ -30,9 +30,10 @@ int Server::start() {
 
     /* So this allow multiple connections, is it just a good habit, it will work without this */
     /* x value is the wanted value for the updated parameter */
+    /* https://stackoverflow.com/questions/14388706/how-do-so-reuseaddr-and-so-reuseport-differ */
 
     int x = 1;
-    if (setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(x)) == -1)
+    if (setsockopt(sockFd, SOL_SOCKET, SO_REUSEPORT, &x, sizeof(x)) == -1)
         throw ServerException("Server::start : setsockopt()", std::string(strerror(errno)));
 
     /* ---------- 3) BIND ---------- */
@@ -40,9 +41,6 @@ int Server::start() {
     /* https://www.it-swarm.dev/fr/c/comprendre-inaddr-any-pour-la-programmation-de-sockets/1073716001/ */
     /* https://www.commentcamarche.net/contents/1053-les-fonctions-de-l-api-socket */
 
-    /* htonl : convertit un entier non signé hostlong depuis l'ordre des octets de l'hôte vers celui du réseau. */
-    /* htons : convertit un entier court non signé hostshort depuis l'ordre des octets de l'hôte vers celui du réseau. */
-   
     // When INADDR_ANY is specified in the bind call the socket will be bound to all local interfaces
     // Default behavior with INADDR_ANY : automatically be filled with current host's IP address
 
@@ -52,7 +50,7 @@ int Server::start() {
     /* Le socket peut être relié à un port libre quelconque en utilisant le numéro 0.  */
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_addr.s_addr = inet_addr(LOCAL_IP);
     addr.sin_port = htons(port);
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));

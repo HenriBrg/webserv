@@ -6,6 +6,9 @@
 # valgrind --track-origins=yes --leak-check=full --log-file="output" --show-leak-kinds=all ./webserv conf/default.conf
 # leaks webserv --fullStacks --fullContent
 
+# Score :
+# Official Tester : < 15 minutes (full logs)
+
 # Usage : runTests.py [METHOD] [TEST NUM] [VERBOSE]
 # python3 runTests.py
 # python3 runTests.py GET
@@ -13,7 +16,6 @@
 # python3 runTests.py GET 2
 # python3 runTests.py GET 7
 # python3 runTests.py GET 7 -v
-# python3 test/runTests.py TESTER42
 
 # ---------------------------------------------------------------------------
 # ---------------------------- 1. CHECKS ------------------------------------
@@ -306,6 +308,15 @@ def GET_TESTS(testNum = 0):
         assertResponse(r, 404, index)
     index += 1
     if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/nego/xxxxxx")
+        assertResponse(r, 404, index)
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/ftcgi/.bla")
+        assertResponse(r, 404, index)
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/...")
         assertResponse(r, 404, index)
         
@@ -323,15 +334,15 @@ def GET_TESTS(testNum = 0):
         r = requests.get("http://localhost:7777/auto")
         assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "index.html")
 
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:7777/auto/index.html")
-        assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "Welcome to Webserv !")
+    # index += 1
+    # if (testNum == 0 or index == int(testNum)):
+    #     r = requests.get("http://localhost:7777/auto/index.html")
+    #     assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "Welcome to Webserv !")
    
-    index += 1
-    if (testNum == 0 or index == int(testNum)):
-        r = requests.get("http://localhost:7777/auto/xxx")
-        assertResponse(r, 404, index) # ---> Potentiellement à modifier
+    # index += 1
+    # if (testNum == 0 or index == int(testNum)):
+    #     r = requests.get("http://localhost:7777/auto/xxx")
+    #     assertResponse(r, 404, index) # ---> Potentiellement à modifier
 
 
 # -----------------------------------------------------------------------------
@@ -344,7 +355,7 @@ def POST_TESTS(testNum = 0):
     index = 0
     print("\n     ~ POST REQUESTS -----------------------> \n")
     
-    # ------- POST - 200/2001 - NO CGI
+    # ------- POST - 200/201 - NO CGI
     index += 1
     if (testNum == 0 or index == int(testNum)):
         if os.path.exists("www/newFile"): os.remove("www/newFile")

@@ -51,16 +51,19 @@ void Request::reset(void) {
 std::string mapToStr(std::map<int, std::string> map, char sep) {
 	
 	size_t i = 0;
-	std::stringstream ret;
+	std::string ret;
 
 	ret.clear();    
 	while (i < map.size()) {
-		ret << map[int(i)];
-		if ((i + 1) < map.size())
-			ret << sep << " ";
+		ret = map[int(i)];
+		if ((i + 1) < map.size()) {
+			ret.append(std::to_string(sep));
+            ret.append(" ");
+        }
+
 		++i;
 	}
-	return (ret.str());
+	return (ret);
 }
 
  std::map<std::string, std::string> Request::mapReqHeaders(void) {
@@ -453,17 +456,17 @@ void Request::checkBody() {
 */
 
 void Request::parse(std::vector<Location*> locations) {
-    LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode)); */
     parseRequestLine();
-    LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode)); */
     parseUriQueries();
-    LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode)); */
     parseFile(locations);
-    LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode)); */
     parseHeaders();
-    LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode)); */
     checkBody();
-    LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
+    /* LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode)); */
 }
 
 /* **************************************************** */
