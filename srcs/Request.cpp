@@ -348,6 +348,12 @@ void Request::parseBody()
     }
 }
 
+inline bool endsWith(std::string & value, std::string & ending) {
+
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+
+}
 
 /* Really good article */
 /* https://en.wikipedia.org/wiki/Chunked_transfer_encoding */
@@ -357,6 +363,7 @@ void Request::parseBody()
 
 void Request::parseChunkedBody() {
 
+    std::string endPattern = "0\r\n\r\n";
     size_t      separator = 0;
     std::string tmp;
 
@@ -376,8 +383,15 @@ void Request::parseChunkedBody() {
         /* Note that chunkLineBytesSize is the hexa value for the chunk size */
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
-            if (separator == std::string::npos)
-                break ;
+            
+            // if (endsWith(_reqBody, endPattern) == true) {
+            //     _reqBody = _reqBody.substr(0, _reqBody.size() - 5);
+            //     client->recvStatus = Client::COMPLETE;
+            //     break ;
+            // } else
+            
+            if (separator == std::string::npos) break ;
+            
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;
@@ -387,7 +401,10 @@ void Request::parseChunkedBody() {
             /* Delete the last "\r\n" which indicate the end */
             if (separator != std::string::npos)
                 _reqBody.erase(separator, 2);
-            else break ;
+            else if (_reqBody.back() == '0')
+                _reqBody = _reqBody.substr(0, _reqBody.size() - 1);
+            else 
+                break ; 
             client->recvStatus = Client::COMPLETE;
             break ;
         }

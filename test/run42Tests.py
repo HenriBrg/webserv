@@ -1,7 +1,7 @@
 # Tester dedicated to the 42 project webserv.
 # 04/11/2020
 # Reproduction of the "official" tester given in the project page (named "tester" or "ubuntu_tester")
-# Thanks Wireshark
+# Thanks Wireshark. If you need the networks captures, feel free to ask. I have kept them
 # For info, it seems that the tester only call uppercase on its input and return it
 
 # ---------------------------------------------------------------------------
@@ -34,7 +34,8 @@ class assertTypes:
     BODY_CONTAIN_ASSERT = 1
     FILE_CONTAIN_ASSERT = 2
     RES_HD_CONTAIN_ASSERT = 3
-    
+    RES_BODY_SIZE_ASSERT = 4
+
 class bcolors:
     HEADER = '\033[95m'
     OKGREEN = '\033[92m'
@@ -73,6 +74,10 @@ def resHeadersKeyVal(r, hdKeyTab = [], hdValTab = []):
         return True
     return False
 
+def resBodySize(r, size):
+    if (r.text and str(len(r.text)) >= size and str(r.headers["Content-Length"]) == size): return True
+    else: return False
+
 def moreAsserts(r, assertLevel, *args):
     indexArgsUsed = 0
     ret = False
@@ -85,6 +90,10 @@ def moreAsserts(r, assertLevel, *args):
     if (assertTypes.RES_HD_CONTAIN_ASSERT in assertLevel and resHeadersKeyVal(r, args[0][indexArgsUsed], args[0][indexArgsUsed + 1]) == True):
         ret = True
         indexArgsUsed += 2
+    if (assertTypes.RES_BODY_SIZE_ASSERT in assertLevel and resBodySize(r, args[0][indexArgsUsed]) == True ):
+        ret = True
+        indexArgsUsed += 1
+
     return ret
 
 def assertResponse(r, code, index, assertLevel = [], *args):
@@ -124,15 +133,9 @@ def run(sys):
             TESTS_42(sys.argv[1])
     print()
     
-
-
-
 # -----------------------------------------------------------------------------
 # -------------------------------- 3. TESTS -----------------------------------
 # -----------------------------------------------------------------------------
-
-
-
 
 def TESTS_42(testNum = 0):
 
@@ -177,7 +180,7 @@ def TESTS_42(testNum = 0):
         payload = "0\r\n\r\n" # --> Need confirmation about Request Python Library
         # The last \n seems to be send in another request ... idk why, may be to trool us but it may raise an error of invalid request
         r = requests.post("http://localhost:8888/", headers=hd, data=payload)
-        assertResponse(r, 405, index)
+        assertResponse(r, 405, index, [assertTypes.RES_BODY_SIZE_ASSERT], "212")
         
 # -----------------------------------------------------------------------------> #3 - STAGE 1
 
@@ -382,16 +385,7 @@ def TESTS_42(testNum = 0):
         r = requests.get("http://localhost:8888/directory/Yeah/not_happy.bad_extension", headers=hd)
         assertResponse(r, 200, index)
 
-
-# -----------------------------------------------------------------------------
-
-# ---------------------------- ! DISCLAIMER ! ---------------------------------
-
-# Frow now on, the body sent by tester is randomly sent (or maybe ramdomly received
-# by our server, idk well TCP) so it is mandatory to have a chunk parser which doesn't
-# block or return error if he chunk is'nt proper at first
-
-# ----------------------------------------------------------------------------- #14 - STAGE 1 -  1.000 BYTES
+# ----------------------------------------------------------------------------- #14 - STAGE 1 -  PUT 1.000 BYTES
 
     # PUT /put_test/file_should_exist_after HTTP/1.1
     # Host: localhost:8080
@@ -425,10 +419,7 @@ def TESTS_42(testNum = 0):
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
         assertResponse(r, 201, index)
     
-# ----------------------------------------------------------------------------- #15 - STAGE 1 - 10.000.000 BYTES
-
-
-
+# ----------------------------------------------------------------------------- #15 - STAGE 1 - PUT 10.000.000 BYTES
 
     # PUT /put_test/file_should_exist_after HTTP/1.1
     # Host: localhost:8080
@@ -454,7 +445,6 @@ def TESTS_42(testNum = 0):
             "Accept-Encoding": "gzip",
             "Transfer-Encoding": "chunked"
         }
-        # TODO : Loop
         i = 10000000 // 32768
         i = math.floor(i)
         mod = 10000000 % 32768 # == 5760 (dec) or 1680 (hex)
@@ -472,10 +462,12 @@ def TESTS_42(testNum = 0):
         # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
         r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
         assertResponse(r, 200, index)
+        # No longer needed :
+        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
 
-# ----------------------------------------------------------------------------- #16 - STAGE 1  - 100.000.000 BYTES
+# ----------------------------------------------------------------------------- #16 - STAGE 2 - POST 100.000.000 BYTES
 
-    # POST /directoru/youpi.bla HTTP/1.1
+    # POST /directory/youpi.bla HTTP/1.1
     # Host: localhost:8080
     # User-Agent: Go-http-client/1.1
     # Transfer-Encoding: chunked
@@ -492,15 +484,15 @@ def TESTS_42(testNum = 0):
 
     # Response Code must be 200
 
-        index += 1
+    index += 1
     if (testNum == 0 or index == int(testNum)):
         hd = {
             "Host": "localhost:8080",
             "User-Agent": "Go-http-client/1.1",
             "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
             "Transfer-Encoding": "chunked"
         }
-        # TODO : Loop
         i = 100000000 // 32768
         i = math.floor(i)
         mod = 100000000 % 32768 # == 5760 (dec) or 1680 (hex)
@@ -514,19 +506,147 @@ def TESTS_42(testNum = 0):
         payload += "n" * mod
         payload += "\r\n"
         payload += "0\r\n\r\n"
-
-        # The last \n seems to be send in another request ... idk why, may be to trool. It may raise an error of invalid request
-        r = requests.put("http://localhost:8888/put_test/file_should_exist_after", headers=hd, data=payload)
-        assertResponse(r, 200, index)
+        r = requests.post("http://localhost:8888/directory/youpi.bla", headers=hd, data=payload)
+        assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "100000000")
         
-        if os.path.exists("www/test42/file_should_exist_after"): os.remove("www/test42/file_should_exist_after")
+
+# ----------------------------------------------------------------------------- #17 - STAGE 2 - POST 100.000.000 BYTES
+
+    # POST /directory/youpla.bla HTTP/1.1
+    # Host: localhost:8080
+    # User-Agent: Go-http-client/1.1
+    # Transfer-Encoding: chunked
+    # Content-Type: test/file
+    # Accepted-Encoding: gzip
+
+    # 8000  =    32 768 en HEX
+    # 186A0 =   100 000 en HEX
+    # F4240 = 1 000 000 en HEX
+
+    # Also, in hexadecimal, 8000 is written : 38 30 30 30 (usefull for Wireshark)
+    # In this test too, body is sent by chunk of 32 768 bytes or 8000 in hexa
+    # File should exist after with a size of 100 000 000
+
+    # Response Code must be 200
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked"
+        }
+        i = 100000000 // 32768
+        i = math.floor(i)
+        mod = 100000000 % 32768 # == 5760 (dec) or 1680 (hex)
+        payload = ""
+        for x in range(0, i):
+            payload += "8000\r\n"
+            payload += "c" * 32768
+            payload += "\r\n"
+        payload += "1680"
+        payload += "\r\n"
+        payload += "c" * mod
+        payload += "\r\n"
+        payload += "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/directory/youpla.bla", headers=hd, data=payload)
+        assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "100000000")
+        
+
+# ----------------------------------------------------------------------------- #18 - STAGE 2 - POST 100.000 BYTES - Special Headers
+
+    # POST /directory/youpi.bla HTTP/1.1
+    # Host: localhost:8080
+    # User-Agent: Go-http-client/1.1
+    # Transfer-Encoding: chunked
+    # Content-Type: test/file
+    # Accepted-Encoding: gzip
+    # X-Secret-Header-For-Test: 1
+
+    # 8000  =    32 768 en HEX
+    # 186A0 =   100 000 en HEX
+    # F4240 = 1 000 000 en HEX
+
+    # Also, in hexadecimal, 8000 is written : 38 30 30 30 (usefull for Wireshark)
+    # In this test too, body is sent by chunk of 32 768 bytes or 8000 in hexa
+    # File should exist after with a size of 100 000 000
+
+    # Response Code must be 200
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked",
+            "X-Secret-Header-For-Test": "1"
+        }
+        i = 100000 // 32768
+        i = math.floor(i)
+        mod = 100000 % 32768 # == 5760 (dec) or 1680 (hex)
+        payload = ""
+        for x in range(0, i):
+            payload += "8000\r\n"
+            payload += "y" * 32768
+            payload += "\r\n"
+        payload += "1680"
+        payload += "\r\n"
+        payload += "y" * mod
+        payload += "\r\n"
+        payload += "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/directory/youpi.bla", headers=hd, data=payload)
+        assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "100000")
 
 
-# ----------------------------------------------------------------------------- #17 - STAGE 2
+# ----------------------------------------------------------------------------- #19 - STAGE 3 - Small POST (1)
+
+    # http://localhost:8080/post_body with a size of 0
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked",
+        }
+        payload = "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/post_body", headers=hd, data=payload)
+        assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "71")
+        # Here, set the 71 to the Content-Length of your response, since the purpose in this test is to
+        # verify that you send an answer DESCRIBING the resulting changes of the request like "Successfull POST request" (size = 24)
 
 
+# ----------------------------------------------------------------------------- #20 - STAGE 3 - Small POST (2)
 
+    # http://localhost:8080/post_body with a size of 100
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
+        hd = {
+            "Host": "localhost:8080",
+            "User-Agent": "Go-http-client/1.1",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "test/file",
+            "Transfer-Encoding": "chunked",
+        }
+        payload = "64\r\n"
+        payload += "t" * 100
+        payload += "0\r\n\r\n"
+        r = requests.post("http://localhost:8888/post_body", headers=hd, data=payload)
+        assertResponse(r, 200, index, [assertTypes.RES_BODY_SIZE_ASSERT], "71")
 
+# ----------------------------------------------------------------------------- #21 - STAGE 3 - Small POST (3)
+    
+    # http://localhost:8080/post_body with a size of 200
+    
+# ----------------------------------------------------------------------------- #22 - STAGE 3 - Small POST (4)
+    
+    # http://localhost:8080/post_body with a size of 101
 
 
 

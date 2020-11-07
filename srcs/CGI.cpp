@@ -212,7 +212,7 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
 
     NOCLASSLOGPRINT(INFO, ("Request::parseCGIOutput() : Starting parseCGIOutput() on the CGI output (its size = " + std::to_string(buffer.size()) + ")"));
     int x = buffer.size() > 100 ? 100 : buffer.size();
-    std::cout << RED << "\n==================== BUFFER OUTPUT CGI ==================== " << END << std::endl;
+    std::cout << RED << "\n==================== BUFFER OUTPUT CGI ==================== \n" << END << std::endl;
     NOCLASSLOGPRINT(INFO, ("Request::parseCGIOutput() : The CGI output start with : \n" + buffer.substr(0, x)));
     std::cout << std::endl << RED << "==================== END BUFFER OUTPUT CGI ====================" << END << std::endl;
 
