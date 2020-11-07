@@ -1,6 +1,6 @@
 #include "../inc/Webserv.hpp"
 
-int Config::_availableConnections = 10;
+int Config::_availableConnections = 220;
 
 Config::Config() {
     run = 1;

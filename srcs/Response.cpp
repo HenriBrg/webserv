@@ -27,7 +27,6 @@ void Response::reset() {
     transfertEncoding.clear();
     wwwAuthenticate.clear();
 
-    // resClient = nullptr; // Segfault on seccond request
     _errorFileName.clear();
     formatedResponse.clear();
     _bytesSent = 0;
@@ -54,8 +53,8 @@ void Response::setErrorParameters(int sendStatus, int code) {
 
 	_sendStatus = sendStatus;
 	_statusCode = code;
-	_errorFileName = resClient->server->error + "/error.html"; /* TODO : UPDATE AFTER PARSER DONE */
-	_resFile =  resClient->server->error + "/error.html";;
+	_errorFileName = resClient->server->error + "/error.html";
+	_resFile =  resClient->server->error + "/error.html";
 }
 
 /*
@@ -242,9 +241,8 @@ void Response::callMethod(Request * req) {
 		(this->*_methodFctPtr)(req);
 }
 
-
 /*
-**  SET ALL HEADERS TODO
+**  SET ALL HEADERS
 */
 
 void Response::setHeaders(Request * req) {
@@ -265,13 +263,11 @@ void Response::setHeaders(Request * req) {
     // Set wwwAuthenticate header if auth error
 	wwwAuthenticate.clear();
     if (_statusCode == UNAUTHORIZED_401)
-        wwwAuthenticate.append("Basic realm=\"Access to the staging site\", charset=\"UTF-8\""); // TODO : c'est pas juste "Basic" ? le reste c'était à titre d'example dans l'article je crois
-
+        wwwAuthenticate.append("Basic");
 	/* 4) Other headers */
-	/* TODO contentLanguage */
-	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
-	/* contentLanguage[0] = "fr";          // contentLanguage always to "fr" ---> finally, useless header if the file isnt explicitely fr  */
-	
+	if (_isLanguageNegociated == true && !_resFile.empty())
+        contentLanguage[0] = _resFile.substr(_resFile.rfind("."), _resFile.size() - 1);
+
     // Set Content Language -> What if multiple tag (de-DE, en-CA - > file.html.de-DE.en-CA) ? --> à voir ensemble
     if (_isLanguageNegociated == true)
 	     contentLocation[0] = _resFile;

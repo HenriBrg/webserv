@@ -200,7 +200,7 @@ class Client(Thread):
             except requests.exceptions.RequestException as e:
                 print("     " + str(self.threadID) + " - # " + str(index).ljust(3, ' ') + "RequestException : " + e)
                 index += 1
-            
+                
             # # https://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module
             # except requests.exceptions.HTTPError as errh:
             #     try:
@@ -284,12 +284,15 @@ def TESTS_42(testNum = 0):
         threads = []
         name = "Thread n°"
         for x in range(20):
-            threads.append(Client((name + str(x + 1)), "GET", "http://localhost:8888", -1, 100))
+            threads.append(Client((name + str(x + 1)), "GET", "http://localhost:8888", -1, 200))
         # 2. Lancement
         for x in threads:
             x.start()
         for x in threads:
             x.join()
 
-
+    print("\n     ~ Exceptions raised during that test ------------------------> \n")
+    # infoFail = bcolors.FAIL + "     KO" + bcolors.ENDC + " : " + str(testFailedCounter) + " requests have failed on GET / 20 * 5000"
+    # print(infoFail)
+    
 run(sys)

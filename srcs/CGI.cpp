@@ -209,13 +209,7 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
     std::string key;
     std::string value;
     std::string headersSection;
-
-    NOCLASSLOGPRINT(INFO, ("Request::parseCGIOutput() : Starting parseCGIOutput() on the CGI output (its size = " + std::to_string(buffer.size()) + ")"));
-    int x = buffer.size() > 100 ? 100 : buffer.size();
-    std::cout << RED << "\n==================== BUFFER OUTPUT CGI ==================== \n" << END << std::endl;
-    NOCLASSLOGPRINT(INFO, ("Request::parseCGIOutput() : The CGI output start with : \n" + buffer.substr(0, x)));
-    std::cout << std::endl << RED << "==================== END BUFFER OUTPUT CGI ====================" << END << std::endl;
-
+    
     if (cgiType == PHP_CGI)
         _statusCode = OK_200;
     headersSection = buffer.substr(0, buffer.find("\r\n\r\n") + 1);
@@ -236,8 +230,6 @@ void Response::parseCGIOutput(int cgiType, std::string & buffer) {
     pos = endLine = 0;
     pos = buffer.find("\r\n\r\n") + 4;
     if (pos == std::string::npos) return NOCLASSLOGPRINT(LOGERROR, "Response::parseCGIHeadersOutput: Invalid CGI Output, not <CR><LF><CR><LF> present to separate headers from body");
-
-    // TODO : here we should avoid the allocation if we already know we won't respond
     _resBody = responseUtils::setBodyNoFile(buffer.substr(pos), buffer.substr(pos).size(), contentLength);
     _resFile.clear();
 
