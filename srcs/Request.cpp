@@ -138,23 +138,24 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
             return LOGPRINT(INFO, this, ("Request::assignLocation() : Location directly assigned, the index of the location should be the resource to return"));
         }
     }
-    size_t i = uri.size() - 1;
     std::string tmpUri = uri;
-    while (tmpUri.size() > 0) {                     // Parcours URI entier
+    while (tmpUri.size() > 1) {                     // Parcours URI entier
+        size_t i = uri.size() - 1;
 		while (tmpUri[i] != '/' && i != 0)          // Si / alors arret
 			i--;
 		tmpUri = tmpUri.substr(0, i);               // tmpUri => partie droite URI
 		if (tmpUri == "")                           // Si racine
 			tmpUri = "/";
-		for (std::size_t x = 0; x < vecLocs.size(); ++x) {
+        std::size_t x = 0;
+		for (; x < vecLocs.size(); ++x) {
 			if (vecLocs[x]->uri == tmpUri) {
 				file = uri.substr(i + 1, uri.size());
 				reqLocation = vecLocs[x];
-                return LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned. file = " + file));
+                LOGPRINT(INFO, this, ("Request::assignLocation() : Location indirectly assigned. file = " + file));
+                return ;
 			}
 		}
 	}
-
 }
 
 /*
@@ -190,6 +191,8 @@ void Request::parseFile(std::vector<Location*> locations)
 		}
 		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assigned : " + file));
 	}
+    else
+        reqLocation = new Location();
 }
 
 /*
@@ -451,17 +454,17 @@ void Request::checkBody() {
 */
 
 void Request::parse(std::vector<Location*> locations) {
-    // LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "1 -------> " + std::to_string(this->client->res._statusCode));
     parseRequestLine();
-    // LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "2 -------> " + std::to_string(this->client->res._statusCode));
     parseUriQueries();
-    // LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "3 -------> " + std::to_string(this->client->res._statusCode));
     parseFile(locations);
-    // LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "4 -------> " + std::to_string(this->client->res._statusCode));
     parseHeaders();
-    // LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "5 -------> " + std::to_string(this->client->res._statusCode));
     checkBody();
-    // LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
+    LOGPRINT(LOGERROR, this->client, "6 -------> " + std::to_string(this->client->res._statusCode));
 }
 
 /* **************************************************** */
