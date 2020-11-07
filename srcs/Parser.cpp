@@ -12,26 +12,19 @@
 
 # include "../inc/Parser.hpp"
 
-Conf::Conf()
-{
-}
+Conf::Conf() {}
 
-Conf::Conf(char *filename): _fileName(filename), _confFile("")
-{
-}
+Conf::Conf(char *filename): _fileName(filename), _confFile("") {}
 
-Conf::~Conf()
-{
-}
+Conf::~Conf() {}
 
-Conf	&Conf::operator=(const Conf &copy)
-{
+Conf	&Conf::operator=(const Conf &copy) {
 	(void)copy;
 	return (*this);
 }
 
-void	Conf::openFile(void)
-{
+void	Conf::openFile(void) {
+	
 	int		ret;
 	int		fd;
 	char	buf[BUFFMAX + 1];
@@ -45,8 +38,8 @@ void	Conf::openFile(void)
 	close(fd);
 }
 
-void	Conf::parseLocation(Server *serv, std::string locs)
-{
+void	Conf::parseLocation(Server *serv, std::string locs) {
+
 	int			max_body = -1, beg, end;
 	bool		autoindex = false;
 	std::string	uri, root, index, methods, auth, cgi, phpcgi, ext;

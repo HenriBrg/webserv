@@ -68,11 +68,6 @@ void Response::postReq(Request * req) {
         LOGPRINT(INFO, this, ("Response::postReq() : POST - CGI has been performed !"));
     } else if (req->cgiType == NO_CGI) {
         
-         if (req->isolateFileName.empty()) {
-            LOGPRINT(INFO, this, ("Response::postReq() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
-            return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-        }
-
         if (stat(req->file.c_str(), &buffer) == -1) {
             action = CREATE;
             LOGPRINT(INFO, this, ("Response::postReq() : POST - stat(" + req->file + ") has returned -1 meaning that the resource doesn't exist, thus, we create it."));
@@ -88,11 +83,8 @@ void Response::postReq(Request * req) {
             LOGPRINT(INFO, this, ("Response::postReq() : POST without CGI - write() _reqBody has returned ret = " + std::to_string(ret)));
         close(fd);
         _statusCode = action == CREATE ? CREATED_201 : OK_200;
-
         str = action == CREATE ? "201 - SUCCESSFULL POST REQUEST - CREATED FILE : " + req->file : "200 - SUCCESSFULL POST REQUEST - UPDATED FILE : " + req->file;
-
         _resBody = responseUtils::setBodyNoFile(str, str.size(), contentLength);
-
         lastModified = ft::getLastModifDate(req->file);
         LOGPRINT(INFO, this, ("Response::postReq() : POST - Successfull POST request"));
     } 
@@ -137,8 +129,9 @@ void Response::patchReq(Request * req) {
 **  1. If target is a directory then call deleteDir()
 **  2. Else unlink target
 */
-void Response::deleteReq(Request * req)
-{
+
+void Response::deleteReq(Request * req) {
+    
     struct stat fileStat;
 
     if (stat(req->resource.c_str(), &fileStat) == 0 && S_ISDIR(fileStat.st_mode))
@@ -158,19 +151,17 @@ void Response::deleteReq(Request * req)
 **  5. Else unlink entry
 **  6. When no more entry in directory delete it
 */
-void Response::deleteDir(std::string directory)
-{
+
+void Response::deleteDir(std::string directory) {
     DIR *dir;
     struct dirent *dirEntry;
     std::string entryName;
 
-    if (!(dir = opendir(directory.c_str())))
-    {
+    if (!(dir = opendir(directory.c_str()))) {
         LOGPRINT(LOGERROR, this, ("Request::deleteDir() : Open directory : " + directory + "failed"));
         return ;
     }
-    while ((dirEntry = readdir(dir)))
-    {
+    while ((dirEntry = readdir(dir))) {
         entryName.clear();
         entryName.append(dirEntry->d_name);
         if (entryName == "." || entryName == "..")
@@ -191,6 +182,7 @@ void Response::deleteDir(std::string directory)
 **  3. Seek for language extension of file (example.html.fr or example.html.de)
 **  4. if file then set as reponse file
 */
+
 void Response::negotiateAcceptLanguage(Request * req)
 {
     if (req->acceptLanguage.empty())
@@ -221,6 +213,7 @@ void Response::negotiateAcceptLanguage(Request * req)
 **  1. If header in request
 **  2. Seek for utf-8 or * (* is everything) in values of Accept-charset header
 */
+
 void Response::negotiateAcceptCharset(Request * req)
 {
     if (req->acceptCharset.empty())
@@ -238,5 +231,4 @@ void Response::negotiateAcceptCharset(Request * req)
         }
     }
     LOGPRINT(INFO, this, ("Response::negotiateAcceptCharset() : Unknow Charset"));
-    //setErrorParameters(Response::ERROR, BAD_REQUEST_400); => ERROR OR IGNORE ?
 }

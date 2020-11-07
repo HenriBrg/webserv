@@ -3,7 +3,8 @@
 Client::Client(int acceptFd, Server *server, struct sockaddr_in clientAddr): acceptFd(acceptFd), server(server), req(this), res(this) {
     
     isConnected = true;
-    _isAccepted = true; // By default we consider we are able to accept an user
+    /* By default we consider we are able to accept an user */
+    _isAccepted = true; 
     ip = inet_ntoa(clientAddr.sin_addr);
     port = htons(clientAddr.sin_port);
     req.client = this;
@@ -24,7 +25,6 @@ Client::~Client() {
     gConfig.removeFd(acceptFd);
     close(acceptFd);
     acceptFd = -1;
-
     if (_isAccepted)
         gConfig._availableConnections++;
 }
@@ -47,8 +47,7 @@ void Client::reset() {
 
 }
 
-void Client::resetTimeOut(void)
-{
+void Client::resetTimeOut(void) {
     _lastRequest = ft::getTime();
 }
 

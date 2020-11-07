@@ -67,6 +67,7 @@ void Response::setErrorParameters(int sendStatus, int code) {
 **  5. Fullfil new char* with post-tag chars
 **  6. Free _resBody and attribuate new char* to it
 */
+
 void Response::replaceErrorCode(const Server *server)
 {
     int index(0);
@@ -133,6 +134,7 @@ void Response::authControl(Request * req) {
 **  3. If no one match then error 405
 **  4. Else attribuate corresponding method function
 */
+
 void Response::methodControl(Request * req, Server * serv)
 {
     std::vector<std::string>    allowedMethods;
@@ -155,6 +157,7 @@ void Response::methodControl(Request * req, Server * serv)
 **  2. Verify HTTP 
 **  3. Verify http version
 */
+
 void Response::versionControl(Request *req)
 {
     if (req->httpVersion.size() < 8
@@ -171,6 +174,7 @@ void Response::versionControl(Request *req)
 **  2. If PUT || POST -> verify if resource is a directory (if true then error)
 **  3. Else verify if file exists
 */
+
 void Response::resourceControl(Request * req)
 {
     struct stat fileStat;
@@ -180,12 +184,8 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->resource.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, CONFLICT_409); 
     } else if (req->method == "PUT" || req->method == "POST") {
-        if (req->resource.back() == '/')
+        if (req->method == "PUT" && req->resource.back() == '/')
             setErrorParameters(Response::ERROR, CONFLICT_409);
-        if (req->method == "POST" && req->isolateFileName.empty()) {
-            LOGPRINT(INFO, this, ("Response::resourceControl() : POST - isolateFileName is empty, so there is nothing to create/update. Invalid Request"));
-            setErrorParameters(Response::ERROR, BAD_REQUEST_400);
-        }
     } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
@@ -201,7 +201,6 @@ void Response::reqHeadersControl(Request * req) {
 		return setErrorParameters(Response::ERROR, BAD_REQUEST_400);
 	}
 }
-
 
 /*
 **  Dispatching function for controlling request
@@ -260,9 +259,14 @@ void Response::setHeaders(Request * req) {
 	/* 3) Error headers */
 	if (_sendStatus != Response::ERROR) {
 		allow.clear();
-		wwwAuthenticate.clear();
 		retryAfter = -1;
 	}
+
+    // Set wwwAuthenticate header if auth error
+	wwwAuthenticate.clear();
+    if (_statusCode == UNAUTHORIZED_401)
+        wwwAuthenticate.append("Basic realm=\"Access to the staging site\", charset=\"UTF-8\""); // TODO : c'est pas juste "Basic" ? le reste c'était à titre d'example dans l'article je crois
+
 	/* 4) Other headers */
 	/* TODO contentLanguage */
 	/* contentLanguage[0] = "fr";          // TODO : si la négotiation à réussi, ce header doit le prendre en compte */
@@ -283,8 +287,6 @@ void Response::setHeaders(Request * req) {
 	if (_resFile.empty() && !(_resBody)) // ---> à voir
 		contentLength = -1;
 
-	/* On set également ce header lors de l'authentification */
-	if (_statusCode == UNAUTHORIZED_401) wwwAuthenticate[0] = "Basic";
 }
 
 void    Response::handleAutoIndex(void)
@@ -298,8 +300,7 @@ void    Response::handleAutoIndex(void)
 	<body bgcolor=\"white\">\n \
 	<h1>Index of " + resClient->req.file + "</h1>\n \
 	<hr><pre>\n";
-	if (dir != NULL)
-	{
+	if (dir != NULL) {
 		struct dirent *ent;
 		while ((ent = readdir(dir)) != NULL)
 			htmlPage += std::string(ent->d_name) + "\n";
@@ -353,7 +354,7 @@ void Response::setBody(const Server *server) {
 
         if (responseUtils::setupBytesArray(this) == -1)
             return ;
-        if (resClient->req.reqLocation->autoindex == true)
+        if (resClient->req.reqLocation && resClient->req.reqLocation->autoindex == true)
             handleAutoIndex();
         else if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
@@ -375,6 +376,7 @@ void Response::setBody(const Server *server) {
         else
             LOGPRINT(LOGERROR, this, ("Response::setBody() : open() body file failed"));
     }
+
     if (_resBody && _sendStatus == Response::ERROR)
         replaceErrorCode(server);
 }
@@ -432,9 +434,20 @@ void Response::format(void) {
     responseUtils::headerFormat(formatedResponse, "Retry-After", retryAfter);
     responseUtils::headerFormat(formatedResponse, "Host", server);
     responseUtils::headerFormat(formatedResponse, "Transfer-Encoding", transfertEncoding);
-    // TODO : QUID de www-authenticate ?
+    responseUtils::headerFormat(formatedResponse, "WWW-Authenticate", wwwAuthenticate);
     formatedResponse.append("\r\n");
 
+}
+
+void Response::setRefusedClient(const Server *serv)
+{
+    setErrorParameters(Response::ERROR, SERVICE_UNAVAILABLE_503);
+	httpVersion = "HTTP/1.1";
+	reason = responseUtils::getReasonPhrase(_statusCode);
+	date = ft::getDate();
+	server = "webserv";
+    retryAfter = 10;
+    setBody(serv);
 }
 
 /* **************************************************** */
@@ -461,7 +474,7 @@ void Response::showRes(void) {
     std::cout << indent << "Status Code : " << std::to_string(_statusCode) << std::endl;
     std::cout << indent << "Reason : " << reason << std::endl;
 	if (SILENTLOGS == 0)
-        showFullHeadersRes();    
+        showFullHeadersRes();
     std::cout << std::endl;
     std::cout << ORANGE << "    ------------------------------- END" << END;
     std::cout << std::endl << std::endl;
@@ -477,8 +490,8 @@ void Response::showFullHeadersRes(void) {
     std::cout << std::endl;
     utils::displayHeaderMap(contentLocation, (indent + "Content-Location"));
     utils::displayHeaderMap(contentType, (indent + "Content-Type"));
-    utils::displayHeaderMap(wwwAuthenticate, (indent + "WWW-Authenticate"));
     utils::displayHeaderMap(transfertEncoding, (indent + "Transfer-Encoding"));
+    if (!wwwAuthenticate.empty())  std::cout << indent << "WWW-Authenticate : " << wwwAuthenticate << std::endl;
     if (!lastModified.empty())  std::cout << indent << "Last-Modified : " << lastModified << std::endl;
     if (!location.empty())      std::cout << indent << "Location : " << location << std::endl;
     if (!date.empty())          std::cout << indent << "Date : " << date << std::endl;
@@ -490,5 +503,5 @@ void Response::showFullHeadersRes(void) {
     if (!_resFile.empty())          std::cout << indent << "_resFile : " << _resFile << std::endl;
     int x =  contentLength;
     std::cout << indent << "_resBody Size : " << std::to_string(x) << std::endl;
-	// std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl;
+	/* std::cout << indent << "_resBody content : " << ( x < 500 ? _resBody : "_resBody too big") << std::endl; */
 }

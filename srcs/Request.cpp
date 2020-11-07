@@ -43,7 +43,8 @@ void Request::reset(void) {
     uriQueries.clear();
     transferEncoding.clear();
     keepAlive.clear();
-
+    otherHeaders.clear();
+    acceptEncoding.clear();
 
 }
 
@@ -66,7 +67,7 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	
 	std::map<std::string, std::string> ret;
 
-    // TODO ?
+    // TODO 
 	// ret["Accept-Charset"] = mapToStr(acceptCharset, ';');
 	// ret["Accept-Language"] = mapToStr(acceptLanguage, ',');
 	ret["Authorization"] = authorization;
@@ -79,6 +80,11 @@ std::string mapToStr(std::map<int, std::string> map, char sep) {
 	ret["Referer"] = referer;
 	ret["User-Agent"] = userAgent;
 	ret["User-Agent"] = keepAlive;
+
+    std::map<std::string, std::string>::iterator it(otherHeaders.begin());
+    std::map<std::string, std::string>::iterator ite(otherHeaders.end());
+    for (; it != ite; it++)
+        ret[(*it).first] = (*it).second;
 
 	return (ret);
 }
@@ -197,7 +203,7 @@ void Request::fillHeader(std::string const key, std::string const value) {
 	
 	if (key == "Content-Language" || key == "Transfer-Encoding")
 		fillMultiValHeaders(key, value);
-	else if (key == "Accept-Charset" || key == "Accept-Language")
+	else if (key == "Accept-Charset" || key == "Accept-Language" ||  key == "Accept-Encoding")
 		fillMultiWeightValHeaders(key, value);
 	else
 		fillUniqueValHeaders(key, value);
@@ -242,6 +248,8 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
                 acceptCharset.insert(std::make_pair(1.0, multiValues[count]));
             else if (key == "Accept-Language")
                 acceptLanguage.insert(std::make_pair(1.0, multiValues[count]));
+            else if (key == "Accept-Encoding")
+                acceptEncoding.insert(std::make_pair(1.0, multiValues[count]));
         }
         else {
             /* If weight then key is specified weight */
@@ -251,6 +259,8 @@ void Request::fillMultiWeightValHeaders(std::string const key, std::string const
                 acceptCharset.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
             else if (key == "Accept-Language")
                 acceptLanguage.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
+            else if (key == "Accept-Encoding")
+                acceptEncoding.insert(std::make_pair(std::atof(weight[1].c_str()), weight[0]));
         }
     }
 }
@@ -265,7 +275,7 @@ void Request::fillUniqueValHeaders(std::string const key, std::string const valu
 	else if (key == "Host") host = value;
 	else if (key == "Referer") referer = value;
 	else if (key == "User-Agent") userAgent = value;
-
+    else otherHeaders[key] = value;
 }
 
 /*
@@ -325,6 +335,12 @@ void Request::parseBody()
             LOGPRINT(LOGERROR, client, ("Server::readClientRequest() : Anormal body"));
         if (reqLocation->max_body != -1 && (int)_reqBody.size() > reqLocation->max_body)
         {
+            std::cout << ORANGE << "_reqBody.size() = " << _reqBody.size() << std::endl;
+            std::cout << " reqLocation->max_body = " <<  reqLocation->max_body << END << std::endl;
+            std::cout << RED << "===================================\n" << END;
+            std::cout << _reqBody << std::endl;
+            std::cout << RED << "===================================\n" << END;
+
             LOGPRINT(REQERROR, client, ("Server::readClientRequest() : Error : REQUEST_ENTITY_TOO_LARGE_413 - Max = " + std::to_string(reqLocation->max_body)));
             client->recvStatus = Client::ERROR;
             client->res.setErrorParameters(Response::ERROR, REQUEST_ENTITY_TOO_LARGE_413);
@@ -332,6 +348,12 @@ void Request::parseBody()
     }
 }
 
+inline bool endsWith(std::string & value, std::string & ending) {
+
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+
+}
 
 /* Really good article */
 /* https://en.wikipedia.org/wiki/Chunked_transfer_encoding */
@@ -341,6 +363,7 @@ void Request::parseBody()
 
 void Request::parseChunkedBody() {
 
+    std::string endPattern = "0\r\n\r\n";
     size_t      separator = 0;
     std::string tmp;
 
@@ -360,8 +383,15 @@ void Request::parseChunkedBody() {
         /* Note that chunkLineBytesSize is the hexa value for the chunk size */
         if (chunkLineBytesSize > 0) {
             separator = _reqBody.find("\r\n", _optiChunkOffset);
-            if (separator == std::string::npos)
-                break ;
+            
+            // if (endsWith(_reqBody, endPattern) == true) {
+            //     _reqBody = _reqBody.substr(0, _reqBody.size() - 5);
+            //     client->recvStatus = Client::COMPLETE;
+            //     break ;
+            // } else
+            
+            if (separator == std::string::npos) break ;
+            
             _optiChunkOffset = separator;
             _reqBody.erase(separator, 2);
             chunkLineBytesSize = -1;
@@ -371,7 +401,10 @@ void Request::parseChunkedBody() {
             /* Delete the last "\r\n" which indicate the end */
             if (separator != std::string::npos)
                 _reqBody.erase(separator, 2);
-            else break ;
+            else if (_reqBody.back() == '0')
+                _reqBody = _reqBody.substr(0, _reqBody.size() - 1);
+            else 
+                break ; 
             client->recvStatus = Client::COMPLETE;
             break ;
         }

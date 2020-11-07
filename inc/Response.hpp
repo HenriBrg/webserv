@@ -145,7 +145,7 @@ class Response {
 
 
         /* ERRORS */
-
+        void setRefusedClient(const Server *serv);
         void setErrorParameters(int sendStatus, int code);
         void replaceErrorCode(const Server *server);
         
@@ -208,7 +208,7 @@ class Response {
 
         // https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/WWW-Authenticate
         // Use : 401 Unauthorized
-        std::map<int, std::string> wwwAuthenticate;
+        std::string wwwAuthenticate;
 
     private:
 
