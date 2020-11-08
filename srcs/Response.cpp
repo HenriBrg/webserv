@@ -187,8 +187,16 @@ void Response::resourceControl(Request * req)
             setErrorParameters(Response::ERROR, CONFLICT_409);
     } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
-            setErrorParameters(Response::ERROR, NOT_FOUND_404);
-        else if ((retStat = stat(req->file.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) && req->reqLocation->autoindex == true)
+        {
+            std::string tmpreqFile = req->file.erase(req->file.size() - req->reqLocation->index.size(), req->reqLocation->index.size());
+            if ((retStat = stat(tmpreqFile.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) \
+            && req->reqLocation->autoindex == true)
+                handleAutoIndex(req);
+            else
+                setErrorParameters(Response::ERROR, NOT_FOUND_404);
+        }
+        else if ((retStat = stat(req->file.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) \
+        && req->reqLocation->autoindex == true)
             handleAutoIndex(req);
     }
     if (retStat == -1) NOCLASSLOGPRINT(INFO, ("Response::resourceControl() : Resource " + req->file + " not found - It might be an error or a request to create the resource"));
@@ -217,6 +225,7 @@ void    Response::handleAutoIndex(Request * req)
     _resBody = strdup(htmlPage.c_str());
     contentType[0] = "text/html";
     contentLength = strlen(_resBody);
+    LOGPRINT(INFO, this, ("Response::handleAutoIndex() : autoindex generated"));
 }
 
 void Response::reqHeadersControl(Request * req) {

@@ -143,7 +143,7 @@ void Request::assignLocation(std::vector<Location*> vecLocs) {
     }
     std::string tmpUri = uri;
     while (tmpUri.size() > 1) {                     // Parcours URI entier
-        size_t i = uri.size() - 1;
+        size_t i = tmpUri.size() - 1;
 		while (tmpUri[i] != '/' && i != 0)          // Si / alors arret
 			i--;
 		tmpUri = tmpUri.substr(0, i);               // tmpUri => partie droite URI
@@ -185,11 +185,9 @@ void Request::parseFile(std::vector<Location*> locations)
 			file = reqLocation->root + "/" + file;
 	   resource = file;
 		if (stat(file.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
-			if (reqLocation->autoindex == false) {
-				i = file.size() - 1;
-				if (file[i] == '/') file = file + reqLocation->index;
-				else file = file + "/" + reqLocation->index;
-			}
+			i = file.size() - 1;
+			if (file[i] == '/') file = file + reqLocation->index;
+			else file = file + "/" + reqLocation->index;
 		}
 		LOGPRINT(INFO, this, ("Request::parseFile() : Autoindex = 0 and File Assigned : " + file));
 	}
