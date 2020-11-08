@@ -188,9 +188,35 @@ void Response::resourceControl(Request * req)
     } else {
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
+        else if ((retStat = stat(req->file.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) && req->reqLocation->autoindex == true)
+            handleAutoIndex(req);
     }
     if (retStat == -1) NOCLASSLOGPRINT(INFO, ("Response::resourceControl() : Resource " + req->file + " not found - It might be an error or a request to create the resource"));
+}
 
+void    Response::handleAutoIndex(Request * req)
+{
+	DIR			*dir = opendir((req->file).c_str());
+	std::string	htmlPage;
+
+	htmlPage = "<!DOCTYPE html>\n \
+	<html>\n \
+	<head><title>Index of " + req->file + "</title></head>\n \
+	<body bgcolor=\"white\">\n \
+	<h1>Index of " + req->file + "</h1>\n \
+	<hr><pre>\n";
+	if (dir != NULL) {
+		struct dirent *ent;
+		while ((ent = readdir(dir)) != NULL)
+			htmlPage += std::string(ent->d_name) + "\n";
+		closedir(dir);
+	}
+	htmlPage += "\t</pre><hr>\n \
+	</body>\n \
+	</html>";
+    _resBody = strdup(htmlPage.c_str());
+    contentType[0] = "text/html";
+    contentLength = strlen(_resBody);
 }
 
 void Response::reqHeadersControl(Request * req) {
@@ -285,31 +311,6 @@ void Response::setHeaders(Request * req) {
 
 }
 
-void    Response::handleAutoIndex(void)
-{
-	DIR			*dir = opendir((resClient->req.file).c_str());
-	std::string	htmlPage;
-
-	htmlPage = "<!DOCTYPE html>\n \
-	<html>\n \
-	<head><title>Index of " + resClient->req.file + "</title></head>\n \
-	<body bgcolor=\"white\">\n \
-	<h1>Index of " + resClient->req.file + "</h1>\n \
-	<hr><pre>\n";
-	if (dir != NULL) {
-		struct dirent *ent;
-		while ((ent = readdir(dir)) != NULL)
-			htmlPage += std::string(ent->d_name) + "\n";
-		closedir(dir);
-	}
-	htmlPage += "\t</pre><hr>\n \
-	</body>\n \
-	</html>";
-    _resBody = strdup(htmlPage.c_str());
-    contentType[0] = "text/html";
-    contentLength = strlen(_resBody);
-}
-
 /*
 ** Fonction en cours
 ** Que le body soit chunked ou pas, send() va fail ... à la limite faut call send() chunk par chunk, ou faire des plus petit call de send()
@@ -350,8 +351,6 @@ void Response::setBody(const Server *server) {
 
         if (responseUtils::setupBytesArray(this) == -1)
             return ;
-        if (resClient->req.reqLocation && resClient->req.reqLocation->autoindex == true)
-            handleAutoIndex();
         else if ((fileFd = open(_resFile.c_str(), O_RDONLY)) != -1)
         {
             while ((retRead = read(fileFd, fileBuf, 4096)) != 0)

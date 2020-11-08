@@ -95,7 +95,7 @@ class Response {
         void    control(Request * req, Server * serv);
         void    callMethod(Request * req);
         void    setHeaders(Request * req);
-        void    handleAutoIndex(void);
+        void    handleAutoIndex(Request * req);
         void    setBody(const Server *server);
         void    setBodyHeaders(void);
         void    format(void);
