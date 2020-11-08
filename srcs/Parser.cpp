@@ -16,7 +16,9 @@ Conf::Conf() {}
 
 Conf::Conf(char *filename): _fileName(filename), _confFile("") {}
 
-Conf::~Conf() {}
+Conf::~Conf() {
+	
+}
 
 Conf	&Conf::operator=(const Conf &copy) {
 	(void)copy;
@@ -146,6 +148,8 @@ void	Conf::parseLocation(Server *serv, std::string locs) {
 				else if (line[0] != "}")
 					throw(Conf::errorSyntaxException("unknown parameter."));
 			}
+			if (autoindex == true && !index.empty())
+				throw(Conf::errorSyntaxException("index must be asbent if autoindex in on."));
 			line.clear();
 		}
 		locBlock.clear();
@@ -302,6 +306,11 @@ void	Conf::parseConf(void)
 		}
 		else
 			confTmp[i].erase(0, j);
+		if (confTmp[i][0] == '#')
+		{
+			confTmp.erase(confTmp.begin() + i);
+			i--;
+		}
 	}
 	for (size_t i = 0; i < confTmp.size(); i++)
 	{
