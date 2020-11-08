@@ -29,6 +29,8 @@ void Config::webservShutdown() {
             delete *itCli;
         for (itLoc = srv->locations.begin(); itLoc != srv->locations.end(); itLoc++)
             delete *itLoc;
+        srv->clients.clear();
+        srv->locations.clear();
     }
 
     for (itSrv = gConfig.servers.begin(); itSrv != gConfig.servers.end(); itSrv++) {
