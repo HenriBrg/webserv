@@ -197,15 +197,16 @@ void Response::handleCGIOutput(int cgiType) {
         return NOCLASSLOGPRINT(LOGERROR, ("Response::handleCGIOutput() : Open() has failed while opening cgiFdOutput"));
     fstat(cgiFdOutput, &sb);
     buffer.resize(sb.st_size);
-    read(cgiFdOutput, const_cast<char*>(buffer.data()), sb.st_size);
-    close(cgiFdOutput);
 
+    if (read(cgiFdOutput, const_cast<char*>(buffer.data()), sb.st_size) == -1)
+        NOCLASSLOGPRINT(LOGERROR, ("Response::handleCGIOutput() : read() has return -1 on CGI_OUTPUT_TMPFILE"));
+    
+    close(cgiFdOutput);
     _cgiOutputBody = buffer;
     if (_cgiOutputBody.find("\r\n\r\n") == std::string::npos) {
         LOGPRINT(LOGERROR, this, ("Response::handleCGIOutput() : CGI (type : " + std::to_string(cgiType) + ") output doesn't contain <CR><LR><CR><LR> pattern. Invalid CGI. Internal Error"));
         return setErrorParameters(Response::ERROR, INTERNAL_ERROR_500);
-    }
-    parseCGIOutput(cgiType, buffer);
+    } else parseCGIOutput(cgiType, buffer);
     unlink(CGI_OUTPUT_TMPFILE);
     buffer.clear();
     _cgiOutputBody.clear();
