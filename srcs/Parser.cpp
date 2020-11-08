@@ -17,7 +17,6 @@ Conf::Conf() {}
 Conf::Conf(char *filename): _fileName(filename), _confFile("") {}
 
 Conf::~Conf() {
-	
 }
 
 Conf	&Conf::operator=(const Conf &copy) {
@@ -40,7 +39,7 @@ void	Conf::openFile(void) {
 	close(fd);
 }
 
-void	Conf::parseLocation(Server *serv, std::string locs) {
+std::string	Conf::parseLocation(Server *serv, std::string locs) {
 
 	int			max_body = -1, beg, end;
 	bool		autoindex = false;
@@ -54,23 +53,23 @@ void	Conf::parseLocation(Server *serv, std::string locs) {
 		end = locs.find("}");
 		location = locs.substr(beg, end + 1 - beg);
 		if (ft::countElem(location, "\troot ") != 1)
-			throw(Conf::errorSyntaxException("parameter root must be present once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter root must be present once.");
 		if (ft::countElem(location, "\tindex ") > 1)
-			throw(Conf::errorSyntaxException("parameter index must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter index must be present max once.");
 		if (ft::countElem(location, "\tmethod ") != 1)
-			throw(Conf::errorSyntaxException("parameter method must be present once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter method must be present once.");
 		if (ft::countElem(location, "\tauth ") > 1)
-			throw(Conf::errorSyntaxException("parameter auth must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter auth must be present max once.");
 		if (ft::countElem(location, "\tmax_body ") > 1)
-			throw(Conf::errorSyntaxException("parameter max_body must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter max_body must be present max once.");
 		if (ft::countElem(location, "\tautoindex ") > 1)
-			throw(Conf::errorSyntaxException("parameter autoindex must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter autoindex must be present max once.");
 		if (ft::countElem(location, "\tphp ") > 1)
-			throw(Conf::errorSyntaxException("parameter php must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter php must be present max once.");
 		if (ft::countElem(location, "\tcgi ") > 1)
-			throw(Conf::errorSyntaxException("parameter cgi must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter cgi must be present max once.");
 		if (ft::countElem(location, "\text ") > 1)
-			throw(Conf::errorSyntaxException("parameter ext must be present max once."));
+			return ("in server port " + std::to_string(serv->port) + ": parameter ext must be present max once.");
 		locBlock = ft::split(location, '\n');
 		for (size_t i = 0; i < locBlock.size(); i++)
 		{
@@ -80,18 +79,18 @@ void	Conf::parseLocation(Server *serv, std::string locs) {
 				if (line[0] == "location")
 				{
 					if (line.size() != 3 || line[1][0] != '/' || line[2] != "{")
-						throw(Conf::errorSyntaxException("location syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": location syntax.");
 					uri = line[1];
 				}
 				else if (line[0] == "root")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("root syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": root syntax.");
 					DIR *dir;
 					if (!(dir = opendir(line[1].c_str())))
 					{
 						closedir(dir);
-						throw(Conf::errorSyntaxException("cannot find root path."));
+						return ("in server port " + std::to_string(serv->port) + ": cannot find root path.");
 					}
 					closedir(dir);
 					root = line[1];
@@ -99,57 +98,57 @@ void	Conf::parseLocation(Server *serv, std::string locs) {
 				else if (line[0] == "index")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("index syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": index syntax.");
 					index = line[1];
 				}
 				else if (line[0] == "method")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("method syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": method syntax.");
 					methods = line[1];
 				}
 				else if (line[0] == "auth")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("auth syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": auth syntax.");
 					auth = line[1];
 				}
 				else if (line[0] == "cgi")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("cgi syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": cgi syntax.");
 					cgi = line[1];
 				}
 				else if (line[0] == "php")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("php syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": php syntax.");
 					phpcgi = line[1];
 				}
 				else if (line[0] == "ext")
 				{
 					if (line.size() != 2)
-						throw(Conf::errorSyntaxException("ext syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": ext syntax.");
 					ext = line[1];
 				}
 				else if (line[0] == "max_body")
 				{
 					if (line.size() != 2 || !ft::isNumber(line[1]))
-						throw(Conf::errorSyntaxException("max_body syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": max_body syntax.");
 					max_body = std::stoi(line[1]);
 				}
 				else if (line[0] == "autoindex")
 				{
 					if (line.size() != 2 || (line[1] != "on" && line[1] != "off"))
-						throw(Conf::errorSyntaxException("autoindex syntax."));
+						return ("in server port " + std::to_string(serv->port) + ": autoindex syntax.");
 					if (line[1] == "on")
 						autoindex = true;
 				}
 				else if (line[0] != "}")
-					throw(Conf::errorSyntaxException("unknown parameter."));
+					return ("in server port " + std::to_string(serv->port) + ": unknown parameter.");
 			}
 			if (autoindex == true && !index.empty())
-				throw(Conf::errorSyntaxException("index must be asbent if autoindex in on."));
+				return ("in server port " + std::to_string(serv->port) + ": index must be asbent if autoindex in on.");
 			line.clear();
 		}
 		locBlock.clear();
@@ -169,9 +168,10 @@ void	Conf::parseLocation(Server *serv, std::string locs) {
 		max_body = -1;
 		autoindex = false;
 	}
+	return ("0");
 }
 
-void	Conf::parseServerBlock(std::string block)
+std::string	Conf::parseServerBlock(std::string block)
 {
 	std::vector<std::string>	serverBlock;
 	std::vector<std::string>	line;
@@ -185,15 +185,15 @@ void	Conf::parseServerBlock(std::string block)
 	std::string	servParams;
 
 	if ((nbLoc = ft::countElem(block, "\tlocation ")) < 1)
-		throw (Conf::errorSyntaxException("parameter location must be present at least once."));
+		return ("parameter location must be present at least once.");
 	idx = block.find("\tlocation");
 	servParams = block.substr(0, idx);
 	if (ft::countElem(servParams, "\tlisten ") != 1)
-		throw(Conf::errorSyntaxException("parameter listen must be present once."));
+		return ("parameter listen must be present once.");
 	if (ft::countElem(servParams, "\tserver_name ") > 1)
-		throw(Conf::errorSyntaxException("parameter server_name must be present max once."));
+		return ("parameter server_name must be present max once.");
 	if (ft::countElem(servParams, "\terror ") != 1)
-		throw(Conf::errorSyntaxException("there must be one errors path."));
+		return ("there must be one errors path.");
 	serverBlock = ft::split(servParams, '\n');
 	for (size_t i = 0; i < serverBlock.size(); i++)
 	{
@@ -201,30 +201,29 @@ void	Conf::parseServerBlock(std::string block)
 		if (line[0] == "listen")
 		{
 			if (line.size() != 2 || !ft::isNumber(line[1]))
-				throw(Conf::errorSyntaxException("port syntax."));
+				return ("port syntax.");
 			port = std::stoi(line[1]);
 			if (port <= 1024)
-				throw(Conf::errorSyntaxException("port must be over 1024."));
+				return ("port must be over 1024.");
 		}
 		else if (line[0] == "server_name")
 		{
 			if (line.size() != 2)
-				throw(Conf::errorSyntaxException("server name syntax."));
+				return ("server name syntax.");
 			serverName = line[1];
 		}
 		else if (line[0] == "error")
 		{
 			DIR *dir = NULL;
-			if (line.size() != 2 || !(dir = opendir(line[1].c_str())))
-			{
+			if (line.size() != 2 || !(dir = opendir(line[1].c_str()))) {
 				closedir(dir);
-				throw(Conf::errorSyntaxException("cannot find errors path."));
+				return ("cannot find errors path.");
 			}
 			closedir(dir);
 			error = line[1];
 		}
 		else
-			throw(Conf::errorSyntaxException("wrong server parameter."));
+			return ("wrong server parameter.");
 		line.clear();
 	}
 	serverBlock.clear();
@@ -232,9 +231,17 @@ void	Conf::parseServerBlock(std::string block)
 	if (serverName == "")
 		serverName = "webserv" + std::to_string(nameNb++);
 	Server *serv = new Server(port, serverName, error);
-	serverBlock = ft::split(servParams, '\n');
 	NOCLASSLOGPRINT(INFO, ("Conf::parseServerBlock() : FOR SERVER PORT " + std::to_string(port)));
-	parseLocation(serv, servParams);
+	if ((_errMsg = parseLocation(serv, servParams)) != "0")
+	{
+		for (std::vector<Location*>::iterator itl = serv->locations.begin(); itl != serv->locations.end(); itl++)
+		{
+			Location *loc = *itl;
+			delete loc;
+		}
+		delete serv;
+		return (_errMsg);
+	}
 	try
 	{
         serv->start();
@@ -244,13 +251,15 @@ void	Conf::parseServerBlock(std::string block)
         std::cerr << e.what() << std::endl;
     }
 	_servers.push_back(serv);
-	for (size_t i = 0; i < _servers.size() - 1; i++)
+	for (size_t i = 0; i < _servers.size() - 1; i++) {
 		if (_servers[i]->port == _servers[_servers.size() - 1]->port)
-			throw(Conf::errorSyntaxException("each server must have a different port."));
+			return ("each server must have a different port.");
+	}
 	NOCLASSLOGPRINT(INFO, ("Server::parseServerBlock() : SERVER CREATED PORT(" + std::to_string(port) + "), NAME(" + serverName + "), ERROR_PATH(" + error + ")"));
+	return ("0");
 }
 
-size_t	Conf::findServer(std::vector<std::string> confTmp)
+int			Conf::findServer(std::vector<std::string> confTmp)
 {
 	size_t		i;
 	size_t		j;
@@ -271,7 +280,7 @@ size_t	Conf::findServer(std::vector<std::string> confTmp)
 		if (confTmp[j].find('}') != std::string::npos)
 			bracket--;
 		if (ft::countElem(confTmp[j], "{") > 1 || ft::countElem(confTmp[j], "}") > 1)
-			throw (Conf::errorSyntaxException("line: " + confTmp[j - 1] + " : syntax error."));
+			throw (Conf::errorSyntaxException("syntax error."));
 		if (bracket != 0)
 			block += '\t' + confTmp[j] + '\n';
 		j++;
@@ -280,21 +289,22 @@ size_t	Conf::findServer(std::vector<std::string> confTmp)
 	while (ft::isSpace(confTmp[j - 1][i]) || confTmp[j - 1][i] == '}')
 		i++;
 	if (confTmp[j - 1][i] != '\0' || bracket != 0)
-		throw (Conf::errorSyntaxException("line: " + confTmp[j - 1] + " : syntax error."));
-	parseServerBlock(block);
+		throw (Conf::errorSyntaxException("syntax error."));
+	if ((_errMsg = parseServerBlock(block)) != "0")
+		return (-1);
 	return (j);
 }
 
 void	Conf::parseConf(void)
 {
-	size_t						i;
+	int							i;
 	size_t						j;
 	std::string					line;
 	std::vector<std::string>	confTmp;
 
 	openFile();
 	confTmp = ft::split(_confFile, '\n');
-	for (i = 0; i < confTmp.size(); i++)
+	for (i = 0; i < (int)confTmp.size(); i++)
 	{
 		j = 0;
 		while (ft::isSpace(confTmp[i][j]))
@@ -312,7 +322,7 @@ void	Conf::parseConf(void)
 			i--;
 		}
 	}
-	for (size_t i = 0; i < confTmp.size(); i++)
+	for (i = 0; i < (int)confTmp.size(); i++)
 	{
 		j = 0;
 		while (confTmp[i][j])
@@ -328,6 +338,8 @@ void	Conf::parseConf(void)
 		if (confTmp[0].compare(0, 6, "server") != 0)
 			throw (Conf::errorSyntaxException("parameter must be a server."));
 		i = findServer(confTmp);
+		if (i == -1)
+			throw (Conf::errorSyntaxException(_errMsg));
 		confTmp.erase(confTmp.begin(), confTmp.begin() + i);
 	}
 }

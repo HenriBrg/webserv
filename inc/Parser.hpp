@@ -29,11 +29,11 @@ class Conf
 
 	Conf	&operator=(const Conf&);
 
-	void	openFile(void);
-	void	parseLocation(Server *serv, std::string locs);
-	void	parseServerBlock(std::string block);
-	size_t	findServer(std::vector<std::string> confTmp);
-	void	parseConf(void);
+	void		openFile(void);
+	std::string	parseLocation(Server *serv, std::string locs);
+	std::string	parseServerBlock(std::string block);
+	int			findServer(std::vector<std::string> confTmp);
+	void		parseConf(void);
 
 	class errorSyntaxException: public std::exception
 	{
@@ -53,6 +53,7 @@ class Conf
 	Conf();
 	char					*_fileName;
 	std::string				_confFile;
+	std::string				_errMsg;
 	std::vector<Server*>	_servers;
 };
 
