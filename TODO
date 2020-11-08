@@ -1,5 +1,5 @@
-Actualisée au 06/11/2020 :
+Actualisée au 09/11/2020 :
 
     - Testeur VM
-    - review guideline correction
-    - quid de ça ? Setup multiple servers with different host name (use somthing like: curl --resolve exemple.com:80:127.0.0.1 http://example.com/)
+    - SIEGE
+    - Correction Review

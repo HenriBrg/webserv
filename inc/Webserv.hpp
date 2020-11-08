@@ -35,7 +35,6 @@
 # include "Logger.hpp"
 # include "Utils.hpp"
 
-
 extern Config gConfig;
 
 #endif
