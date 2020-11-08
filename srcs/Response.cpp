@@ -191,16 +191,6 @@ void Response::resourceControl(Request * req)
         if ((retStat = stat(req->file.c_str(), &fileStat)) == -1)
             setErrorParameters(Response::ERROR, NOT_FOUND_404);
         else if ((retStat = stat(req->file.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) && req->reqLocation->autoindex == true)
-        // {
-        //     std::string tmpreqFile = req->file.erase(req->file.size() - req->reqLocation->index.size(), req->reqLocation->index.size());
-        //     if ((retStat = stat(tmpreqFile.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) \
-        //     && req->reqLocation->autoindex == true)
-        //         handleAutoIndex(req);
-        //     else
-        //         setErrorParameters(Response::ERROR, NOT_FOUND_404);
-        // }
-        // else if ((retStat = stat(req->file.c_str(), &fileStat)) == 0 && S_ISDIR(fileStat.st_mode) \
-        // && req->reqLocation->autoindex == true)
             handleAutoIndex(req);
     }
     if (retStat == -1) NOCLASSLOGPRINT(INFO, ("Response::resourceControl() : Resource " + req->file + " not found - It might be an error or a request to create the resource"));

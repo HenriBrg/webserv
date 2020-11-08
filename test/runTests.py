@@ -348,6 +348,11 @@ def GET_TESTS(testNum = 0):
    
     index += 1
     if (testNum == 0 or index == int(testNum)):
+        r = requests.get("http://localhost:7777/auto/test42/")
+        assertResponse(r, 200, index, [assertTypes.BODY_CONTAIN_ASSERT], "YoupiBanane")
+
+    index += 1
+    if (testNum == 0 or index == int(testNum)):
         r = requests.get("http://localhost:7777/auto/xxx")
         assertResponse(r, 404, index) # ---> Potentiellement à modifier
 
