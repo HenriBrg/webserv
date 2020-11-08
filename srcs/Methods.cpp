@@ -153,6 +153,7 @@ void Response::deleteReq(Request * req) {
 */
 
 void Response::deleteDir(std::string directory) {
+
     DIR *dir;
     struct dirent *dirEntry;
     std::string entryName;
@@ -172,6 +173,7 @@ void Response::deleteDir(std::string directory) {
             unlink((directory + "/" + entryName).c_str());
     }
     rmdir(directory.c_str());
+    closedir(dir);
 }
 
 
