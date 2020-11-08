@@ -78,7 +78,8 @@ char ** Response::buildCGIEnv(Request * req) {
 		++it;
 	}
     hdmap.clear();
-    showCGIEnv(envmap);
+    if (SILENTLOGS == 0)
+        showCGIEnv(envmap);
     int i = -1;
     env = (char**)malloc(sizeof(char*) * (envmap.size() + 1));
     it = envmap.begin();

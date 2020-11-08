@@ -55,17 +55,11 @@ int Server::start() {
     addr.sin_addr.s_addr = inet_addr(LOCAL_IP);
 
     /* https://code.woboq.org/userspace/glibc/bits/byteswap.h.html#30 */
+    
     int i = 0x00000001;
-    if (((char *)&i)[0] ) /* Little */
-    {    
-        addr.sin_port = ((__uint16_t) ((((port) >> 8) & 0xff) | (((port) & 0xff) << 8)));
-        std::cout << "LIT = reverse order" << std::endl;
-    }
-    else /* Big */
-    {    
-        addr.sin_port = static_cast<__uint16_t>(port);
-        std::cout << "BIG = ordered" << std::endl;
-    }
+    if (((char *)&i)[0] ) /* Little */ addr.sin_port = ((__uint16_t) ((((port) >> 8) & 0xff) | (((port) & 0xff) << 8)));
+    else /* Big */ addr.sin_port = static_cast<__uint16_t>(port);
+
     if ((bind(sockFd, (struct sockaddr*)&addr, sizeof(addr))) == -1)
         throw ServerException("Server::start : bind()", std::string(strerror(errno)));
 

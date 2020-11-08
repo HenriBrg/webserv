@@ -4,6 +4,13 @@ Actualisée au 06/11/2020 :
     - LOG sur tous les read write recv send qui retourne -1 ou 0
     - corriger negotiate et test autoindex et valider par test python (ils sont déjà là mais commentés)
     - review guideline correction
-    - leaks fd sur test delete ?
     - arg bidon passé à webserv
     - quid de ça ? Setup multiple servers with different host name (use somthing like: curl --resolve exemple.com:80:127.0.0.1 http://example.com/)
+
+
+VM : 
+
+    Test GET http://localhost:8888/directory
+    FATAL ERROR ON LAST TEST: Get http://localhost:8888/directory: net/http: HTTP/1.x transport connection broken: malformed HTTP status code "html>"
+
+retirer sanitize ^^
