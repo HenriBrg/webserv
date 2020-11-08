@@ -148,7 +148,7 @@ std::string	Conf::parseLocation(Server *serv, std::string locs) {
 					return ("in server port " + std::to_string(serv->port) + ": unknown parameter.");
 			}
 			if (autoindex == true && !index.empty())
-				return ("in server port " + std::to_string(serv->port) + ": index must be asbent if autoindex in on.");
+				return ("in server port " + std::to_string(serv->port) + ": index must be asbent if autoindex is on.");
 			line.clear();
 		}
 		locBlock.clear();

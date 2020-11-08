@@ -13,7 +13,7 @@ int init(int ac, char **av) {
 		if (ac == 1) configuration = DEFAULT_CONF_PATH;
 		else {
 			struct stat statbuf;
-			if (stat(av[1], &statbuf) == 0) {
+			if (stat(av[1], &statbuf) == 0 && !S_ISDIR(statbuf.st_mode)) {
 				configuration = av[1];
 				if (configuration.compare(configuration.size() - 5, 5, ".conf") != 0) {
 					std::cout << "Error: file must be of type .conf" << std::endl;

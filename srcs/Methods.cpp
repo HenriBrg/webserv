@@ -172,6 +172,7 @@ void Response::deleteDir(std::string directory) {
             unlink((directory + "/" + entryName).c_str());
     }
     rmdir(directory.c_str());
+    closedir(dir);
 }
 
 
