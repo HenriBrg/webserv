@@ -380,17 +380,17 @@ def POST_TESTS(testNum = 0):
         r = requests.post('http://localhost:7777/newFile', data=payload, headers={})
         assertResponse(r, 200, index, [assertTypes.FILE_CONTAIN_ASSERT], "Hello ! I am a new file. I have been updated !", "www/newFile")
     index += 1
-    if (testNum == 0 or index == int(testNum)):
+    if (platform == "darwin" and testNum == 0 or index == int(testNum)):
         if os.path.exists("Www/newFile"): os.remove("www/newFile")
         payload = {'hello': 'world'}
         hd = {"Content-Type": "application/json"}
         r = requests.post('http://localhost:7777/newFile',  data=json.dumps(payload), headers=hd)
         assertResponse(r, 201, index, [assertTypes.FILE_CONTAIN_ASSERT], "{\"hello\": \"world\"}", "www/newFile")
-    index += 1
    
     # ------- POST CHUNKED - 200/201 - NO CGI
 
     # Note that if a message is received with both a Transfer-Encoding header field and a Content-Length header field, the latter MUST be ignored.
+    index += 1
     if (platform == "darwin" and (testNum == 0 or index == int(testNum))):
         if os.path.exists("www/newFile"): os.remove("www/newFile")
         payload = "14\r\nabcdefghijklmnopqrst\r\nA\r\n0123456789\r\n0\r\n\r\n"

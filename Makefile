@@ -13,7 +13,7 @@ _END		=	\e[0m
 # VARIABLES
 
 NAME = webserv
-CC = clang++  -Wall -Wextra -Werror # -g3 -fsanitize=address
+CC = clang++ -Wall -Wextra -Werror # -g3 -fsanitize=address
 RM = rm -rf
 
 # DIRECTORIES
