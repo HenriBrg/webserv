@@ -298,7 +298,8 @@ int Server::sendBytes(Client *c, char *toSend, long bytesToSend)
             if (bytesToSend != 0)
                 continue ;
             return (EXIT_FAILURE);
-        }
+        } else if (retSend == 0)
+            NOCLASSLOGPRINT(INFO, ("retSend = 0"));
         bytesSent += retSend;
         bytesToSend -= retSend;
         NOCLASSLOGPRINT(INFO, ("Cumulated bytes sent : " + std::to_string(bytesSent)));
